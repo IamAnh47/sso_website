@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ thống đặt phòng học - HCMUT</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin-dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="js/auth.js" defer></script>
+  <style>
+    .menu-item.logo-item {
+      padding: 10px 0;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      width: 60px;
+      height: 60px;
+      max-width: 100%;
+      object-fit: contain;
+    }
+
+    .menu-item.active {
+      background-color: #28a745;
+      color: white;
+    }
+    
+    .dashboard-card {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .dashboard-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body class="student-dashboard">
+  <div class="sidebar">
+    <div class="menu">
+      <div class="menu-item logo-item">
+        <img src="./images/hcmut_logo.png" alt="Logo" class="logo">
+      </div>
+      <div class="menu-item active" id="dashboard-menu-item" data-title="Trang chủ">
+        <i class="fas fa-tachometer-alt"></i>
+      </div>
+      <div class="menu-item" id="room-booking-menu-item" data-title="Đặt phòng">
+        <i class="fas fa-door-open"></i>
+      </div>
+      <div class="menu-item" id="booking-history-menu-item" data-title="Lịch sử đặt phòng">
+        <i class="fas fa-history"></i>
+      </div>
+      <div class="menu-item" id="notifications-menu-item" data-title="Thông báo">
+        <i class="fas fa-bell"></i>
+      </div>
+      <div class="menu-item" id="profile-menu-item" data-title="Thông tin cá nhân">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="menu-item" id="statistics-menu-item" data-title="Thống kê">
+        <i class="fas fa-chart-bar"></i>
+      </div>
+      <div class="menu-item" id="logout-btn" data-title="Đăng xuất">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+    </div>
+  </div>
+  
+  <div class="main-content">
+    <div class="header">
+      <div class="header-title">Trang chủ</div>
+      <div class="user-info">
+        <div class="user-greeting" id="user-greeting">Xin chào, <span id="user-full-name">Sinh viên</span></div>
+        <div class="notification-bell" id="notification-bell">
+          <i class="fas fa-bell"></i>
+          <span class="notification-count" id="notification-count">0</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="dashboard-content">
+      <div class="welcome-section">
+        <h2>Xin chào, <span id="welcome-name">Sinh viên</span>!</h2>
+        <p>Chào mừng đến với Hệ thống đặt phòng học HCMUT</p>
+      </div>
+      
+      <div class="dashboard-cards">
+        <div class="dashboard-card" id="find-room-card">
+          <div class="card-icon">
+            <i class="fas fa-search"></i>
+          </div>
+          <div class="card-content">
+            <h3>Tìm và đặt phòng</h3>
+            <p>Tìm kiếm phòng học phù hợp với nhu cầu của bạn</p>
+          </div>
+        </div>
+        
+        <div class="dashboard-card" id="view-bookings-card">
+          <div class="card-icon">
+            <i class="fas fa-calendar-alt"></i>
+          </div>
+          <div class="card-content">
+            <h3>Lịch sử đặt phòng</h3>
+            <p>Xem lại các phòng bạn đã đặt trước đó</p>
+          </div>
+        </div>
+        
+        <div class="dashboard-card" id="view-notifications-card">
+          <div class="card-icon">
+            <i class="fas fa-bell"></i>
+          </div>
+          <div class="card-content">
+            <h3>Thông báo</h3>
+            <p>Xem các thông báo mới nhất từ hệ thống</p>
+          </div>
+        </div>
+        
+        <div class="dashboard-card" id="edit-profile-card">
+          <div class="card-icon">
+            <i class="fas fa-user-edit"></i>
+          </div>
+          <div class="card-content">
+            <h3>Thông tin cá nhân</h3>
+            <p>Cập nhật thông tin cá nhân của bạn</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="upcoming-bookings">
+        <h3>Lịch đặt phòng sắp tới</h3>
+        <div class="upcoming-bookings-list" id="upcoming-bookings-list">
+          <p class="loading-text">Đang tải...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // API endpoints
+    const API_BASE_URL = '/api';
+    const ENDPOINTS = {
+      USERS: `${API_BASE_URL}/users`,
+      BOOKINGS: `${API_BASE_URL}/bookings`,
+      USER_BOOKINGS: `${API_BASE_URL}/bookings/user`,
+      NOTIFICATIONS: `${API_BASE_URL}/notifications`,
+      UNREAD_NOTIFICATIONS: `${API_BASE_URL}/notifications/unread/count`,
+      AUTH_VERIFY: `${API_BASE_URL}/auth/verify`,
+      AUTH_LOGOUT: `${API_BASE_URL}/auth/logout`
+    };
+    
+    // Navigation setup
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if user is authenticated
+      verifyAuth()
+        .then(userData => {
+          if (userData && userData.role === 'student') {
+            // Initialize the page components
+            setupNavigation();
+            initializeDashboard(userData);
+          } else {
+            console.error('User is not a student or is not authenticated');
+            clearAuthData();
+            window.location.href = 'index.html';
+          }
+        })
+        .catch(error => {
+          console.error('Authentication error:', error.message);
+          clearAuthData();
+          window.location.href = 'index.html';
+        });
+    });
+    
+    // Setup navigation
+    function setupNavigation() {
+      document.getElementById('dashboard-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-dashboard.html';
+      });
+      
+      document.getElementById('room-booking-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-room-reservation.html';
+      });
+      
+      document.getElementById('booking-history-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-booking-history.html';
+      });
+      
+      document.getElementById('notifications-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-notifications.html';
+      });
+      
+      document.getElementById('profile-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-profile.html';
+      });
+      
+      document.getElementById('statistics-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-statistics.html';
+      });
+      
+      document.getElementById('logout-btn').addEventListener('click', async function() {
+        try {
+          const response = await fetch(ENDPOINTS.AUTH_LOGOUT, {
+            method: 'POST',
+            credentials: 'include'
+          });
+          
+          clearAuthData();
+          window.location.href = 'index.html';
+        } catch (error) {
+          console.error('Logout error:', error);
+          clearAuthData();
+          window.location.href = 'index.html';
+        }
+      });
+      
+      // Card click handlers
+      document.getElementById('find-room-card').addEventListener('click', function() {
+        window.location.href = 'student-room-reservation.html';
+      });
+      
+      document.getElementById('view-bookings-card').addEventListener('click', function() {
+        window.location.href = 'student-booking-history.html';
+      });
+      
+      document.getElementById('view-notifications-card').addEventListener('click', function() {
+        window.location.href = 'student-notifications.html';
+      });
+      
+      document.getElementById('edit-profile-card').addEventListener('click', function() {
+        window.location.href = 'student-profile.html';
+      });
+      
+      // Set up notification bell click
+      document.getElementById('notification-bell').addEventListener('click', function() {
+        window.location.href = 'student-notifications.html';
+      });
+    }
+    
+    // Clear auth data
+    function clearAuthData() {
+      // Clear any stored auth data (cookies are handled by the server)
+      sessionStorage.removeItem('user');
+      localStorage.removeItem('authToken');
+    }
+    
+    // Initialize dashboard
+    async function initializeDashboard(userData) {
+      // Set user greeting
+      document.getElementById('user-greeting').innerHTML = `Xin chào, <span id="user-full-name">${userData.full_name || userData.username}</span>`;
+      document.getElementById('welcome-name').textContent = userData.full_name || userData.username;
+      
+      // Load unread notifications count
+      try {
+        const response = await fetch(ENDPOINTS.UNREAD_NOTIFICATIONS, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('notification-count').textContent = data.count;
+          
+          // Show notification count only if there are unread notifications
+          if (data.count > 0) {
+            document.getElementById('notification-count').style.display = 'inline-block';
+          } else {
+            document.getElementById('notification-count').style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.error('Error loading notifications count:', error);
+      }
+      
+      // Load upcoming bookings
+      loadUpcomingBookings();
+    }
+    
+    // Load upcoming bookings
+    async function loadUpcomingBookings() {
+      try {
+        const response = await fetch(`${ENDPOINTS.USER_BOOKINGS}?status=pending,confirmed`, {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch bookings');
+        }
+        
+        const bookings = await response.json();
+        
+        const upcomingBookingsContainer = document.getElementById('upcoming-bookings-list');
+        upcomingBookingsContainer.innerHTML = '';
+        
+        if (bookings.length === 0) {
+          upcomingBookingsContainer.innerHTML = '<p class="no-items">Bạn chưa có lịch đặt phòng nào sắp tới</p>';
+          return;
+        }
+        
+        // Sort bookings by date and time
+        bookings.sort((a, b) => {
+          const dateA = new Date(a.booking_date + 'T' + a.start_time);
+          const dateB = new Date(b.booking_date + 'T' + b.start_time);
+          return dateA - dateB;
+        });
+        
+        // Only show the next 5 bookings
+        const upcomingBookings = bookings.slice(0, 5);
+        
+        upcomingBookings.forEach(booking => {
+          const formattedDate = new Date(booking.booking_date).toLocaleDateString('vi-VN');
+          
+          const bookingItem = document.createElement('div');
+          bookingItem.className = 'booking-item';
+          
+          // Add status badge
+          let statusClass = '';
+          let statusText = '';
+          
+          switch(booking.status) {
+            case 'pending':
+              statusClass = 'status-pending';
+              statusText = 'Chờ xác nhận';
+              break;
+            case 'confirmed':
+              statusClass = 'status-confirmed';
+              statusText = 'Đã xác nhận';
+              break;
+            case 'in_use':
+              statusClass = 'status-in-use';
+              statusText = 'Đang sử dụng';
+              break;
+            default:
+              statusClass = 'status-default';
+              statusText = booking.status;
+          }
+          
+          bookingItem.innerHTML = `
+            <div class="booking-info">
+              <div class="booking-room">${booking.room_name}</div>
+              <div class="booking-location"><i class="fas fa-map-marker-alt"></i> ${booking.location}</div>
+              <div class="booking-time"><i class="far fa-calendar-alt"></i> ${formattedDate}, ${booking.start_time} - ${booking.end_time}</div>
+            </div>
+            <div class="booking-status">
+              <span class="status-badge ${statusClass}">${statusText}</span>
+            </div>
+          `;
+          
+          upcomingBookingsContainer.appendChild(bookingItem);
+        });
+      } catch (error) {
+        console.error('Error loading upcoming bookings:', error);
+        document.getElementById('upcoming-bookings-list').innerHTML = '<p class="error-text">Không thể tải lịch đặt phòng</p>';
+      }
+    }
+  </script>
+</body>
+</html> 

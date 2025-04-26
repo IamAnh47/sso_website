@@ -1,0 +1,2307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết phòng - Admin Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        .room-detail-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .room-image-section {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+        
+        .main-image-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .main-room-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .image-action {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .image-action:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .thumbnail-container {
+            display: flex;
+            padding: 15px;
+            gap: 10px;
+            overflow-x: auto;
+        }
+        
+        .thumbnail {
+            width: 80px;
+            height: 60px;
+            border-radius: 5px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            border: 2px solid transparent;
+        }
+        
+        .thumbnail:hover {
+            opacity: 0.8;
+        }
+        
+        .thumbnail.active {
+            border-color: var(--primary-color);
+        }
+        
+        .room-info-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .room-info-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .room-title h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .room-id {
+            color: #6c757d;
+            font-size: 14px;
+        }
+        
+        .room-status {
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-available {
+            background-color: #d4edda;
+            color: #28a745;
+        }
+        
+        .status-occupied {
+            background-color: #f8d7da;
+            color: #dc3545;
+        }
+        
+        .status-maintenance {
+            background-color: #fff3cd;
+            color: #ffc107;
+        }
+        
+        .detail-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .detail-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .detail-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+        }
+        
+        .detail-content {
+            flex: 1;
+        }
+        
+        .detail-label {
+            color: #6c757d;
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+        
+        .detail-value {
+            font-weight: 500;
+        }
+        
+        .description-section {
+            margin-top: 10px;
+        }
+        
+        .description-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .description-text {
+            color: #495057;
+            line-height: 1.6;
+        }
+        
+        .equipment-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .equipment-item {
+            background-color: #f8f9fa;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #495057;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #dee2e6;
+            color: #6c757d;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .booking-history {
+            margin-top: 30px;
+        }
+        
+        .booking-history h3 {
+            margin-bottom: 15px;
+        }
+        
+        .booking-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .booking-table th, .booking-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .booking-table th {
+            color: #495057;
+            font-weight: 600;
+            background-color: #f8f9fa;
+        }
+        
+        .booking-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        
+        .user-name {
+            font-weight: 500;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            font-size: 24px;
+            cursor: pointer;
+            color: #6c757d;
+        }
+        
+        .image-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 5px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        
+        .upload-icon {
+            font-size: 30px;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .room-detail-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .detail-group {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Add this CSS to match the new sidebar format */
+        .menu-item.logo-item {
+            padding: 10px 0;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .menu-item.active {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        /* Thêm CSS cho phần thống kê */
+        .stats-section {
+            margin-top: 30px;
+        }
+        
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .stats-title {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .stats-period {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .period-select {
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .card-primary {
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .card-success {
+            border-left: 4px solid #28a745;
+        }
+        
+        .card-warning {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .card-danger {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+        
+        .stat-value {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 5px 0;
+        }
+        
+        .stat-desc {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-box {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            height: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chart-title {
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .chart-canvas {
+            height: 250px !important;
+            max-height: 250px;
+            width: 100%;
+            display: block;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+        
+        @media (max-width: 992px) {
+            .room-detail-container,
+            .stats-cards,
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="admin-dashboard">
+    <div class="sidebar">
+        <div class="menu">
+            <div class="menu-item logo-item">
+                <img src="./images/hcmut_logo.png" alt="Logo" class="logo">
+            </div>
+            <div class="menu-item" id="overview-menu-item" data-title="Trang chủ">
+                <i class="fas fa-tachometer-alt"></i>
+            </div>
+            <div class="menu-item active" id="room-management-menu-item" data-title="Quản lý phòng">
+                <i class="fas fa-door-open"></i>
+            </div>
+            <div class="menu-item" id="user-management-menu-item" data-title="Quản lý người dùng">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="menu-item" id="booking-management-menu-item" data-title="Quản lý đặt phòng">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="menu-item" id="notifications-menu-item" data-title="Thông báo">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="menu-item" id="statistics-menu-item" data-title="Thống kê">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <div class="menu-item" id="logout-btn" data-title="Đăng xuất">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="header-container">
+            <h1 class="header-title">Chi tiết phòng</h1>
+            <div class="user-controls">
+                <i class="fas fa-bell"></i>
+                <i class="fas fa-envelope"></i>
+                <i class="fas fa-user-circle"></i>
+            </div>
+        </div>
+        
+        <div class="content-container">
+            <div class="breadcrumb">
+                <a href="admin-overview.html">Trang chủ</a> / 
+                <a href="admin-room-management.html">Quản lý phòng</a> / 
+                <span>Chi tiết phòng</span>
+            </div>
+            
+            <div class="detail-container">
+                <!-- Left column - Images -->
+                <div class="detail-image-section">
+                    <div class="main-image-container">
+                        <!-- <img src="images/room1.jpg" alt="Room image" id="main-room-image" class="main-room-image"> -->
+                        <div class="image-overlay">
+                            <div class="image-action" id="upload-image-btn" title="Upload new image">
+                                <i class="fas fa-upload"></i>
+                            </div>
+                            <div class="image-action" title="Delete image">
+                                <i class="fas fa-trash"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- <div class="detail-thumbnails">
+                        <img src="images/room1.jpg" alt="Thumbnail 1" class="detail-thumbnail active" onclick="changeMainImage('images/room1.jpg', this)">
+                        <img src="images/room2.jpg" alt="Thumbnail 2" class="detail-thumbnail" onclick="changeMainImage('images/room2.jpg', this)">
+                        <img src="images/room3.jpg" alt="Thumbnail 3" class="detail-thumbnail" onclick="changeMainImage('images/room3.jpg', this)">
+                    </div> -->
+                </div>
+                
+                <!-- Right column - Room info -->
+                <div class="detail-info-section">
+                    <div class="detail-card">
+                        <div class="detail-header">
+                            <h2 class="detail-title">Phòng họp H6.610</h2>
+                            <span class="status status-available">Còn trống</span>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3 class="detail-section-title">Thông tin cơ bản</h3>
+                            <div class="detail-attribute">
+                                <div class="detail-item">
+                                    <div class="detail-icon">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </div>
+                                    <div>
+                                        <div class="detail-label">Vị trí</div>
+                                        <div class="detail-value" id="location-value"></div>
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-icon">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div>
+                                        <div class="detail-label">Sức chứa</div>
+                                        <div class="detail-value" id="capacity-value"></div>
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-icon">
+                                        <i class="fas fa-th-large"></i>
+                                    </div>
+                                    <div>
+                                        <div class="detail-label">Loại phòng</div>
+                                        <div class="detail-value" id="room-type-value"></div>
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-icon">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </div>
+                                    <div>
+                                        <div class="detail-label">Ngày cập nhật</div>
+                                        <div class="detail-value" id="update-date-value"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3 class="detail-section-title">Trang thiết bị</h3>
+                            <ul id="equipment-list">
+                                <!-- Equipment will be populated by JavaScript -->
+                            </ul>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3 class="detail-section-title">Mô tả</h3>
+                            <p id="room-description-text">
+                                <!-- Room description will be populated by JavaScript -->
+                            </p>
+                        </div>
+                        
+                        <div class="detail-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                            <button class="btn btn-outline" id="edit-room-btn">
+                                <i class="fas fa-edit"></i> Chỉnh sửa
+                            </button>
+                            <button class="btn btn-primary" id="change-status-btn">
+                                <i class="fas fa-toggle-on"></i> Đổi trạng thái
+                            </button>
+                            <button class="btn btn-danger" id="delete-room-btn">
+                                <i class="fas fa-trash"></i> Xóa phòng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Statistics Section -->
+            <div class="stats-section detail-card">
+                <div class="stats-header">
+                    <h3 class="stats-title">Thống kê sử dụng phòng</h3>
+                    <div class="stats-period">
+                        <label for="period-select">Thời gian:</label>
+                        <select id="period-select" class="period-select">
+                            <option value="week">7 ngày qua</option>
+                            <option value="month" selected>Tháng này</option>
+                            <option value="quarter">3 tháng gần đây</option>
+                            <option value="year">Năm nay</option>
+                        </select>
+                        <button id="refresh-stats" class="btn btn-outline">
+                            <i class="fas fa-sync-alt"></i> Làm mới
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="stats-cards">
+                    <div class="stat-card card-primary">
+                        <div class="stat-label">Tổng số lượt đặt phòng</div>
+                        <div class="stat-value" id="total-bookings">--</div>
+                        <div class="stat-desc">Trong tháng này</div>
+                    </div>
+                    <div class="stat-card card-success">
+                        <div class="stat-label">Tỉ lệ sử dụng</div>
+                        <div class="stat-value" id="usage-rate">--</div>
+                        <div class="stat-desc">Thời gian sử dụng/khả dụng</div>
+                    </div>
+                    <div class="stat-card card-warning">
+                        <div class="stat-label">Thời gian sử dụng TB</div>
+                        <div class="stat-value" id="avg-time">--</div>
+                        <div class="stat-desc">Trung bình mỗi lượt đặt</div>
+                    </div>
+                    <div class="stat-card card-danger">
+                        <div class="stat-label">Tỉ lệ hủy đặt phòng</div>
+                        <div class="stat-value" id="cancel-rate">--</div>
+                        <div class="stat-desc">Số lượt hủy/tổng đặt</div>
+                    </div>
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-box">
+                        <h4 class="chart-title">Thống kê theo ngày trong tuần</h4>
+                        <div class="chart-container">
+                        <canvas id="day-chart" class="chart-canvas"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-box">
+                        <h4 class="chart-title">Thống kê theo thời gian trong ngày</h4>
+                        <div class="chart-container">
+                        <canvas id="time-chart" class="chart-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Booking history -->
+            <div class="detail-card">
+                <div class="detail-header">
+                    <h3 class="detail-title">Lịch sử đặt phòng</h3>
+                    <button class="btn btn-outline" id="export-history-btn">
+                        <i class="fas fa-download"></i> Xuất báo cáo
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Mã đặt phòng</th>
+                                <th>Người đặt</th>
+                                <th>Thời gian bắt đầu</th>
+                                <th>Thời gian kết thúc</th>
+                                <th>Trạng thái</th>
+                                <th>Mục đích sử dụng</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="booking-history">
+                            <!-- Booking history will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Room Modal -->
+    <div class="modal" id="edit-room-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Chỉnh sửa thông tin phòng</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-room-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="room-name">Tên phòng</label>
+                            <input type="text" class="form-input" id="room-name" placeholder="Nhập tên phòng">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="room-id">Mã phòng</label>
+                            <input type="text" class="form-input" id="room-id" readonly>
+                            <small class="form-help">Mã phòng được tạo tự động</small>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="room-type">Loại phòng</label>
+                        <select class="form-input" id="room-type">
+                            <option value="">Chọn loại phòng</option>
+                            <option value="classroom">Phòng học</option>
+                            <option value="meeting">Phòng họp</option>
+                            <option value="lab">Phòng thí nghiệm</option>
+                            <option value="computer">Phòng máy tính</option>
+                            <option value="lecture">Giảng đường</option>
+                            <option value="study">Không gian học tập</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="room-capacity">Sức chứa</label>
+                            <input type="number" class="form-input" id="room-capacity" placeholder="Số người">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="room-status">Trạng thái</label>
+                            <select class="form-input" id="room-status">
+                                <option value="available">Còn trống</option>
+                                <option value="occupied">Đang sử dụng</option>
+                                <option value="maintenance">Bảo trì</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="room-location">Vị trí</label>
+                        <input type="text" class="form-input" id="room-location" placeholder="Nhập vị trí phòng">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="room-equipment">Thiết bị</label>
+                        <div class="equipment-options">
+                            <div class="equipment-item">
+                                <input type="checkbox" id="projector" name="equipment" value="projector">
+                                <label for="projector">Máy chiếu</label>
+                                <input type="number" class="equipment-count" id="projector-count" min="0" max="10" value="0">
+                            </div>
+                            <div class="equipment-item">
+                                <input type="checkbox" id="computer" name="equipment" value="computer">
+                                <label for="computer">Máy tính</label>
+                                <input type="number" class="equipment-count" id="computer-count" min="0" max="100" value="0">
+                            </div>
+                            <div class="equipment-item">
+                                <input type="checkbox" id="air_conditioner" name="equipment" value="air_conditioner">
+                                <label for="air_conditioner">Điều hòa</label>
+                                <input type="number" class="equipment-count" id="air_conditioner-count" min="0" max="10" value="0">
+                            </div>
+                            <div class="equipment-item">
+                                <input type="checkbox" id="whiteboard" name="equipment" value="whiteboard">
+                                <label for="whiteboard">Bảng</label>
+                                <input type="number" class="equipment-count" id="whiteboard-count" min="0" max="10" value="0">
+                            </div>
+                            <div class="equipment-item">
+                                <input type="checkbox" id="table" name="equipment" value="table">
+                                <label for="table">Bàn</label>
+                                <input type="number" class="equipment-count" id="table-count" min="0" max="50" value="0">
+                            </div>
+                            <div class="equipment-item">
+                                <input type="checkbox" id="chair" name="equipment" value="chair">
+                                <label for="chair">Ghế</label>
+                                <input type="number" class="equipment-count" id="chair-count" min="0" max="500" value="0">
+                            </div>
+                            <div class="equipment-item">
+                                <input type="checkbox" id="sound_system" name="equipment" value="sound_system">
+                                <label for="sound_system">Hệ thống âm thanh</label>
+                                <input type="number" class="equipment-count" id="sound_system-count" min="0" max="5" value="0">
+                            </div>
+                            <div class="equipment-item">
+                                <input type="checkbox" id="wifi" name="equipment" value="wifi">
+                                <label for="wifi">Hệ thống wifi</label>
+                                <input type="number" class="equipment-count" id="wifi-count" min="0" max="5" value="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="room-description">Mô tả</label>
+                        <textarea class="form-input" id="room-description" rows="3" placeholder="Nhập mô tả phòng"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancel-edit-btn">Hủy</button>
+                <button class="btn btn-primary" id="save-room-btn">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Upload Modal -->
+    <div class="modal" id="upload-image-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Tải ảnh phòng mới</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="drop-area" style="border: 2px dashed #dee2e6; border-radius: 10px; padding: 30px; text-align: center; margin-bottom: 20px;">
+                    <p>Kéo và thả hình ảnh vào đây hoặc</p>
+                    <input type="file" id="file-input" accept="image/*" style="display: none;" multiple>
+                    <button class="btn btn-outline" id="file-select-btn">Chọn ảnh từ máy tính</button>
+                </div>
+                <div id="preview-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancel-upload-btn">Hủy</button>
+                <button class="btn btn-primary" id="upload-btn">Tải lên</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Navigation setup
+        document.getElementById('overview-menu-item').addEventListener('click', function() {
+            window.location.href = 'admin-overview.html';
+        });
+        
+        document.getElementById('room-management-menu-item').addEventListener('click', function() {
+            window.location.href = 'admin-room-management.html';
+        });
+        
+        document.getElementById('user-management-menu-item').addEventListener('click', function() {
+            window.location.href = 'admin-user-management.html';
+        });
+
+        document.getElementById('booking-management-menu-item').addEventListener('click', function() {
+            window.location.href = 'admin-booking-management.html';
+        });
+        document.getElementById('notifications-menu-item').addEventListener('click', function() {
+            window.location.href = 'admin-notifications.html';
+        });
+        document.getElementById('statistics-menu-item').addEventListener('click', function() {
+            window.location.href = 'admin-statistics.html';
+        });
+        
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            window.location.href = 'index.html';
+        });
+        
+        // Image change function
+        function changeMainImage(src, thumbElement) {
+            document.getElementById('main-room-image').src = src;
+            
+            // Update active thumbnail
+            document.querySelectorAll('.detail-thumbnail').forEach(thumb => {
+                thumb.classList.remove('active');
+            });
+            thumbElement.classList.add('active');
+        }
+        
+        // Modal functionality
+        const editRoomModal = document.getElementById('edit-room-modal');
+        const uploadImageModal = document.getElementById('upload-image-modal');
+        
+        document.getElementById('edit-room-btn').addEventListener('click', function() {
+            // Make sure the form has the latest data before showing
+            if (roomData && roomData.details) {
+                document.getElementById('room-name').value = roomData.details.room_name || '';
+                document.getElementById('room-id').value = roomData.details.id || '';
+                document.getElementById('room-type').value = roomData.details.room_type || 'meeting';
+                document.getElementById('room-capacity').value = roomData.details.capacity || 0;
+                document.getElementById('room-status').value = roomData.details.status || 'available';
+                document.getElementById('room-location').value = roomData.details.location || '';
+                
+                // Make sure description populates correctly, even if empty
+                const description = roomData.details.description;
+                document.getElementById('room-description').value = description !== null && description !== undefined ? description : '';
+                
+                // Set up equipment checkboxes
+                setupEquipmentCheckboxes(roomData.details.facilities);
+            }
+            
+            // Show the modal
+            editRoomModal.style.display = 'flex';
+        });
+        
+        document.getElementById('upload-image-btn').addEventListener('click', function() {
+            uploadImageModal.style.display = 'flex';
+        });
+        
+        document.querySelectorAll('.modal-close, #cancel-edit-btn, #cancel-upload-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                editRoomModal.style.display = 'none';
+                uploadImageModal.style.display = 'none';
+            });
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === editRoomModal) {
+                editRoomModal.style.display = 'none';
+            }
+            if (event.target === uploadImageModal) {
+                uploadImageModal.style.display = 'none';
+            }
+        });
+        
+        // Setup file upload
+        function setupFileUpload() {
+            const dropArea = document.getElementById('drop-area');
+            const fileInput = document.getElementById('file-input');
+            const fileSelectBtn = document.getElementById('file-select-btn');
+            const previewContainer = document.getElementById('preview-container');
+            const uploadBtn = document.getElementById('upload-btn');
+            
+            if (!dropArea || !fileInput || !fileSelectBtn) {
+                console.warn('File upload elements not found');
+                return;
+            }
+            
+            fileSelectBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // Add highlight on drag over
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.style.borderColor = 'var(--primary-color)';
+            });
+            
+            // Remove highlight when drag leave
+            dropArea.addEventListener('dragleave', () => {
+                dropArea.style.borderColor = '#ccc';
+            });
+            
+            // Handle dropped files
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.style.borderColor = '#ccc';
+                
+                if (e.dataTransfer.files.length) {
+                    handleFiles(e.dataTransfer.files);
+                }
+            });
+            
+            // Handle selected files
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length) {
+                    handleFiles(fileInput.files);
+                }
+            });
+            
+            // Upload images
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', async function() {
+                    if (!previewContainer || previewContainer.children.length === 0) {
+                        alert('Vui lòng chọn ít nhất một ảnh để tải lên!');
+                        return;
+                    }
+                    
+                    const formData = new FormData();
+                    
+                    // Get all files from file input
+                    for (const file of fileInput.files) {
+                        if (file.type.match('image.*')) {
+                            formData.append('images', file);
+                        }
+                    }
+                    
+                    try {
+                        const response = await fetch(`${ENDPOINTS.ROOM}/images`, {
+                            method: 'POST',
+                            credentials: 'include',
+                            body: formData
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Failed to upload images');
+                        }
+                        
+                        // Refresh room details
+                        await fetchRoomDetails();
+                        updateRoomDetails();
+                        
+                        // Close modal
+                        const modal = document.getElementById('upload-image-modal');
+                        if (modal) {
+                            modal.style.display = 'none';
+                        }
+                        
+                        // Clear preview container
+                        previewContainer.innerHTML = '';
+                        
+                        alert('Ảnh đã được tải lên thành công!');
+                    } catch (error) {
+                        console.error('Error uploading images:', error);
+                        alert(`Lỗi khi tải ảnh lên: ${error.message}`);
+                    }
+                });
+            } else {
+                console.warn('Upload button not found');
+            }
+        }
+        
+        // Delete room confirmation
+        document.getElementById('delete-room-btn').addEventListener('click', function() {
+            if (confirm('Bạn có chắc chắn muốn xóa phòng này? Hành động này không thể hoàn tác.')) {
+                deleteRoom(roomData.details.id);
+            }
+        });
+        
+        // Change room status
+        document.getElementById('change-status-btn').addEventListener('click', function() {
+            toggleRoomStatus(roomData.details.id, roomData.details.status);
+        });
+        
+        // Get room ID from URL
+        const roomId = new URLSearchParams(window.location.search).get('id');
+        
+        if (!roomId) {
+            alert('Không tìm thấy ID phòng, chuyển về trang quản lý phòng');
+            window.location.href = 'admin-room-management.html';
+        }
+        
+        // State management for room data
+        let roomData = {
+            details: {},
+            stats: {},
+            bookingHistory: []
+        };
+        
+        // API endpoints
+        const API_BASE_URL = '/api';
+        const ENDPOINTS = {
+            ROOMS: `${API_BASE_URL}/rooms`,
+            ROOM_DETAIL: `${API_BASE_URL}/rooms/${roomId}`,
+            ROOM_STATS: `${API_BASE_URL}/dashboard/room/${roomId}`,
+            ROOM_BOOKINGS: `${API_BASE_URL}/bookings/room/${roomId}`
+        };
+        
+        // For development without a proper backend
+        const USE_SAMPLE_DATA = false; // Change to false when you have a working backend
+        
+        // Charts
+        let dayChart, timeChart;
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Show loading indicators
+            showLoading();
+            
+            // Set up equipment checkbox handlers
+            setupEquipmentHandlers();
+            
+            // Initialize Charts
+            initializeCharts();
+            
+            try {
+                // Load room data
+                await fetchRoomDetails();
+                try {
+                    await fetchRoomStats();
+                } catch (statsError) {
+                    console.error("Error loading stats:", statsError);
+                    // Just log the error but continue with room details
+                }
+                
+                // Update UI with fetched data
+                updateRoomDetails();
+                
+                // Only update stats if we have data
+                if (roomData.stats && roomData.stats.bookingStats) {
+                    updateRoomStats();
+                    renderBookingHistory();
+                } else {
+                    // Show placeholder data for stats
+                    showPlaceholderStats();
+                }
+                
+                // Hide loading indicators
+                hideLoading();
+            } catch (error) {
+                console.error("Error loading data:", error);
+                // Handle the error in the UI
+                handleError(error);
+                hideLoading();
+            }
+            
+            // Event listeners for period selection
+            document.getElementById('period-select').addEventListener('change', async function() {
+                try {
+                    showStatsLoading();
+                    await fetchRoomStats();
+                    updateRoomStats();
+                    hideStatsLoading();
+                } catch (error) {
+                    console.error("Error refreshing stats:", error);
+                    alert("Không thể cập nhật dữ liệu thống kê");
+                    hideStatsLoading();
+                    showPlaceholderStats();
+                }
+            });
+            
+            document.getElementById('refresh-stats').addEventListener('click', async function() {
+                try {
+                    showStatsLoading();
+                    await fetchRoomStats();
+                    updateRoomStats();
+                    hideStatsLoading();
+                } catch (error) {
+                    console.error("Error refreshing stats:", error);
+                    alert("Không thể cập nhật dữ liệu thống kê");
+                    hideStatsLoading();
+                    showPlaceholderStats();
+                }
+            });
+            
+            // Export history button
+            document.getElementById('export-history-btn').addEventListener('click', function() {
+                exportBookingHistory();
+            });
+            
+            // Save room button
+            document.getElementById('save-room-btn').addEventListener('click', function() {
+                updateRoomInfo();
+            });
+        });
+        
+        // Setup equipment checkbox handlers
+        function setupEquipmentHandlers() {
+            // Equipment checkbox event listeners
+            document.querySelectorAll('input[name="equipment"]').forEach(checkbox => {
+                const countInput = document.getElementById(`${checkbox.value}-count`);
+                
+                // Enable/disable count input based on checkbox
+                checkbox.addEventListener('change', function() {
+                    countInput.disabled = !this.checked;
+                    if (!this.checked) {
+                        countInput.value = 0;
+                    } else {
+                        countInput.value = 1;
+                    }
+                });
+                
+                // Initially disable count inputs
+                countInput.disabled = !checkbox.checked;
+            });
+        }
+        
+        // Show loading indicators
+        function showLoading() {
+            // Add loading indicators to the page
+            const detailContainer = document.querySelector('.detail-container');
+            if (detailContainer) {
+                // Save the current content instead of replacing it
+                const originalContent = detailContainer.innerHTML;
+                
+                // Create a loading element and add it
+                const loadingEl = document.createElement('div');
+                loadingEl.className = 'loading-spinner main-loading';
+                loadingEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...';
+                loadingEl.style.position = 'absolute';
+                loadingEl.style.top = '50%';
+                loadingEl.style.left = '50%';
+                loadingEl.style.transform = 'translate(-50%, -50%)';
+                loadingEl.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+                loadingEl.style.padding = '20px';
+                loadingEl.style.borderRadius = '5px';
+                loadingEl.style.zIndex = '10';
+                
+                // Make sure the container has position relative for absolute positioning
+                if (getComputedStyle(detailContainer).position === 'static') {
+                    detailContainer.style.position = 'relative';
+                }
+                
+                detailContainer.appendChild(loadingEl);
+                
+                // Store original content to restore if needed
+                detailContainer.dataset.originalContent = originalContent;
+            } else {
+                console.error("Could not find detail container for adding loader");
+            }
+        }
+        
+        // Show loading indicators for stats only
+        function showStatsLoading() {
+            const statsSection = document.querySelector('.stats-section');
+            if (statsSection) {
+                const loadingEl = document.createElement('div');
+                loadingEl.className = 'loading-spinner stats-loading';
+                loadingEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...';
+                loadingEl.style.position = 'absolute';
+                loadingEl.style.top = '50%';
+                loadingEl.style.left = '50%';
+                loadingEl.style.transform = 'translate(-50%, -50%)';
+                loadingEl.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+                loadingEl.style.padding = '20px';
+                loadingEl.style.borderRadius = '5px';
+                loadingEl.style.zIndex = '10';
+                
+                statsSection.style.position = 'relative';
+                statsSection.appendChild(loadingEl);
+            }
+        }
+        
+        // Hide loading indicators
+        function hideLoading() {
+            const mainLoading = document.querySelector('.main-loading');
+            if (mainLoading) {
+                mainLoading.remove();
+            }
+        }
+        
+        // Hide stats loading indicators
+        function hideStatsLoading() {
+            const statsLoading = document.querySelector('.stats-loading');
+            if (statsLoading) {
+                statsLoading.remove();
+            }
+        }
+        
+        // Handle errors
+        function handleError(error) {
+            const contentContainer = document.querySelector('.content-container');
+            if (contentContainer) {
+                contentContainer.innerHTML = `
+                    <div class="error-container" style="text-align: center; padding: 40px; background-color: #f8f9fa; border-radius: 8px; margin: 20px auto; max-width: 600px;">
+                        <div class="error-icon" style="font-size: 48px; color: #dc3545; margin-bottom: 20px;"><i class="fas fa-exclamation-triangle"></i></div>
+                        <h3 style="margin-bottom: 15px; color: #343a40;">Không thể tải dữ liệu phòng</h3>
+                        <p style="margin-bottom: 20px; color: #6c757d;">${error.message || 'Đã xảy ra lỗi khi tải dữ liệu phòng.'}</p>
+                        <a href="admin-room-management.html" class="btn btn-primary" style="display: inline-block; padding: 10px 20px; background-color: #4e73df; color: white; text-decoration: none; border-radius: 5px;">
+                            <i class="fas fa-arrow-left"></i> Quay lại danh sách phòng
+                        </a>
+                    </div>
+                `;
+            }
+        }
+        
+        // Initialize charts with empty data
+        function initializeCharts() {
+            const dayChartEl = document.getElementById('day-chart');
+            const timeChartEl = document.getElementById('time-chart');
+            
+            if (!dayChartEl || !timeChartEl) {
+                console.error("Chart elements not found in the DOM");
+                return;
+            }
+            
+            try {
+                const dayCtx = dayChartEl.getContext('2d');
+            dayChart = new Chart(dayCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'],
+                    datasets: [{
+                        label: 'Số lượt đặt phòng',
+                        data: [0, 0, 0, 0, 0, 0, 0],
+                        backgroundColor: 'rgba(78, 115, 223, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+            
+                const timeCtx = timeChartEl.getContext('2d');
+            timeChart = new Chart(timeCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Buổi sáng (6h-12h)', 'Buổi chiều (12h-18h)', 'Buổi tối (18h-24h)'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: [
+                            'rgba(78, 115, 223, 0.8)',
+                            'rgba(28, 200, 138, 0.8)',
+                            'rgba(246, 194, 62, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Error initializing charts:", error);
+            }
+        }
+        
+        // Fetch room details
+        async function fetchRoomDetails() {
+            try {
+                console.log('Fetching room details for ID:', roomId);
+                console.log('Using endpoint:', ENDPOINTS.ROOM_DETAIL);
+                
+                const response = await fetch(ENDPOINTS.ROOM_DETAIL, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+            
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = 'login.html';
+                        throw new Error('Phiên đăng nhập hết hạn');
+                    }
+                    
+                    throw new Error('Không thể tải thông tin phòng');
+                }
+            
+                roomData.details = await response.json();
+                console.log('Received room data from API:', roomData.details);
+                console.log('Direct description value:', roomData.details.description, 'Type:', typeof roomData.details.description);
+                
+                // Check if the description exists but might be empty
+                if (roomData.details.hasOwnProperty('description')) {
+                    console.log('Found description field in API response:', roomData.details.description);
+                } else {
+                    console.warn('Description field is missing in API response, available fields:', Object.keys(roomData.details));
+                }
+                return roomData.details;
+            } catch (error) {
+                console.error('Error fetching room details:', error);
+                throw error;
+            }
+        }
+        
+        // Fetch room statistics
+        async function fetchRoomStats() {
+            try {
+                const period = document.getElementById('period-select').value;
+                console.log('Fetching room stats with period:', period);
+                console.log('Using endpoint:', `${ENDPOINTS.ROOM_STATS}?period=${period}`);
+                
+                const response = await fetch(`${ENDPOINTS.ROOM_STATS}?period=${period}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+            
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = 'login.html';
+                        console.error('Phiên đăng nhập hết hạn');
+                        return null;
+                    }
+                    
+                    console.error(`API Error: ${response.status} ${response.statusText}`);
+                    roomData.stats = { bookingStats: null };
+                    return null;
+                }
+            
+                roomData.stats = await response.json();
+                console.log('Received stats data:', roomData.stats);
+            
+                // Update booking history from the stats data
+                if (roomData.stats.recentBookings) {
+                    roomData.bookingHistory = roomData.stats.recentBookings;
+                }
+            
+                return roomData.stats;
+            } catch (error) {
+                console.error('Error fetching room stats:', error);
+                // Set empty stats data rather than throwing error
+                roomData.stats = { bookingStats: null };
+                return null;
+            }
+        }
+        
+        // Get translated equipment names
+        function getEquipmentName(key) {
+            const equipmentMap = {
+                'projector': 'Máy chiếu',
+                'computer': 'Máy tính',
+                'air_conditioner': 'Điều hòa',
+                'whiteboard': 'Bảng',
+                'table': 'Bàn',
+                'chair': 'Ghế',
+                'sound_system': 'Hệ thống âm thanh',
+                'wifi': 'Hệ thống wifi',
+                'microphone': 'Micro',
+                'speaker': 'Loa',
+                'screen': 'Màn hình',
+                'camera': 'Camera'
+            };
+            
+            return equipmentMap[key] || key;
+        }
+        
+        // Function to update the room details in the UI
+        function updateRoomDetails() {
+            console.log('Updating room details in UI with data:', roomData.details);
+            
+            if (!roomData.details) {
+                console.error('No room data available to update UI');
+                return;
+            }
+            
+            const room = roomData.details;
+            
+            // DEBUG: Check description field directly from roomData.details
+            console.log('DESCRIPTION DEBUG LOG:');
+            console.log('- Description value:', room.description);
+            console.log('- Description type:', typeof room.description);
+            console.log('- Is null?', room.description === null);
+            console.log('- Is undefined?', room.description === undefined);
+            console.log('- Is empty string?', room.description === '');
+            console.log('- Length:', room.description ? room.description.length : 'N/A');
+            
+            // Update page title
+            document.title = `${room.room_name} - Admin Dashboard`;
+            
+            try {
+                // Update room images
+                // if (room.image_url) {
+                //     document.getElementById('main-room-image').src = room.image_url;
+                //     console.log('Set main image to:', room.image_url);
+                    
+                //     // Update thumbnails if there are multiple images
+                //     // const thumbnailContainer = document.querySelector('.detail-thumbnails');
+                //     // if (thumbnailContainer) {
+                //     //     thumbnailContainer.innerHTML = '';
+                        
+                //     //     // Add main image as first thumbnail
+                //     //     const mainThumb = document.createElement('img');
+                //     //     mainThumb.src = room.image_url;
+                //     //     mainThumb.alt = room.room_name;
+                //     //     mainThumb.className = 'detail-thumbnail active';
+                //     //     mainThumb.onclick = function() {
+                //     //         changeMainImage(room.image_url, this);
+                //     //     };
+                //     //     thumbnailContainer.appendChild(mainThumb);
+                        
+                //     //     // Add additional images if available
+                //     //     if (room.additional_images && Array.isArray(room.additional_images)) {
+                //     //         room.additional_images.forEach(imgUrl => {
+                //     //             const thumb = document.createElement('img');
+                //     //             thumb.src = imgUrl;
+                //     //             thumb.alt = room.room_name;
+                //     //             thumb.className = 'detail-thumbnail';
+                //     //             thumb.onclick = function() {
+                //     //                 changeMainImage(imgUrl, this);
+                //     //             };
+                //     //             thumbnailContainer.appendChild(thumb);
+                //     //         });
+                //     //     }
+                //     // }
+                // } else {
+                //     console.warn('No image URL found in room data');
+                // }
+                
+                // Update room header info
+                const detailTitle = document.querySelector('.detail-title');
+                if (detailTitle) {
+                    detailTitle.textContent = room.room_name || 'Chi tiết phòng';
+                    console.log('Set title to:', room.room_name);
+                } else {
+                    console.warn('Could not find .detail-title element');
+                }
+            
+            // Update room status
+                const statusElement = document.querySelector('.status');
+                if (statusElement) {
+                    statusElement.className = 'status';
+            
+            switch (room.status) {
+                case 'available':
+                            statusElement.classList.add('status-available');
+                            statusElement.textContent = 'Còn trống';
+                    break;
+                case 'occupied':
+                        case 'in_use':
+                            statusElement.classList.add('status-occupied');
+                            statusElement.textContent = 'Đang sử dụng';
+                    break;
+                case 'maintenance':
+                            statusElement.classList.add('status-maintenance');
+                            statusElement.textContent = 'Bảo trì';
+                    break;
+                default:
+                            statusElement.classList.add('status-maintenance');
+                            statusElement.textContent = room.status || 'Không xác định';
+                    }
+                    console.log('Set status to:', room.status);
+                } else {
+                    console.warn('Could not find .status element');
+                }
+                
+                // Update basic information
+                document.getElementById('location-value').textContent = room.location || 'N/A';
+                document.getElementById('capacity-value').textContent = room.capacity ? `${room.capacity} người` : 'N/A';
+                
+                // Get room type display name
+                let roomTypeName = 'N/A';
+                switch(room.room_type) {
+                    case 'meeting':
+                        roomTypeName = 'Phòng họp';
+                        break;
+                    case 'classroom':
+                        roomTypeName = 'Phòng học';
+                        break;
+                    case 'conference':
+                        roomTypeName = 'Phòng hội nghị';
+                        break;
+                    case 'lab':
+                        roomTypeName = 'Phòng thí nghiệm';
+                        break;
+                    case 'computer':
+                        roomTypeName = 'Phòng máy tính';
+                        break;
+                    case 'lecture':
+                        roomTypeName = 'Giảng đường';
+                        break; 
+                    case 'study':
+                        roomTypeName = 'Không gian học tập';
+                        break;
+                    default:
+                        roomTypeName = room.room_type || 'N/A';
+                }
+                document.getElementById('room-type-value').textContent = roomTypeName;
+                
+                // Format update date
+                const updateDate = room.updated_at ? formatDate(room.updated_at) : 'N/A';
+                document.getElementById('update-date-value').textContent = updateDate;
+                
+                console.log('Updated basic information');
+                
+                // Update equipment/facilities list
+                const facilitiesList = document.getElementById('equipment-list');
+                if (facilitiesList) {
+                    facilitiesList.innerHTML = '';
+                    
+                    let facilitiesArray = [];
+                    
+            if (room.facilities) {
+                        console.log('Facilities data type:', typeof room.facilities);
+                        
+                        try {
+                            // Parse facilities into an array of objects with name and count
+                            if (typeof room.facilities === 'string') {
+                                try {
+                                    // Try to parse as JSON first
+                                    const parsedFacilities = JSON.parse(room.facilities);
+                                    
+                                    if (Array.isArray(parsedFacilities)) {
+                                        // If it's an array, assume it's just names
+                                        facilitiesArray = parsedFacilities.map(item => {
+                                            return { name: item, count: 1 };
+                                        });
+                                    } else if (typeof parsedFacilities === 'object') {
+                                        // If it's an object, it's key-value pairs for name and count
+                                        facilitiesArray = [];
+                                        for (const [key, value] of Object.entries(parsedFacilities)) {
+                                            if (value && value > 0) {
+                                                facilitiesArray.push({ 
+                                                    name: key, 
+                                                    count: value 
+                                                });
+                                            }
+                                        }
+                                    }
+                                } catch (parseError) {
+                                    console.log('Facilities not in JSON format, using comma split:', parseError);
+                                    // If parsing fails, split by comma and extract name and count if possible
+                                    facilitiesArray = room.facilities.split(',')
+                                        .map(item => item.trim())
+                                        .filter(item => item)
+                                        .map(item => {
+                                            // Try to extract count (e.g., "Máy chiếu x2" -> name: "Máy chiếu", count: 2)
+                                            const match = item.match(/(.+)\s*x\s*(\d+)/);
+                                            if (match) {
+                                                return { name: match[1].trim(), count: parseInt(match[2]) };
+                                            }
+                                            return { name: item, count: 1 };
+                                        });
+                                }
+                            } else if (Array.isArray(room.facilities)) {
+                                // If it's already an array, assume it's just names
+                                facilitiesArray = room.facilities.map(item => {
+                                    return { name: item, count: 1 };
+                                });
+                            } else if (typeof room.facilities === 'object' && room.facilities !== null) {
+                                // If it's an object, it's key-value pairs for name and count
+                                facilitiesArray = [];
+                                for (const [key, value] of Object.entries(room.facilities)) {
+                                    if (value && value > 0) {
+                                        facilitiesArray.push({ 
+                                            name: key, 
+                                            count: value 
+                                        });
+                                    }
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error processing facilities:', error);
+                            
+                            // Fallback to string if available
+                            if (typeof room.facilities === 'string') {
+                                facilitiesArray = room.facilities.split(',')
+                                    .map(item => item.trim())
+                                    .filter(item => item)
+                                    .map(item => ({ name: item, count: 1 }));
+                            }
+                        }
+                    }
+                    
+                    console.log('Processed facilities:', facilitiesArray);
+                    
+                    if (!facilitiesArray || facilitiesArray.length === 0) {
+                        const li = document.createElement('li');
+                        li.textContent = 'Không có thông tin về trang thiết bị';
+                        facilitiesList.appendChild(li);
+                    } else {
+                        facilitiesArray.forEach(facility => {
+                            if (facility && facility.name) {
+                                const li = document.createElement('li');
+                                // Translate equipment name if needed and format display
+                                const translatedName = getEquipmentName(facility.name);
+                                if (facility.count && facility.count > 1) {
+                                    li.textContent = `${translatedName} x${facility.count}`;
+                                } else {
+                                    li.textContent = translatedName;
+                                }
+                                facilitiesList.appendChild(li);
+                            }
+                        });
+                    }
+                    
+                    console.log('Updated facilities list');
+                } else {
+                    console.warn('Could not find facilities list element');
+                }
+                
+                // Update description
+                const descriptionP = document.getElementById('room-description-text');
+                if (descriptionP) {
+                    // FORCE DISPLAY: Set description directly from room.description with no transformations
+                    if (room.description !== undefined && room.description !== null) {
+                        // Use the raw value exactly as it comes from the database
+                        descriptionP.textContent = room.description;
+                        console.log('FORCE SET description to:', room.description);
+                    } else {
+                        descriptionP.textContent = 'Không có mô tả';
+                        console.log('FORCE SET to default text because description is null/undefined');
+                    }
+                } else {
+                    console.warn('Could not find description element');
+                }
+                
+                // Populate edit form for equipment
+                setupEquipmentCheckboxes(room.facilities);
+                
+                // Populate other form fields
+                document.getElementById('room-name').value = room.room_name || '';
+                document.getElementById('room-id').value = room.id || '';
+                document.getElementById('room-type').value = room.room_type || '';
+                document.getElementById('room-capacity').value = room.capacity || 0;
+                document.getElementById('room-status').value = room.status || 'available';
+                document.getElementById('room-location').value = room.location || '';
+                document.getElementById('room-description').value = room.description || '';
+                
+                console.log('Populated edit form');
+                
+            } catch (error) {
+                console.error('Error updating room details in UI:', error);
+                alert('Đã xảy ra lỗi khi hiển thị thông tin phòng. Vui lòng tải lại trang.');
+            }
+        }
+        
+        // Function to set up equipment checkboxes based on room data
+        function setupEquipmentCheckboxes(facilities) {
+            // Reset all checkboxes first
+            const checkboxes = document.querySelectorAll('input[name="equipment"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                const countInput = document.getElementById(`${checkbox.value}-count`);
+                if (countInput) {
+                    countInput.value = "1";
+                    countInput.disabled = true;
+                }
+            });
+
+            if (!facilities) return;
+            
+            let equipmentData = {};
+            
+            try {
+                // Parse facilities if it's a string
+                if (typeof facilities === 'string') {
+                    try {
+                        const parsed = JSON.parse(facilities);
+                        if (typeof parsed === 'object' && parsed !== null) {
+                            equipmentData = parsed;
+                        }
+                    } catch (e) {
+                        // Try to parse comma-separated format
+                        const items = facilities.split(',').map(item => item.trim());
+                        items.forEach(item => {
+                            const parts = item.split(':').map(part => part.trim());
+                            if (parts.length === 2) {
+                                const [key, value] = parts;
+                                equipmentData[key] = parseInt(value) || 1;
+                            } else if (parts.length === 1 && parts[0]) {
+                                equipmentData[parts[0]] = 1;
+                            }
+                        });
+                    }
+                } else if (typeof facilities === 'object' && facilities !== null) {
+                    equipmentData = facilities;
+                }
+                
+                // Set checkboxes based on equipment data
+                for (const [equipment, count] of Object.entries(equipmentData)) {
+                    if (count && count > 0) {
+                        // Find the checkbox with matching value attribute
+                        const checkbox = document.querySelector(`input[name="equipment"][value="${equipment}"]`);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            const countInput = document.getElementById(`${checkbox.value}-count`);
+                            if (countInput) {
+                                countInput.value = count;
+                                countInput.disabled = false;
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error setting up equipment checkboxes:', error);
+            }
+        }
+        
+        // Get equipment data from checkboxes
+        function getEquipmentData() {
+            let equipment = {};
+            
+            // Loop through all equipment checkboxes
+            document.querySelectorAll('input[name="equipment"]').forEach(checkbox => {
+                if (checkbox.checked) {
+                    const countInput = document.getElementById(`${checkbox.value}-count`);
+                    const count = parseInt(countInput.value) || 1;
+                    equipment[checkbox.value] = count;
+                }
+            });
+            
+            return equipment;
+        }
+        
+        // Helper function to get equipment translation map
+        function getEquipmentMap() {
+            return {
+                'projector': 'Máy chiếu',
+                'computer': 'Máy tính',
+                'air_conditioner': 'Điều hòa',
+                'whiteboard': 'Bảng',
+                'table': 'Bàn',
+                'chair': 'Ghế',
+                'sound_system': 'Hệ thống âm thanh',
+                'wifi': 'Hệ thống wifi',
+                'microphone': 'Micro',
+                'speaker': 'Loa',
+                'screen': 'Màn hình',
+                'camera': 'Camera'
+            };
+        }
+        
+        // Update statistics in the UI
+        function updateRoomStats() {
+            if (!roomData.stats || !roomData.stats.bookingStats) {
+                // Handle missing stats data
+                document.getElementById('total-bookings').textContent = '0';
+                document.getElementById('usage-rate').textContent = '0%';
+                document.getElementById('avg-time').textContent = '0h';
+                document.getElementById('cancel-rate').textContent = '0%';
+                return;
+            }
+            
+            const stats = roomData.stats.bookingStats;
+            
+            // Update stat cards
+            document.getElementById('total-bookings').textContent = stats.totalBookings || '0';
+            document.getElementById('usage-rate').textContent = `${stats.usageRate || '0'}%`;
+            document.getElementById('avg-time').textContent = `${Math.round((stats.avgUsageTime || 0) / 60)}h`;
+            
+            const cancelRate = stats.statusCount && stats.statusCount.total > 0 ? 
+                Math.round((stats.statusCount.cancelled / stats.statusCount.total) * 100) : 0;
+            document.getElementById('cancel-rate').textContent = `${cancelRate}%`;
+            
+            // Update charts
+            if (stats.bookingsByDayOfWeek && dayChart) {
+                const dayData = stats.bookingsByDayOfWeek.map(day => day.count);
+                dayChart.data.datasets[0].data = dayData;
+                dayChart.update();
+            }
+            
+            if (stats.bookingsByTimeOfDay && timeChart) {
+                const timeData = stats.bookingsByTimeOfDay.map(slot => slot.count);
+                timeChart.data.datasets[0].data = timeData;
+                timeChart.update();
+            }
+        }
+        
+        // Render booking history
+        function renderBookingHistory() {
+            const tableBody = document.getElementById('booking-history');
+            if (!tableBody) return;
+            
+            tableBody.innerHTML = '';
+            
+            const bookings = roomData.bookingHistory || [];
+            
+            if (bookings.length === 0) {
+                const emptyRow = document.createElement('tr');
+                const emptyCell = document.createElement('td');
+                emptyCell.colSpan = 7;
+                emptyCell.textContent = 'Không có lịch sử đặt phòng';
+                emptyCell.style.textAlign = 'center';
+                emptyRow.appendChild(emptyCell);
+                tableBody.appendChild(emptyRow);
+                return;
+            }
+            
+            bookings.forEach(booking => {
+                const row = document.createElement('tr');
+                
+                const idCell = document.createElement('td');
+                idCell.textContent = booking.id;
+                
+                const userCell = document.createElement('td');
+                userCell.textContent = booking.user || booking.user_name || 'N/A';
+                
+                const startTimeCell = document.createElement('td');
+                startTimeCell.textContent = `${booking.date || booking.booking_date || ''} ${booking.start_time || ''}`;
+                
+                const endTimeCell = document.createElement('td');
+                endTimeCell.textContent = `${booking.date || booking.booking_date || ''} ${booking.end_time || ''}`;
+                
+                const statusCell = document.createElement('td');
+                const statusSpan = document.createElement('span');
+                statusSpan.className = 'status';
+                
+                if (booking.status === 'completed') {
+                    statusSpan.classList.add('status-available');
+                    statusSpan.textContent = 'Đã hoàn thành';
+                } else if (booking.status === 'cancelled') {
+                    statusSpan.classList.add('status-occupied');
+                    statusSpan.textContent = 'Đã hủy';
+                } else if (booking.status === 'in_use') {
+                    statusSpan.classList.add('status-maintenance');
+                    statusSpan.textContent = 'Đang sử dụng';
+                } else if (booking.status === 'confirmed') {
+                    statusSpan.classList.add('status-maintenance');
+                    statusSpan.textContent = 'Đã xác nhận';
+                } else {
+                    statusSpan.classList.add('status-maintenance');
+                    statusSpan.textContent = 'Chờ xác nhận';
+                }
+                
+                statusCell.appendChild(statusSpan);
+                
+                const purposeCell = document.createElement('td');
+                purposeCell.textContent = booking.purpose || 'N/A';
+                
+                const actionsCell = document.createElement('td');
+                
+                if (['pending', 'confirmed'].includes(booking.status)) {
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'btn btn-danger btn-sm';
+                    cancelBtn.innerHTML = '<i class="fas fa-times"></i> Hủy';
+                    cancelBtn.style.marginRight = '5px';
+                    cancelBtn.addEventListener('click', function() {
+                        if (confirm(`Bạn có chắc chắn muốn hủy đặt phòng ${booking.id}?`)) {
+                            cancelBooking(booking.id);
+                        }
+                    });
+                    
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'btn btn-outline btn-sm';
+                    editBtn.innerHTML = '<i class="fas fa-edit"></i> Sửa';
+                    editBtn.addEventListener('click', function() {
+                        // Redirect to booking edit page
+                        window.location.href = `admin-booking-edit.html?id=${booking.id}`;
+                    });
+                    
+                    actionsCell.appendChild(cancelBtn);
+                    actionsCell.appendChild(editBtn);
+                } else {
+                    const viewBtn = document.createElement('button');
+                    viewBtn.className = 'btn btn-outline btn-sm';
+                    viewBtn.innerHTML = '<i class="fas fa-eye"></i> Xem';
+                    viewBtn.addEventListener('click', function() {
+                        // Redirect to booking details page
+                        window.location.href = `admin-booking-details.html?id=${booking.id}`;
+                    });
+                    
+                    actionsCell.appendChild(viewBtn);
+                }
+                
+                row.appendChild(idCell);
+                row.appendChild(userCell);
+                row.appendChild(startTimeCell);
+                row.appendChild(endTimeCell);
+                row.appendChild(statusCell);
+                row.appendChild(purposeCell);
+                row.appendChild(actionsCell);
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Export booking history to CSV
+        function exportBookingHistory() {
+            const bookings = roomData.bookingHistory || [];
+            
+            if (bookings.length === 0) {
+                alert('Không có dữ liệu để xuất');
+                return;
+            }
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            // Add headers
+            csvContent += "ID,Người đặt,Thời gian bắt đầu,Thời gian kết thúc,Trạng thái,Mục đích\n";
+            
+            // Add rows
+            bookings.forEach(booking => {
+                const status = getStatusText(booking.status);
+                const row = [
+                    booking.id,
+                    booking.user || booking.user_name || '',
+                    `${booking.date || booking.booking_date || ''} ${booking.start_time || ''}`,
+                    `${booking.date || booking.booking_date || ''} ${booking.end_time || ''}`,
+                    status,
+                    booking.purpose || ''
+                ];
+                
+                // Escape fields that might contain commas
+                const escapedRow = row.map(field => {
+                    if (typeof field === 'string' && (field.includes(',') || field.includes('"') || field.includes('\n'))) {
+                        return `"${field.replace(/"/g, '""')}"`;
+                    }
+                    return field;
+                });
+                
+                csvContent += escapedRow.join(',') + '\n';
+            });
+            
+            // Create download link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `bookings-${roomData.details.room_name}-${formatDate(new Date())}.csv`);
+            document.body.appendChild(link);
+            
+            // Trigger download
+            link.click();
+            
+            // Clean up
+            document.body.removeChild(link);
+        }
+        
+        // Get status text from status code
+        function getStatusText(status) {
+            switch (status) {
+                case 'completed': return 'Đã hoàn thành';
+                case 'cancelled': return 'Đã hủy';
+                case 'in_use': return 'Đang sử dụng';
+                case 'confirmed': return 'Đã xác nhận';
+                case 'pending': return 'Chờ xác nhận';
+                default: return status;
+            }
+        }
+        
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString;
+            
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            
+            return `${day}/${month}/${year}`;
+        }
+        
+        // Cancel a booking
+        async function cancelBooking(bookingId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Không thể hủy đặt phòng');
+                }
+                
+                alert('Đã hủy đặt phòng thành công');
+                
+                // Refresh data
+                await fetchRoomStats();
+                renderBookingHistory();
+            } catch (error) {
+                console.error('Error cancelling booking:', error);
+                alert(`Lỗi: ${error.message}`);
+            }
+        }
+        
+        // Update room information
+        async function updateRoomInfo() {
+            // Get form values
+            const roomName = document.getElementById('room-name').value.trim();
+            const roomType = document.getElementById('room-type').value;
+            const capacityInput = document.getElementById('room-capacity').value;
+            const location = document.getElementById('room-location').value.trim();
+            const status = document.getElementById('room-status').value;
+            const description = document.getElementById('room-description').value.trim();
+            
+            // Parse and clean capacity input
+            const capacity = parseInt(capacityInput) || 0;
+            
+            // Get equipment data from checkboxes
+            const facilities = getEquipmentData();
+            
+            // Prepare room data
+            const roomData = {
+                room_name: roomName,
+                room_type: roomType,
+                capacity: capacity,
+                location: location,
+                status: status,
+                description: description,
+                facilities: facilities
+            };
+            
+            // Validate form data
+            if (!roomData.room_name) {
+                alert('Vui lòng nhập tên phòng!');
+                document.getElementById('room-name').focus();
+                return;
+            }
+            
+            if (!roomData.room_type) {
+                alert('Vui lòng chọn loại phòng!');
+                document.getElementById('room-type').focus();
+                return;
+            }
+            
+            if (!roomData.location) {
+                alert('Vui lòng nhập vị trí phòng!');
+                document.getElementById('room-location').focus();
+                return;
+            }
+            
+            try {
+                // Show loading indicator
+                const updateBtn = document.getElementById('save-room-btn');
+                const originalBtnText = updateBtn.innerHTML;
+                updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang cập nhật...';
+                updateBtn.disabled = true;
+                
+                // Send API request
+                const response = await fetch(`${ENDPOINTS.ROOMS}/${roomId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(roomData)
+                });
+                
+                // Reset button
+                updateBtn.innerHTML = originalBtnText;
+                updateBtn.disabled = false;
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.message || 'Không thể cập nhật thông tin phòng');
+                }
+                
+                alert('Phòng đã được cập nhật thành công!');
+                
+                // Close modal
+                document.getElementById('edit-room-modal').style.display = 'none';
+                
+                // Refresh room data
+                await fetchRoomDetails();
+                updateRoomDetails();
+            } catch (error) {
+                console.error('Error updating room:', error);
+                alert(`Lỗi khi cập nhật phòng: ${error.message}`);
+            }
+        }
+
+        // Toggle room status (available/maintenance)
+        async function toggleRoomStatus(roomId, currentStatus) {
+            // Determine new status
+            let newStatus = 'available';
+            if (currentStatus === 'available') {
+                newStatus = 'maintenance';
+            }
+            
+            try {
+                const response = await fetch(`${ENDPOINTS.ROOMS}/${roomId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Không thể cập nhật trạng thái phòng');
+                }
+                
+                alert(`Đã chuyển trạng thái phòng thành ${newStatus === 'available' ? 'còn trống' : 'bảo trì'}`);
+                
+                // Refresh room data
+                await fetchRoomDetails();
+            updateRoomDetails();
+            } catch (error) {
+                console.error('Error updating room status:', error);
+                alert(`Lỗi khi cập nhật trạng thái phòng: ${error.message}`);
+            }
+        }
+        
+        // Delete room
+        async function deleteRoom(roomId) {
+            try {
+                const response = await fetch(`${ENDPOINTS.ROOMS}/${roomId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Không thể xóa phòng');
+                }
+                
+                alert('Phòng đã được xóa thành công!');
+                window.location.href = 'admin-room-management.html';
+            } catch (error) {
+                console.error('Error deleting room:', error);
+                alert(`Lỗi khi xóa phòng: ${error.message}`);
+            }
+        }
+
+        // Show placeholder stats when real stats cannot be loaded
+        function showPlaceholderStats() {
+            // Update stats cards with placeholder values
+            document.getElementById('total-bookings').textContent = '0';
+            document.getElementById('usage-rate').textContent = '0%';
+            document.getElementById('avg-time').textContent = '0h';
+            document.getElementById('cancel-rate').textContent = '0%';
+            
+            // Reset charts to show empty data
+            if (dayChart) {
+                dayChart.data.datasets[0].data = [0, 0, 0, 0, 0, 0, 0];
+                dayChart.update();
+            }
+            
+            if (timeChart) {
+                timeChart.data.datasets[0].data = [0, 0, 0];
+                timeChart.update();
+            }
+            
+            // Show message in booking history table
+            const tableBody = document.getElementById('booking-history');
+            if (tableBody) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 20px;">
+                            <i class="fas fa-info-circle" style="color: #6c757d; margin-right: 5px;"></i>
+                            Không có dữ liệu thống kê và lịch sử đặt phòng
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Process files and generate previews
+        function handleFiles(files) {
+            const previewContainer = document.getElementById('preview-container');
+            if (!previewContainer) {
+                console.error('Preview container not found');
+                return;
+            }
+            
+            previewContainer.innerHTML = '';
+            
+            for (const file of files) {
+                if (!file.type.match('image.*')) continue;
+                
+                const reader = new FileReader();
+                const preview = document.createElement('div');
+                preview.className = 'image-preview';
+                preview.style.position = 'relative';
+                
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.width = '100%';
+                    img.style.height = '80px';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '4px';
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.style.position = 'absolute';
+                    removeBtn.style.top = '2px';
+                    removeBtn.style.right = '2px';
+                    removeBtn.style.background = 'rgba(255, 255, 255, 0.7)';
+                    removeBtn.style.border = 'none';
+                    removeBtn.style.borderRadius = '50%';
+                    removeBtn.style.width = '20px';
+                    removeBtn.style.height = '20px';
+                    removeBtn.style.cursor = 'pointer';
+                    
+                    removeBtn.addEventListener('click', () => {
+                        preview.remove();
+                    });
+                    
+                    preview.appendChild(img);
+                    preview.appendChild(removeBtn);
+                    previewContainer.appendChild(preview);
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        }
+    </script>
+</body>
+</html> 

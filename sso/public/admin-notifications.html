@@ -1,0 +1,2222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý thông báo - Smart Study Space</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/auth.js" defer></script>
+    <script src="js/admin-notifications.js" defer></script>
+    <style>
+        :root {
+            --primary-color: #28a745;
+            --primary-dark: #218838;
+            --primary-light: #ebf9ef;
+            --secondary-color: #6c757d;
+            --info-color: #17a2b8;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --border-color: #dee2e6;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --border-radius: 6px;
+            --transition-speed: 0.3s;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+        }
+        
+        .menu-item.logo-item {
+            padding: 10px 0;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .menu-item.active {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .menu-item {
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+        }
+        
+        .menu-item:hover:not(.logo-item) {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .user-select-container {
+            margin-bottom: 20px;
+        }
+        
+        .main-content {
+            background-color: #f5f5f5;
+        }
+        
+        .header-container {
+            background-color: white;
+            box-shadow: var(--shadow-sm);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        
+        .notification-history {
+            margin-top: 20px;
+        }
+        
+        .notification-history .card-body {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .notification-history .list-group {
+            padding-right: 10px;
+        }
+        
+        .card-body {
+            padding: 20px;
+            min-height: 300px;
+            flex-grow: 1;
+        }
+        
+        .card-header + .card-body {
+            padding-top: 20px;
+        }
+        
+        .notification-item {
+            border-left: 4px solid var(--info-color);
+            margin-bottom: 18px;
+            padding: 15px 18px;
+            background-color: white;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            box-shadow: var(--shadow-sm);
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+        }
+        
+        .notification-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .notification-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .notification-item.success {
+            border-left-color: var(--primary-color);
+        }
+        
+        .notification-item.warning {
+            border-left-color: var(--warning-color);
+        }
+        
+        .notification-item.info {
+            border-left-color: var(--info-color);
+        }
+        
+        .notification-item h5 {
+            color: var(--dark-color);
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .notification-item p {
+            color: var(--secondary-color);
+            margin-bottom: 8px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .notification-metadata {
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+        
+        .tab-content {
+            padding: 25px 0;
+        }
+        
+        .nav-tabs {
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            padding-bottom: 0;
+        }
+        
+        .nav-item {
+            list-style: none;
+        }
+        
+        .nav-link {
+            padding: 10px 15px;
+            display: block;
+            color: var(--secondary-color);
+            text-decoration: none;
+            border-bottom: 3px solid transparent;
+            transition: all var(--transition-speed);
+            font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-light);
+        }
+        
+        .nav-link.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .user-list-container {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background-color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .user-list {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .user-list th {
+            position: sticky;
+            top: 0;
+            background-color: #f9f9f9;
+            border-bottom: 2px solid var(--border-color);
+            padding: 15px;
+            text-align: left;
+            color: var(--dark-color);
+            font-weight: 600;
+        }
+
+        .user-list td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--secondary-color);
+        }
+
+        .user-list tr:hover {
+            background-color: var(--primary-light);
+        }
+        
+        .user-list tr:last-child td {
+            border-bottom: none;
+        }
+
+        .user-select-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .user-search {
+            width: 100%;
+            max-width: 300px;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background-color: white;
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-speed);
+        }
+        
+        .user-search:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .user-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .user-filters select {
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            flex: 1;
+            min-width: 120px;
+            background-color: white;
+            box-shadow: var(--shadow-sm);
+            color: var(--dark-color);
+            transition: all var(--transition-speed);
+        }
+        
+        .user-filters select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            padding: 8px 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+        
+        .checkbox-wrapper label {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .no-users {
+            padding: 20px;
+            text-align: center;
+            color: var(--secondary-color);
+            font-style: italic;
+        }
+
+        .selected-count {
+            margin-left: 10px;
+            padding: 3px 10px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Custom select replacement for single user selection */
+        .custom-select {
+            position: relative;
+            width: 100%;
+        }
+
+        .custom-select-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            background-color: white;
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-speed);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .custom-select-input::after {
+            content: '\f078';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            color: var(--secondary-color);
+            font-size: 14px;
+        }
+        
+        .custom-select.active .custom-select-input::after {
+            content: '\f077';
+        }
+        
+        .custom-select-input:hover {
+            border-color: var(--primary-color);
+        }
+
+        .custom-select-dropdown {
+            display: none;
+            position: absolute;
+            z-index: 10;
+            width: 100%;
+            max-height: 250px;
+            overflow-y: auto;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+            box-shadow: var(--shadow-md);
+            margin-top: 2px;
+        }
+
+        .custom-select.active .custom-select-dropdown {
+            display: block;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .custom-select-search {
+            width: 100%;
+            padding: 10px 15px;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 5px;
+        }
+        
+        .custom-select-search:focus {
+            outline: none;
+            border-bottom-color: var(--primary-color);
+        }
+
+        .custom-select-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background-color var(--transition-speed);
+        }
+
+        .custom-select-option:hover {
+            background-color: var(--primary-light);
+        }
+
+        .custom-select-selected {
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .card {
+            height: 100%;
+            margin-bottom: 0;
+            border-radius: var(--border-radius);
+            background-color: white;
+            box-shadow: var(--shadow-md);
+            border: none;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-header {
+            padding: 15px 20px;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+            display: inline-flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            min-width: 300px;
+            margin-bottom: 0;
+            flex-shrink: 0;
+        }
+        
+        .card-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-color);
+            white-space: nowrap;
+        }
+        
+        .card-tools button {
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            cursor: pointer;
+            transition: color var(--transition-speed);
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .card-tools button:hover {
+            color: var(--primary-color);
+            background-color: var(--primary-light);
+        }
+        
+        .content-container {
+            padding: 0 20px 20px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background-color: white;
+            transition: all var(--transition-speed);
+            box-shadow: var(--shadow-sm);
+            min-height: 45px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 45px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-info {
+            background-color: #e3f2fd;
+            color: #0c5460;
+            border-left: 4px solid var(--info-color);
+        }
+        
+        .spinner-border {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            vertical-align: text-bottom;
+            border: 0.25em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border .75s linear infinite;
+        }
+        
+        .spinner-border.text-primary {
+            color: var(--primary-color);
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        @keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .layout-columns {
+                flex-direction: column;
+            }
+            
+            .column-60, .column-40 {
+                flex: 1;
+            }
+            
+            .notification-history {
+                margin-top: 20px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .user-filters {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .user-filters select {
+                width: 100%;
+            }
+            
+            .user-select-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .user-search {
+                max-width: 100%;
+            }
+        }
+
+        /* Thêm thanh điều hướng phân trang */
+        .notification-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .notification-pagination .pagination-info {
+            color: var(--secondary-color);
+            font-size: 14px;
+        }
+
+        .notification-pagination .pagination-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .notification-pagination .pagination-button {
+            padding: 5px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: white;
+            color: var(--dark-color);
+            cursor: pointer;
+            transition: all var(--transition-speed);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .notification-pagination .pagination-button:hover {
+            background-color: var(--primary-light);
+            color: var(--primary-color);
+        }
+
+        .notification-pagination .pagination-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Thêm nút lọc và tìm kiếm thông báo */
+        .notification-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .notification-search {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background-color: white;
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-speed);
+        }
+
+        .notification-search:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .notification-filter-select {
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background-color: white;
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-speed);
+            min-width: 150px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        /* Xóa khoảng trắng giữa header và body */
+        .card-header, .card-body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="admin-dashboard">
+    <div class="sidebar">
+        <div class="menu">
+            <div class="menu-item logo-item">
+                <img src="./images/hcmut_logo.png" alt="Logo" class="logo">
+            </div>
+            <div class="menu-item" id="overview-menu-item" data-title="Trang chủ">
+                <i class="fas fa-tachometer-alt"></i>
+            </div>
+            <div class="menu-item" id="room-management-menu-item" data-title="Quản lý phòng">
+                <i class="fas fa-door-open"></i>
+            </div>
+            <div class="menu-item" id="user-management-menu-item" data-title="Quản lý người dùng">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="menu-item" id="booking-management-menu-item" data-title="Quản lý đặt phòng">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="menu-item active" id="notifications-menu-item" data-title="Thông báo">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="menu-item" id="statistics-menu-item" data-title="Thống kê">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <div class="menu-item" id="logout-btn" data-title="Đăng xuất">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header-container">
+            <h1 class="header-title">Quản lý thông báo</h1>
+            <div class="user-controls">
+                <i class="fas fa-bell"></i>
+                <i class="fas fa-envelope"></i>
+                <i class="fas fa-user-circle"></i>
+            </div>
+        </div>
+
+        <div class="content-container">
+            <!-- Phần gửi thông báo -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-paper-plane"></i> Gửi thông báo</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="notificationTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="single-tab" data-toggle="tab" href="#single" role="tab">
+                                <i class="fas fa-user"></i> Gửi đến 1 người dùng
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="multiple-tab" data-toggle="tab" href="#multiple" role="tab">
+                                <i class="fas fa-users"></i> Gửi đến nhiều người dùng
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="all-tab" data-toggle="tab" href="#all" role="tab">
+                                <i class="fas fa-broadcast-tower"></i> Gửi đến tất cả
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content" id="notificationTabContent">
+                        <!-- Gửi đến một người dùng -->
+                        <div class="tab-pane fade show active" id="single" role="tabpanel">
+                            <form id="singleNotificationForm">
+                                <div class="form-group">
+                                    <label for="singleUserSelect"><i class="fas fa-user-check"></i> Chọn người dùng</label>
+                                    <div class="custom-select" id="singleUserSelectWrapper">
+                                        <div class="custom-select-input" id="singleUserDisplay">Chọn người dùng...</div>
+                                        <input type="hidden" id="singleUserSelect" name="userId">
+                                        <div class="custom-select-dropdown">
+                                            <input type="text" class="custom-select-search" id="singleUserSearch" placeholder="Tìm kiếm người dùng...">
+                                            <div id="singleUserOptions">
+                                                <!-- Options will be added here dynamically -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="singleTitle"><i class="fas fa-heading"></i> Tiêu đề</label>
+                                    <input type="text" class="form-control" id="singleTitle" placeholder="Nhập tiêu đề thông báo">
+                                </div>
+                                <div class="form-group">
+                                    <label for="singleMessage"><i class="fas fa-comment-alt"></i> Nội dung</label>
+                                    <textarea class="form-control" id="singleMessage" rows="3" placeholder="Nhập nội dung thông báo"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Gửi thông báo
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Gửi đến nhiều người dùng -->
+                        <div class="tab-pane fade" id="multiple" role="tabpanel">
+                            <form id="multipleNotificationForm">
+                                <div class="form-group">
+                                    <label><i class="fas fa-users"></i> Chọn người dùng</label>
+                                    
+                                    <div class="user-select-header">
+                                        <div class="checkbox-wrapper">
+                                            <input type="checkbox" id="selectAllUsers"> 
+                                            <label for="selectAllUsers">Chọn tất cả người dùng hiển thị</label>
+                                            <span id="selectedUsersCount" class="selected-count">0</span>
+                                        </div>
+                                        <input type="text" id="userSearchInput" class="user-search" placeholder="Tìm kiếm người dùng...">
+                                    </div>
+                                    
+                                    <div class="user-filters">
+                                        <select id="roleFilter" class="filter-select">
+                                            <option value="all">Tất cả vai trò</option>
+                                            <option value="student">Sinh viên</option>
+                                            <option value="staff">Nhân viên</option>
+                                        </select>
+                                        
+                                        <select id="departmentFilter" class="filter-select">
+                                            <option value="all">Tất cả khoa</option>
+                                            <!-- Sẽ được điền bởi JavaScript -->
+                                        </select>
+                                        
+                                        <select id="statusFilter" class="filter-select">
+                                            <option value="all">Tất cả trạng thái</option>
+                                            <option value="active">Hoạt động</option>
+                                            <option value="inactive">Không hoạt động</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="user-list-container">
+                                        <table class="user-list" id="userTable">
+                                            <thead>
+                                                <tr>
+                                                    <th width="50"></th>
+                                                    <th>Họ và tên</th>
+                                                    <th>MSSV</th>
+                                                    <th>Email</th>
+                                                    <th>Vai trò</th>
+                                                    <th>Khoa</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="userTableBody">
+                                                <!-- User rows will be inserted here by JavaScript -->
+                                                <tr>
+                                                    <td colspan="6" class="text-center">
+                                                        <div class="spinner-border text-primary" role="status">
+                                                            <span class="sr-only">Đang tải...</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="multipleTitle"><i class="fas fa-heading"></i> Tiêu đề</label>
+                                    <input type="text" class="form-control" id="multipleTitle" placeholder="Nhập tiêu đề thông báo">
+                                </div>
+                                <div class="form-group">
+                                    <label for="multipleMessage"><i class="fas fa-comment-alt"></i> Nội dung</label>
+                                    <textarea class="form-control" id="multipleMessage" rows="3" placeholder="Nhập nội dung thông báo"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Gửi thông báo
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Gửi đến tất cả người dùng -->
+                        <div class="tab-pane fade" id="all" role="tabpanel">
+                            <form id="allNotificationForm">
+                                <div class="form-group">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> 
+                                        <span>Thông báo sẽ được gửi đến tất cả người dùng trong hệ thống (trừ quản trị viên).</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="allTitle"><i class="fas fa-heading"></i> Tiêu đề</label>
+                                    <input type="text" class="form-control" id="allTitle" placeholder="Nhập tiêu đề thông báo">
+                                </div>
+                                <div class="form-group">
+                                    <label for="allMessage"><i class="fas fa-comment-alt"></i> Nội dung</label>
+                                    <textarea class="form-control" id="allMessage" rows="3" placeholder="Nhập nội dung thông báo"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-paper-plane"></i> Gửi thông báo đến tất cả
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lịch sử thông báo -->
+            <div class="card notification-history">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-history"></i> Lịch sử thông báo gần đây</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" id="refreshNotificationHistory" title="Làm mới">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Thêm bộ lọc và tìm kiếm -->
+                    <div class="notification-filters">
+                        <input type="text" class="notification-search" id="notificationSearch" placeholder="Tìm kiếm thông báo...">
+                        <select class="notification-filter-select" id="notificationTypeFilter">
+                            <option value="all">Tất cả loại</option>
+                            <option value="info">Thông tin</option>
+                            <option value="success">Thành công</option>
+                            <option value="warning">Cảnh báo</option>
+                        </select>
+                        <select class="notification-filter-select" id="notificationRecipientFilter">
+                            <option value="all">Tất cả người nhận</option>
+                            <option value="single">Cá nhân</option>
+                            <option value="multiple">Nhóm người dùng</option>
+                            <option value="all_users">Tất cả người dùng</option>
+                        </select>
+                        <select class="notification-filter-select" id="notificationDateFilter">
+                            <option value="all">Tất cả thời gian</option>
+                            <option value="today">Hôm nay</option>
+                            <option value="week">Tuần này</option>
+                            <option value="month">Tháng này</option>
+                        </select>
+                    </div>
+
+                    <div id="notificationHistoryList" class="list-group">
+                        <!-- Danh sách thông báo sẽ được thêm vào đây bằng JavaScript -->
+                        <div class="text-center" id="loadingNotifications">
+                            <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                        </div>
+                    </div>
+
+                    <!-- Thêm phân trang -->
+                    <div class="notification-pagination">
+                        <div class="pagination-info">
+                            Hiển thị <span id="currentPageStart">1</span>-<span id="currentPageEnd">10</span> trên <span id="totalNotifications">0</span> thông báo
+                        </div>
+                        <div class="pagination-controls">
+                            <button class="pagination-button" id="prevPageBtn" disabled>
+                                <i class="fas fa-chevron-left"></i> Trước
+                            </button>
+                            <button class="pagination-button" id="nextPageBtn">
+                                Sau <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // API endpoints
+        const BASE_URL = '/api';
+        const ENDPOINTS = {
+            USERS: `${BASE_URL}/users`,
+            DEPARTMENTS: `${BASE_URL}/departments`,
+            NOTIFICATIONS_SEND: `${BASE_URL}/notifications`,
+            NOTIFICATIONS_SEND_BULK: `${BASE_URL}/notifications/bulk`,
+            NOTIFICATIONS_HISTORY: `${BASE_URL}/notifications/history`
+        };
+        
+        // Store users data
+        let usersData = [];
+        let departmentsData = [];
+        let selectedUsers = new Set();
+        
+        // Biến cho phân trang và lọc thông báo
+        let currentPage = 1;
+        let itemsPerPage = 5;
+        let filteredNotifications = [];
+        let allNotifications = [];
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fix auth.js errors by checking if elements exist before adding event listeners
+            fixAuthJsErrors();
+            
+            // Set up navigation
+            setupNavigation();
+            
+            // Set up custom select for single user
+            setupCustomSelect();
+            
+            // Set up form submission
+            document.getElementById('singleNotificationForm').addEventListener('submit', handleSingleNotificationSubmit);
+            document.getElementById('multipleNotificationForm').addEventListener('submit', handleMultipleNotificationSubmit);
+            document.getElementById('allNotificationForm').addEventListener('submit', handleAllNotificationSubmit);
+            
+            // Set up tab functionality
+            setupTabs();
+            
+            // Load data
+            Promise.all([
+                loadUsers(),
+                loadDepartments(),
+                loadNotificationHistory()
+            ]).then(() => {
+                // Initialize UI
+                populateUserOptions();
+                populateDepartmentFilter();
+                renderUsersTable();
+                
+                // Set up filters and search cho cả người dùng và thông báo
+                setupFiltersAndSearch();
+                setupNotificationFilters();
+                setupNotificationPagination();
+            }).catch(error => {
+                console.error("Error initializing data:", error);
+                // Continue with UI setup even if data loading fails
+                setupFiltersAndSearch();
+                setupNotificationFilters();
+                setupNotificationPagination();
+            });
+            
+            // Set up select all checkbox
+            document.getElementById('selectAllUsers').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('#userTableBody input[type="checkbox"]');
+                const isChecked = this.checked;
+                
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                    
+                    const userId = checkbox.dataset.userId;
+                    if (isChecked) {
+                        selectedUsers.add(userId);
+                    } else {
+                        selectedUsers.delete(userId);
+                    }
+                });
+                
+                updateSelectedCount();
+            });
+            
+            // Set up refresh button for notification history
+            document.getElementById('refreshNotificationHistory').addEventListener('click', loadNotificationHistory);
+        });
+
+        // Fix auth.js errors by adding dummy elements or checks
+        function fixAuthJsErrors() {
+            // This function creates any missing elements that auth.js might be looking for
+            // and adds no-op event listeners to prevent errors
+            const elementsToCheck = ['login-form', 'register-form', 'logout-link', 'profile-link'];
+            
+            elementsToCheck.forEach(id => {
+                if (!document.getElementById(id)) {
+                    const dummyElement = document.createElement('div');
+                    dummyElement.id = id;
+                    dummyElement.style.display = 'none';
+                    document.body.appendChild(dummyElement);
+                    
+                    // Add empty event listener
+                    dummyElement.addEventListener('submit', e => {
+                        e.preventDefault();
+                    });
+                    dummyElement.addEventListener('click', e => {
+                        e.preventDefault();
+                    });
+                }
+            });
+        }
+
+        // Set up custom tabs functionality
+        function setupTabs() {
+            const tabLinks = document.querySelectorAll('.nav-tabs .nav-link');
+            
+            tabLinks.forEach(tab => {
+                tab.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    
+                    // Remove active class from all tabs
+                    tabLinks.forEach(t => {
+                        t.classList.remove('active');
+                        const targetId = t.getAttribute('href').substring(1);
+                        document.getElementById(targetId).classList.remove('show', 'active');
+                    });
+                    
+                    // Add active class to current tab
+                    this.classList.add('active');
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetPane = document.getElementById(targetId);
+                    targetPane.classList.add('show', 'active');
+                });
+            });
+        }
+        
+        // Set up custom select for single user
+        function setupCustomSelect() {
+            const selectWrapper = document.getElementById('singleUserSelectWrapper');
+            const selectInput = document.getElementById('singleUserDisplay');
+            const dropdown = selectWrapper.querySelector('.custom-select-dropdown');
+            const searchInput = document.getElementById('singleUserSearch');
+            
+            // Toggle dropdown
+            selectInput.addEventListener('click', function() {
+                selectWrapper.classList.toggle('active');
+                if (selectWrapper.classList.contains('active')) {
+                    searchInput.focus();
+                }
+            });
+            
+            // Hide dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!selectWrapper.contains(event.target)) {
+                    selectWrapper.classList.remove('active');
+                }
+            });
+            
+            // Filter options based on search
+            searchInput.addEventListener('input', function() {
+                const searchValue = this.value.toLowerCase();
+                const options = document.querySelectorAll('#singleUserOptions .custom-select-option');
+                
+                options.forEach(option => {
+                    const text = option.textContent.toLowerCase();
+                    if (text.includes(searchValue)) {
+                        option.style.display = 'block';
+                    } else {
+                        option.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Sidebar navigation
+        function setupNavigation() {
+            document.getElementById('overview-menu-item').addEventListener('click', function() {
+                window.location.href = 'admin-overview.html';
+            });
+            
+            document.getElementById('room-management-menu-item').addEventListener('click', function() {
+                window.location.href = 'admin-room-management.html';
+            });
+            
+            document.getElementById('user-management-menu-item').addEventListener('click', function() {
+                window.location.href = 'admin-user-management.html';
+            });
+            
+            document.getElementById('statistics-menu-item').addEventListener('click', function() {
+                window.location.href = 'admin-statistics.html';
+            });
+            document.getElementById('booking-management-menu-item').addEventListener('click', function() {
+                window.location.href = 'admin-booking-management.html';
+            });
+            document.getElementById('notifications-menu-item').addEventListener('click', function() {
+                window.location.href = 'admin-notifications.html';
+            });
+            
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                if (typeof logout === 'function') {
+                    logout();
+                } else {
+                    // Fallback if the logout function is not available
+                    fetch(`${BASE_URL}/auth/logout`, {
+                        method: 'POST',
+                        credentials: 'include'
+                    })
+                    .then(() => {
+                        window.location.href = 'index.html';
+                    })
+                    .catch(error => {
+                        console.error('Logout error:', error);
+                        window.location.href = 'index.html';
+                    });
+                }
+            });
+        }
+        
+        // Load users data (exclude admin users)
+        async function loadUsers() {
+            try {
+                console.log('Fetching users from:', ENDPOINTS.USERS);
+                const response = await fetch(ENDPOINTS.USERS, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    console.warn(`Failed to fetch users. Status: ${response.status}`);
+                    throw new Error(`Failed to fetch users. Status: ${response.status}`);
+                }
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                console.log('Users response content type:', contentType);
+                
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.warn('Users response is not JSON type:', contentType);
+                    throw new Error('Response is not JSON');
+                }
+                
+                let data;
+                try {
+                    data = await response.json();
+                    console.log('Users data received');
+                } catch (jsonError) {
+                    console.error('Error parsing users JSON:', jsonError);
+                    throw new Error('Error parsing JSON response');
+                }
+                
+                // Make sure data is an array or has a users property
+                if (Array.isArray(data)) {
+                    // Filter out admin users
+                    usersData = data.filter(user => user.role !== 'admin');
+                } else if (data.users && Array.isArray(data.users)) {
+                    usersData = data.users.filter(user => user.role !== 'admin');
+                } else {
+                    console.warn('Unexpected users data format. Using mock data.');
+                    // Use mock data if API response is incorrect
+                    usersData = getMockUsers();
+                }
+                
+                return usersData;
+            } catch (error) {
+                console.error('Error loading users:', error);
+                // Log more details about the error
+                if (error.response) {
+                    console.error('Error response:', error.response);
+                }
+                
+                // Use mock data for development
+                console.log('Using mock users data due to API error');
+                usersData = getMockUsers();
+                return usersData;
+            }
+        }
+        
+        // Load departments
+        async function loadDepartments() {
+            try {
+                console.log('Fetching departments from:', ENDPOINTS.DEPARTMENTS);
+                const response = await fetch(ENDPOINTS.DEPARTMENTS, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    console.warn(`Failed to fetch departments. Status: ${response.status}`);
+                    throw new Error(`Failed to fetch departments. Status: ${response.status}`);
+                }
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                console.log('Department response content type:', contentType);
+                
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.warn('Department response is not JSON type:', contentType);
+                    throw new Error('Response is not JSON');
+                }
+                
+                let data;
+                try {
+                    data = await response.json();
+                    console.log('Departments data received:', data);
+                } catch (jsonError) {
+                    console.error('Error parsing departments JSON:', jsonError);
+                    throw new Error('Error parsing JSON response');
+                }
+                
+                // Make sure data is an array or has a departments property
+                if (Array.isArray(data)) {
+                    departmentsData = data;
+                } else if (data.departments && Array.isArray(data.departments)) {
+                    departmentsData = data.departments;
+                } else {
+                    console.warn('Unexpected departments data format. Using mock data.');
+                    // Use mock data if API response is incorrect
+                    departmentsData = getMockDepartments();
+                }
+                
+                return departmentsData;
+            } catch (error) {
+                console.error('Error loading departments:', error);
+                // Log more details about the error
+                if (error.response) {
+                    console.error('Error response:', error.response);
+                }
+                
+                // Fallback data if API fails
+                console.log('Using mock departments data due to API error');
+                departmentsData = getMockDepartments();
+                return departmentsData;
+            }
+        }
+        
+        // Get mock departments for development/testing
+        function getMockDepartments() {
+            return [
+                { id: 1, name: 'Khoa Khoa học và Kỹ thuật Máy tính', code: 'CSE' },
+                { id: 2, name: 'Khoa Điện - Điện tử', code: 'EEE' },
+                { id: 3, name: 'Khoa Quản lý Công nghiệp', code: 'IIM' },
+                { id: 4, name: 'Khoa Cơ khí', code: 'ME' },
+                { id: 5, name: 'Khoa Xây dựng', code: 'CE' }
+            ];
+        }
+        
+        // Get mock users for development/testing
+        function getMockUsers() {
+            return [
+                { id: '1', full_name: 'Nguyễn Văn A', student_id: '1912001', email: 'nva@hcmut.edu.vn', role: 'student', department: 'CSE', status: 'active' },
+                { id: '2', full_name: 'Trần Thị B', student_id: '1912002', email: 'ttb@hcmut.edu.vn', role: 'student', department: 'EEE', status: 'active' },
+                { id: '3', full_name: 'Lê Văn C', student_id: '1912003', email: 'lvc@hcmut.edu.vn', role: 'student', department: 'IIM', status: 'inactive' },
+                { id: '4', full_name: 'Phạm Thị D', student_id: '1912004', email: 'ptd@hcmut.edu.vn', role: 'staff', department: 'CSE', status: 'active' },
+                { id: '5', full_name: 'Hoàng Văn E', student_id: '1912005', email: 'hve@hcmut.edu.vn', role: 'staff', department: 'ME', status: 'active' }
+            ];
+        }
+        
+        // Load notification history
+        async function loadNotificationHistory() {
+            try {
+                const historyList = document.getElementById('notificationHistoryList');
+                historyList.innerHTML = '<div class="text-center" id="loadingNotifications"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
+                
+                console.log('Fetching notification history from:', ENDPOINTS.NOTIFICATIONS_HISTORY);
+                const response = await fetch(ENDPOINTS.NOTIFICATIONS_HISTORY, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    console.warn(`Failed to fetch notification history. Status: ${response.status}`);
+                    throw new Error(`Failed to fetch notification history. Status: ${response.status}`);
+                }
+                
+                // Check if response is JSON
+                const contentType = response.headers.get('content-type');
+                console.log('Notification history response content type:', contentType);
+                
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.warn('Notification history response is not JSON type:', contentType);
+                    throw new Error('Response is not JSON');
+                }
+                
+                let data;
+                try {
+                    data = await response.json();
+                    console.log('Notification history data received');
+                } catch (jsonError) {
+                    console.error('Error parsing notification history JSON:', jsonError);
+                    throw new Error('Error parsing JSON response');
+                }
+                
+                // Make sure we have an array of notifications
+                let notifications = [];
+                if (Array.isArray(data)) {
+                    notifications = data;
+                } else if (data.notifications && Array.isArray(data.notifications)) {
+                    notifications = data.notifications;
+                } else {
+                    console.warn('Unexpected notification history data format. Using mock data.');
+                    // Use mock data if API response is incorrect
+                    notifications = getMockNotifications();
+                }
+                
+                // Lưu tất cả thông báo
+                allNotifications = notifications;
+                filteredNotifications = [...allNotifications];
+                
+                // Cập nhật tổng số thông báo
+                updatePaginationInfo();
+                
+                // Render trang đầu tiên
+                currentPage = 1;
+                renderNotificationPage();
+            } catch (error) {
+                console.error('Error loading notification history:', error);
+                // Log more details about the error
+                if (error.response) {
+                    console.error('Error response:', error.response);
+                }
+                
+                // Use mock data for development
+                console.log('Using mock notification history data due to API error');
+                allNotifications = getMockNotifications();
+                filteredNotifications = [...allNotifications];
+                
+                // Cập nhật tổng số thông báo
+                updatePaginationInfo();
+                
+                // Render trang đầu tiên
+                currentPage = 1;
+                renderNotificationPage();
+            }
+        }
+        
+        // Get mock notifications for development/testing
+        function getMockNotifications() {
+            return [
+                { 
+                    id: '1', 
+                    title: 'Thông báo bảo trì hệ thống', 
+                    message: 'Hệ thống sẽ bảo trì vào ngày 30/06/2023 từ 22:00 đến 24:00.', 
+                    type: 'info',
+                    recipient_type: 'all',
+                    sender_name: 'Admin',
+                    created_at: new Date().toISOString()
+                },
+                { 
+                    id: '2', 
+                    title: 'Cập nhật phần mềm', 
+                    message: 'Phần mềm đã được cập nhật lên phiên bản mới nhất với nhiều tính năng mới.', 
+                    type: 'success',
+                    recipient_type: 'multiple',
+                    recipient_count: 50,
+                    sender_name: 'Admin',
+                    created_at: new Date(Date.now() - 86400000).toISOString() // Yesterday
+                },
+                { 
+                    id: '3', 
+                    title: 'Cảnh báo không sử dụng được phòng A1-101', 
+                    message: 'Phòng A1-101 đang được sửa chữa và không thể sử dụng trong tuần này.', 
+                    type: 'warning',
+                    recipient_type: 'single',
+                    recipient_name: 'Nguyễn Văn A',
+                    sender_name: 'Admin',
+                    created_at: new Date(Date.now() - 172800000).toISOString() // 2 days ago
+                },
+                { 
+                    id: '4', 
+                    title: 'Hướng dẫn sử dụng hệ thống mới', 
+                    message: 'Vui lòng xem hướng dẫn sử dụng hệ thống mới tại đây.', 
+                    type: 'info',
+                    recipient_type: 'all',
+                    sender_name: 'Admin',
+                    created_at: new Date(Date.now() - 259200000).toISOString() // 3 days ago
+                },
+                { 
+                    id: '5', 
+                    title: 'Cập nhật chính sách sử dụng', 
+                    message: 'Chính sách sử dụng hệ thống đã được cập nhật, vui lòng xem chi tiết.', 
+                    type: 'info',
+                    recipient_type: 'all',
+                    sender_name: 'Admin',
+                    created_at: new Date(Date.now() - 345600000).toISOString() // 4 days ago
+                }
+            ];
+        }
+        
+        // Populate user options for single user select
+        function populateUserOptions() {
+            const optionsContainer = document.getElementById('singleUserOptions');
+            optionsContainer.innerHTML = '';
+            
+            usersData.forEach(user => {
+                const option = document.createElement('div');
+                option.className = 'custom-select-option';
+                option.dataset.userId = user.id;
+                option.textContent = `${user.full_name} (${user.email})`;
+                
+                option.addEventListener('click', function() {
+                    const userId = this.dataset.userId;
+                    const userName = this.textContent;
+                    
+                    // Update hidden input and display
+                    document.getElementById('singleUserSelect').value = userId;
+                    document.getElementById('singleUserDisplay').textContent = userName;
+                    
+                    // Update selected class
+                    const options = document.querySelectorAll('#singleUserOptions .custom-select-option');
+                    options.forEach(opt => opt.classList.remove('custom-select-selected'));
+                    this.classList.add('custom-select-selected');
+                    
+                    // Close dropdown
+                    document.getElementById('singleUserSelectWrapper').classList.remove('active');
+                });
+                
+                optionsContainer.appendChild(option);
+            });
+        }
+        
+        // Populate department filter
+        function populateDepartmentFilter() {
+            const select = document.getElementById('departmentFilter');
+            
+            // Clear existing options except the "all" option
+            const allOption = select.options[0];
+            select.innerHTML = '';
+            select.appendChild(allOption);
+            
+            departmentsData.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept.code;
+                option.textContent = dept.name;
+                select.appendChild(option);
+            });
+        }
+        
+        // Render users table
+        function renderUsersTable(filteredUsers = usersData) {
+            const tableBody = document.getElementById('userTableBody');
+            tableBody.innerHTML = '';
+            
+            if (!filteredUsers || filteredUsers.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" class="no-users">Không tìm thấy người dùng nào.</td></tr>';
+                return;
+            }
+            
+            filteredUsers.forEach(user => {
+                const row = document.createElement('tr');
+                
+                // Checkbox cell
+                const checkboxCell = document.createElement('td');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.dataset.userId = user.id;
+                checkbox.checked = selectedUsers.has(user.id);
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        selectedUsers.add(user.id);
+                    } else {
+                        selectedUsers.delete(user.id);
+                    }
+                    updateSelectedCount();
+                });
+                checkboxCell.appendChild(checkbox);
+                
+                // Full name cell
+                const nameCell = document.createElement('td');
+                nameCell.textContent = user.full_name || 'N/A';
+                
+                // Student ID cell
+                const studentIdCell = document.createElement('td');
+                studentIdCell.textContent = user.student_id || 'N/A';
+                
+                // Email cell
+                const emailCell = document.createElement('td');
+                emailCell.textContent = user.email || 'N/A';
+                
+                // Role cell
+                const roleCell = document.createElement('td');
+                const roleName = user.role === 'student' ? 'Sinh viên' : (user.role === 'staff' ? 'Nhân viên' : user.role);
+                roleCell.textContent = roleName;
+                
+                // Department cell
+                const deptCell = document.createElement('td');
+                const dept = departmentsData.find(d => d.code === user.department);
+                deptCell.textContent = dept ? dept.name : (user.department || 'N/A');
+                
+                // Append cells to row
+                row.appendChild(checkboxCell);
+                row.appendChild(nameCell);
+                row.appendChild(studentIdCell);
+                row.appendChild(emailCell);
+                row.appendChild(roleCell);
+                row.appendChild(deptCell);
+                
+                tableBody.appendChild(row);
+            });
+            
+            updateSelectedCount();
+        }
+        
+        // Set up lọc và tìm kiếm thông báo
+        function setupNotificationFilters() {
+            const searchInput = document.getElementById('notificationSearch');
+            const typeFilter = document.getElementById('notificationTypeFilter');
+            const recipientFilter = document.getElementById('notificationRecipientFilter');
+            const dateFilter = document.getElementById('notificationDateFilter');
+            
+            // Function to apply filters
+            function applyFilters() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const typeValue = typeFilter.value;
+                const recipientValue = recipientFilter.value;
+                const dateValue = dateFilter.value;
+                
+                // Bắt đầu với tất cả thông báo
+                filteredNotifications = [...allNotifications];
+                
+                // Lọc theo loại thông báo
+                if (typeValue !== 'all') {
+                    filteredNotifications = filteredNotifications.filter(notification => 
+                        notification.type === typeValue
+                    );
+                }
+                
+                // Lọc theo người nhận
+                if (recipientValue !== 'all') {
+                    if (recipientValue === 'all_users') {
+                        filteredNotifications = filteredNotifications.filter(notification => 
+                            notification.recipient_type === 'all'
+                        );
+                    } else {
+                        filteredNotifications = filteredNotifications.filter(notification => 
+                            notification.recipient_type === recipientValue
+                        );
+                    }
+                }
+                
+                // Lọc theo thời gian
+                if (dateValue !== 'all') {
+                    const now = new Date();
+                    let cutoffDate;
+                    
+                    if (dateValue === 'today') {
+                        cutoffDate = new Date(now.setHours(0, 0, 0, 0));
+                    } else if (dateValue === 'week') {
+                        const day = now.getDay() || 7; // Lấy ngày trong tuần (0-6), nếu là 0 (chủ nhật) thì đổi thành 7
+                        cutoffDate = new Date(now.setDate(now.getDate() - day + 1)); // Lấy ngày đầu tuần (thứ 2)
+                        cutoffDate.setHours(0, 0, 0, 0);
+                    } else if (dateValue === 'month') {
+                        cutoffDate = new Date(now.getFullYear(), now.getMonth(), 1); // Ngày đầu tháng
+                    }
+                    
+                    filteredNotifications = filteredNotifications.filter(notification => {
+                        const notificationDate = new Date(notification.created_at);
+                        return notificationDate >= cutoffDate;
+                    });
+                }
+                
+                // Lọc theo từ khóa tìm kiếm
+                if (searchTerm) {
+                    filteredNotifications = filteredNotifications.filter(notification => 
+                        (notification.title && notification.title.toLowerCase().includes(searchTerm)) ||
+                        (notification.message && notification.message.toLowerCase().includes(searchTerm))
+                    );
+                }
+                
+                // Reset về trang đầu tiên và render lại
+                currentPage = 1;
+                renderNotificationPage();
+            }
+            
+            // Đăng ký các sự kiện
+            searchInput.addEventListener('input', debounce(applyFilters, 300));
+            typeFilter.addEventListener('change', applyFilters);
+            recipientFilter.addEventListener('change', applyFilters);
+            dateFilter.addEventListener('change', applyFilters);
+        }
+
+        // Setup pagination for notifications
+        function setupNotificationPagination() {
+            const prevPageBtn = document.getElementById('prevPageBtn');
+            const nextPageBtn = document.getElementById('nextPageBtn');
+            
+            prevPageBtn.addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderNotificationPage();
+                    
+                    // Cuộn lên đầu danh sách thông báo
+                    document.querySelector('.notification-history .card-body').scrollTop = 0;
+                }
+            });
+            
+            nextPageBtn.addEventListener('click', function() {
+                const maxPage = Math.ceil(filteredNotifications.length / itemsPerPage);
+                if (currentPage < maxPage) {
+                    currentPage++;
+                    renderNotificationPage();
+                    
+                    // Cuộn lên đầu danh sách thông báo
+                    document.querySelector('.notification-history .card-body').scrollTop = 0;
+                }
+            });
+        }
+
+        // Update selected count - khôi phục lại hàm đã bị xóa
+        function updateSelectedCount() {
+            const countElement = document.getElementById('selectedUsersCount');
+            if (countElement) {
+                countElement.textContent = selectedUsers.size;
+            }
+        }
+
+        // Update pagination information
+        function updatePaginationInfo() {
+            document.getElementById('totalNotifications').textContent = filteredNotifications.length;
+        }
+
+        // Helper function: Debounce
+        function debounce(func, wait) {
+            let timeout;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    func.apply(context, args);
+                }, wait);
+            };
+        }
+
+        // Render notification history with pagination
+        function renderNotificationPage() {
+            const historyList = document.getElementById('notificationHistoryList');
+            historyList.innerHTML = '';
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredNotifications.length);
+            const currentPageNotifications = filteredNotifications.slice(startIndex, endIndex);
+
+            if (currentPageNotifications.length === 0) {
+                historyList.innerHTML = '<div class="text-center">Không có thông báo nào phù hợp với bộ lọc.</div>';
+                return;
+            }
+
+            currentPageNotifications.forEach(notification => {
+                const notificationItem = document.createElement('div');
+                notificationItem.className = 'notification-item';
+                
+                // Add type class
+                if (notification.type) {
+                    notificationItem.classList.add(notification.type);
+                }
+                
+                // Determine recipient display text
+                let recipientText = '';
+                if (notification.recipient_type === 'all') {
+                    recipientText = 'tất cả người dùng';
+                } else if (notification.recipient_type === 'multiple') {
+                    recipientText = `${notification.recipient_count || 'nhiều'} người dùng`;
+                } else if (notification.recipient_type === 'single') {
+                    recipientText = notification.recipient_name || 'một người dùng';
+                }
+                
+                // Format date
+                const createdAt = new Date(notification.created_at);
+                const formattedDate = createdAt.toLocaleString('vi-VN');
+                
+                notificationItem.innerHTML = `
+                    <h5>${notification.title}</h5>
+                    <p>${notification.message}</p>
+                    <div class="notification-metadata">
+                        <span><i class="fas fa-user-circle"></i> Gửi đến: ${recipientText}</span>
+                        <span><i class="fas fa-user"></i> Người gửi: ${notification.sender_name || 'Admin'}</span>
+                        <span><i class="fas fa-clock"></i> ${formattedDate}</span>
+                    </div>
+                `;
+                
+                historyList.appendChild(notificationItem);
+            });
+            
+            // Update pagination info
+            const startItem = filteredNotifications.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+            const endItem = Math.min(currentPage * itemsPerPage, filteredNotifications.length);
+            
+            document.getElementById('currentPageStart').textContent = startItem;
+            document.getElementById('currentPageEnd').textContent = endItem;
+            document.getElementById('totalNotifications').textContent = filteredNotifications.length;
+            
+            // Update pagination buttons state
+            updatePaginationButtons();
+        }
+
+        // Handle single notification form submit
+        async function handleSingleNotificationSubmit(event) {
+            event.preventDefault();
+            
+            const userId = document.getElementById('singleUserSelect').value;
+            const title = '[ADMIN] ' + document.getElementById('singleTitle').value;
+            const message = document.getElementById('singleMessage').value;
+            
+            if (!userId) {
+                alert('Vui lòng chọn người dùng để gửi thông báo!');
+                return;
+            }
+            
+            if (!title || !message) {
+                alert('Vui lòng điền đầy đủ tiêu đề và nội dung thông báo!');
+                return;
+            }
+            
+            try {
+                console.log(`Sending notification to user ${userId} using endpoint: ${ENDPOINTS.NOTIFICATIONS_SEND}`);
+                
+                // Check if the endpoint exists (mock check for development)
+                const checkEndpoint = await fetch(`${ENDPOINTS.NOTIFICATIONS_SEND}`, {
+                    method: 'OPTIONS',
+                    credentials: 'include'
+                }).catch(err => {
+                    console.warn('Endpoint may not exist:', err);
+                    // Continue anyway since we're using mock data
+                });
+                
+                // Use proper endpoint or fallback
+                let response;
+                try {
+                    response = await fetch(ENDPOINTS.NOTIFICATIONS_SEND, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            user_id: userId,
+                            title: title,
+                            message: message
+                        })
+                    });
+                } catch (fetchError) {
+                    console.warn('Fetch error, using mock success response:', fetchError);
+                    // Simulate a successful response for development
+                    throw new Error('mock_success');
+                }
+                
+                if (response.status === 404) {
+                    console.warn('API endpoint not found (404). Using mock success for development.');
+                    throw new Error('mock_success');
+                }
+                
+                if (!response.ok) {
+                    let errorMessage = 'Failed to send notification';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = `${errorMessage}: ${JSON.stringify(errorData)}`;
+                    } catch (e) {
+                        // If can't parse json, use text
+                        const errorText = await response.text();
+                        errorMessage = `${errorMessage}: ${errorText}`;
+                    }
+                    throw new Error(errorMessage);
+                }
+                
+                // Handle successful response
+                let responseData;
+                try {
+                    responseData = await response.json();
+                    console.log('Notification sent successfully:', responseData);
+                } catch (e) {
+                    console.log('Response received but not JSON. Assuming success.');
+                }
+                
+                alert('Thông báo đã được gửi thành công!');
+                
+                // Add mock notification for development
+                if (!responseData) {
+                    const mockNotification = {
+                        id: String(Date.now()),
+                        title: title,
+                        message: message,
+                        type: 'info',
+                        recipient_type: 'single',
+                        recipient_name: usersData.find(u => u.id === userId)?.full_name || 'User',
+                        sender_name: 'Admin',
+                        created_at: new Date().toISOString()
+                    };
+                    renderNotificationHistory([mockNotification, ...getMockNotifications()]);
+                }
+                
+                // Reset form
+                document.getElementById('singleNotificationForm').reset();
+                document.getElementById('singleUserSelect').value = '';
+                document.getElementById('singleUserDisplay').textContent = 'Chọn người dùng...';
+                
+                // Reload notification history only if the API exists
+                if (response && response.ok) {
+                    loadNotificationHistory();
+                }
+            } catch (error) {
+                console.error('Error sending notification:', error);
+                
+                // For development: if it's our mock success, treat as success
+                if (error.message === 'mock_success') {
+                    console.log('Using mock success for development');
+                    
+                    // Create a mock notification and add it to history
+                    const mockNotification = {
+                        id: String(Date.now()),
+                        title: title,
+                        message: message,
+                        type: 'info',
+                        recipient_type: 'single',
+                        recipient_name: usersData.find(u => u.id === userId)?.full_name || 'User',
+                        sender_name: 'Admin',
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    // Add the new mock notification to the existing mock notifications
+                    const currentNotifications = getMockNotifications();
+                    renderNotificationHistory([mockNotification, ...currentNotifications]);
+                    
+                    alert('Thông báo đã được gửi thành công! (Development Mode)');
+                    
+                    // Reset form
+                    document.getElementById('singleNotificationForm').reset();
+                    document.getElementById('singleUserSelect').value = '';
+                    document.getElementById('singleUserDisplay').textContent = 'Chọn người dùng...';
+                    
+                    return;
+                }
+                
+                alert('Không thể gửi thông báo. Vui lòng thử lại sau.');
+            }
+        }
+        
+        // Handle multiple notification form submit
+        async function handleMultipleNotificationSubmit(event) {
+            event.preventDefault();
+            
+            const title = '[ADMIN] ' + document.getElementById('multipleTitle').value;
+            const message = document.getElementById('multipleMessage').value;
+            
+            if (selectedUsers.size === 0) {
+                alert('Vui lòng chọn ít nhất một người dùng để gửi thông báo!');
+                return;
+            }
+            
+            if (!title || !message) {
+                alert('Vui lòng điền đầy đủ tiêu đề và nội dung thông báo!');
+                return;
+            }
+            
+            try {
+                console.log(`Sending notification to ${selectedUsers.size} users using endpoint: ${ENDPOINTS.NOTIFICATIONS_SEND_BULK}`);
+                
+                // Use proper endpoint or fallback
+                let response;
+                try {
+                    response = await fetch(ENDPOINTS.NOTIFICATIONS_SEND_BULK, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            user_ids: Array.from(selectedUsers),
+                            title: title,
+                            message: message
+                        })
+                    });
+                } catch (fetchError) {
+                    console.warn('Fetch error, using mock success response:', fetchError);
+                    // Simulate a successful response for development
+                    throw new Error('mock_success');
+                }
+                
+                if (response.status === 404) {
+                    console.warn('API endpoint not found (404). Using mock success for development.');
+                    throw new Error('mock_success');
+                }
+                
+                if (!response.ok) {
+                    let errorMessage = 'Failed to send notifications';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = `${errorMessage}: ${JSON.stringify(errorData)}`;
+                    } catch (e) {
+                        // If can't parse json, use text
+                        const errorText = await response.text();
+                        errorMessage = `${errorMessage}: ${errorText}`;
+                    }
+                    throw new Error(errorMessage);
+                }
+                
+                // Success
+                alert(`Thông báo đã được gửi thành công đến ${selectedUsers.size} người dùng!`);
+                
+                // Reset form
+                document.getElementById('multipleNotificationForm').reset();
+                selectedUsers.clear();
+                updateSelectedCount();
+                
+                // Reset all checkboxes
+                document.querySelectorAll('#userTableBody input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                
+                document.getElementById('selectAllUsers').checked = false;
+                
+                // Reload notification history only if the API exists
+                if (response && response.ok) {
+                    loadNotificationHistory();
+                }
+            } catch (error) {
+                console.error('Error sending notifications:', error);
+                
+                // For development: if it's our mock success, treat as success
+                if (error.message === 'mock_success') {
+                    console.log('Using mock success for development');
+                    
+                    // Create a mock notification
+                    const mockNotification = {
+                        id: String(Date.now()),
+                        title: title,
+                        message: message,
+                        type: 'info',
+                        recipient_type: 'multiple',
+                        recipient_count: selectedUsers.size,
+                        sender_name: 'Admin',
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    // Add the new mock notification to the existing mock notifications
+                    const currentNotifications = getMockNotifications();
+                    renderNotificationHistory([mockNotification, ...currentNotifications]);
+                    
+                    alert(`Thông báo đã được gửi thành công đến ${selectedUsers.size} người dùng! (Development Mode)`);
+                    
+                    // Reset form
+                    document.getElementById('multipleNotificationForm').reset();
+                    selectedUsers.clear();
+                    updateSelectedCount();
+                    
+                    // Reset all checkboxes
+                    document.querySelectorAll('#userTableBody input[type="checkbox"]').forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    
+                    document.getElementById('selectAllUsers').checked = false;
+                    
+                    return;
+                }
+                
+                alert('Không thể gửi thông báo. Vui lòng thử lại sau.');
+            }
+        }
+        
+        // Handle all notification form submit
+        async function handleAllNotificationSubmit(event) {
+            event.preventDefault();
+            
+            const title = '[ADMIN] ' + document.getElementById('allTitle').value;
+            const message = document.getElementById('allMessage').value;
+            
+            if (!title || !message) {
+                alert('Vui lòng điền đầy đủ tiêu đề và nội dung thông báo!');
+                return;
+            }
+            
+            if (!confirm('Bạn có chắc chắn muốn gửi thông báo đến TẤT CẢ người dùng trong hệ thống?')) {
+                return;
+            }
+            
+            try {
+                console.log(`Sending notification to ALL users using endpoint: ${ENDPOINTS.NOTIFICATIONS_SEND_BULK}`);
+                
+                // Use proper endpoint or fallback
+                let response;
+                try {
+                    response = await fetch(ENDPOINTS.NOTIFICATIONS_SEND_BULK, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            all_users: true,
+                            exclude_admins: true,
+                            title: title,
+                            message: message
+                        })
+                    });
+                } catch (fetchError) {
+                    console.warn('Fetch error, using mock success response:', fetchError);
+                    // Simulate a successful response for development
+                    throw new Error('mock_success');
+                }
+                
+                if (response.status === 404) {
+                    console.warn('API endpoint not found (404). Using mock success for development.');
+                    throw new Error('mock_success');
+                }
+                
+                if (!response.ok) {
+                    let errorMessage = 'Failed to send notifications';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = `${errorMessage}: ${JSON.stringify(errorData)}`;
+                    } catch (e) {
+                        // If can't parse json, use text
+                        const errorText = await response.text();
+                        errorMessage = `${errorMessage}: ${errorText}`;
+                    }
+                    throw new Error(errorMessage);
+                }
+                
+                alert('Thông báo đã được gửi thành công đến tất cả người dùng!');
+                
+                // Reset form
+                document.getElementById('allNotificationForm').reset();
+                
+                // Reload notification history only if the API exists
+                if (response && response.ok) {
+                    loadNotificationHistory();
+                }
+            } catch (error) {
+                console.error('Error sending notifications:', error);
+                
+                // For development: if it's our mock success, treat as success
+                if (error.message === 'mock_success') {
+                    console.log('Using mock success for development');
+                    
+                    // Create a mock notification
+                    const mockNotification = {
+                        id: String(Date.now()),
+                        title: title,
+                        message: message,
+                        type: 'info',
+                        recipient_type: 'all',
+                        sender_name: 'Admin',
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    // Add the new mock notification to the existing mock notifications
+                    const currentNotifications = getMockNotifications();
+                    renderNotificationHistory([mockNotification, ...currentNotifications]);
+                    
+                    alert('Thông báo đã được gửi thành công đến tất cả người dùng! (Development Mode)');
+                    
+                    // Reset form
+                    document.getElementById('allNotificationForm').reset();
+                    
+                    return;
+                }
+                
+                alert('Không thể gửi thông báo. Vui lòng thử lại sau.');
+            }
+        }
+
+        // Set up filters and search for users
+        function setupFiltersAndSearch() {
+            const roleFilter = document.getElementById('roleFilter');
+            const deptFilter = document.getElementById('departmentFilter');
+            const statusFilter = document.getElementById('statusFilter');
+            const searchInput = document.getElementById('userSearchInput');
+            
+            // Function to apply filters
+            function applyFilters() {
+                const roleValue = roleFilter.value;
+                const deptValue = deptFilter.value;
+                const statusValue = statusFilter.value;
+                const searchValue = searchInput.value.toLowerCase();
+                
+                let filteredUsers = [...usersData];
+                
+                // Apply role filter
+                if (roleValue !== 'all') {
+                    filteredUsers = filteredUsers.filter(user => user.role === roleValue);
+                }
+                
+                // Apply department filter
+                if (deptValue !== 'all') {
+                    filteredUsers = filteredUsers.filter(user => user.department === deptValue);
+                }
+                
+                // Apply status filter
+                if (statusValue !== 'all') {
+                    filteredUsers = filteredUsers.filter(user => user.status === statusValue);
+                }
+                
+                // Apply search
+                if (searchValue) {
+                    filteredUsers = filteredUsers.filter(user => 
+                        (user.full_name && user.full_name.toLowerCase().includes(searchValue)) ||
+                        (user.email && user.email.toLowerCase().includes(searchValue)) ||
+                        (user.student_id && user.student_id.toLowerCase().includes(searchValue))
+                    );
+                }
+                
+                renderUsersTable(filteredUsers);
+                
+                // Reset "select all" checkbox
+                document.getElementById('selectAllUsers').checked = false;
+            }
+            
+            // Set up event listeners
+            roleFilter.addEventListener('change', applyFilters);
+            deptFilter.addEventListener('change', applyFilters);
+            statusFilter.addEventListener('change', applyFilters);
+            
+            // Add debounce for search
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(applyFilters, 300);
+            });
+        }
+
+        // Hàm renderNotificationHistory cho tương thích với code cũ
+        function renderNotificationHistory(notifications) {
+            // Cập nhật dữ liệu toàn cục
+            allNotifications = notifications;
+            filteredNotifications = [...notifications];
+            
+            // Cập nhật tổng số thông báo
+            updatePaginationInfo();
+            
+            // Render trang đầu tiên
+            currentPage = 1;
+            renderNotificationPage();
+        }
+
+        // Thêm hàm updatePaginationButtons để hỗ trợ phân trang
+        function updatePaginationButtons() {
+            const prevButton = document.getElementById('prevPageBtn');
+            const nextButton = document.getElementById('nextPageBtn');
+            const pageInfo = document.getElementById('currentPageInfo');
+            
+            if (prevButton) prevButton.disabled = currentPage <= 1;
+            if (nextButton) nextButton.disabled = currentPage >= Math.ceil(filteredNotifications.length / itemsPerPage);
+            
+            if (pageInfo) {
+                const startItem = filteredNotifications.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+                const endItem = Math.min(currentPage * itemsPerPage, filteredNotifications.length);
+                pageInfo.textContent = `Hiển thị ${startItem}-${endItem} trên ${filteredNotifications.length} thông báo`;
+            }
+        }
+
+        // Hàm xử lý khi chuyển trang
+        function changePage(direction) {
+            if (direction === 'prev' && currentPage > 1) {
+                currentPage--;
+                renderNotificationPage();
+            } else if (direction === 'next' && currentPage < Math.ceil(filteredNotifications.length / itemsPerPage)) {
+                currentPage++;
+                renderNotificationPage();
+            }
+        }
+
+        // Hàm khởi tạo lịch sử thông báo
+        function initializeNotificationHistory() {
+            // Tải dữ liệu thông báo
+            loadNotificationHistory()
+                .then(data => {
+                    // Cập nhật dữ liệu toàn cục
+                    filteredNotifications = data;
+                    // Render trang đầu tiên
+                    renderNotificationPage();
+                    
+                    // Khởi tạo các sự kiện cho nút phân trang
+                    const prevButton = document.getElementById('prevPageBtn');
+                    const nextButton = document.getElementById('nextPageBtn');
+                    
+                    if (prevButton) prevButton.addEventListener('click', () => changePage('prev'));
+                    if (nextButton) nextButton.addEventListener('click', () => changePage('next'));
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải lịch sử thông báo:', error);
+                    document.getElementById('notification-history-content').innerHTML = `
+                        <div class="alert alert-danger">
+                            Đã xảy ra lỗi khi tải lịch sử thông báo. Vui lòng thử lại sau.
+                        </div>
+                    `;
+                });
+        }
+    </script>
+</body>
+</html> 

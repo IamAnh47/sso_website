@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Study Space - HCMUT</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <div class="left-panel">
+      <div class="logo-container">
+        <img src="images/hcmut_logo.png" alt="HCMUT Logo" class="logo">
+      </div>
+      <div class="info-text">
+        <h1>Smart Study Space</h1>
+        <p>Ho Chi Minh City University of Technology - HCMUT</p>
+        <div class="features">
+          <div class="feature">
+            <i class="fas fa-search"></i>
+            <span>Find available study spaces</span>
+          </div>
+          <div class="feature">
+            <i class="fas fa-calendar-check"></i>
+            <span>Book space in advance</span>
+          </div>
+          <div class="feature">
+            <i class="fas fa-lightbulb"></i>
+            <span>Smart IoT integration</span>
+          </div>
+          <div class="feature">
+            <i class="fas fa-chart-line"></i>
+            <span>Analytics and insights</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="right-panel">
+      <div class="form-container">
+        <div class="auth-tabs">
+          <button class="tab-btn active" data-tab="login">Login</button>
+          <button class="tab-btn" data-tab="register">Register</button>
+        </div>
+        
+        <div class="tab-content" id="login">
+          <h2>Welcome Back!</h2>
+          <p>Login with your HCMUT credentials</p>
+          
+          <form id="login-form">
+            <div class="form-group">
+              <label for="login-username">Username</label>
+              <input type="text" id="login-username" name="username" placeholder="Enter your username" required>
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <input type="password" id="login-password" name="password" placeholder="Enter your password" required>
+            </div>
+            <div class="form-group remember-me">
+              <input type="checkbox" id="remember-me" name="remember-me">
+              <label for="remember-me">Remember me</label>
+            </div>
+            <div class="form-group">
+              <button type="submit" class="btn-primary">Login</button>
+            </div>
+            <div id="login-error" class="error-message"></div>
+          </form>
+        </div>
+        
+        <div class="tab-content hidden" id="register">
+          <h2>Create Account</h2>
+          <p>Register with your HCMUT details</p>
+          
+          <form id="register-form" class="auth-form">
+            <div class="input-group">
+              <label for="register-username">Tên đăng nhập</label>
+              <input type="text" id="register-username" name="username" required>
+            </div>
+            <div class="input-group">
+              <label for="register-password">Mật khẩu</label>
+              <input type="password" id="register-password" name="password" required>
+            </div>
+            <div class="input-group">
+              <label for="register-confirm-password">Xác nhận mật khẩu</label>
+              <input type="password" id="register-confirm-password" name="confirm-password" required>
+            </div>
+            <div class="input-group">
+              <label for="register-email">Email</label>
+              <input type="email" id="register-email" name="email" required>
+            </div>
+            <div class="input-group">
+              <label for="register-fullname">Họ và tên</label>
+              <input type="text" id="register-fullname" name="fullname" required>
+            </div>
+            <div class="input-group">
+              <label for="register-student-id">Mã số sinh viên</label>
+              <input type="text" id="register-student-id" name="student-id" required>
+            </div>
+            <div class="input-group">
+              <label for="register-phone">Số điện thoại</label>
+              <input type="tel" id="register-phone" name="phone">
+            </div>
+            <div class="input-group">
+              <label for="register-department">Khoa/Phòng ban</label>
+              <select id="register-department" name="department">
+                <option value="">-- Chọn khoa/phòng ban --</option>
+                <option value="cse">Khoa Khoa học và Kỹ thuật Máy tính</option>
+                <option value="eee">Khoa Điện – Điện tử</option>
+                <option value="me">Khoa Cơ khí</option>
+                <option value="mse">Khoa Công nghệ Vật liệu</option>
+                <option value="as">Khoa Khoa học Ứng dụng</option>
+                <option value="rm">Phòng quản lí phòng học</option>
+              </select>
+            </div>
+            <div class="error-message" id="register-error"></div>
+            <button type="submit" class="auth-button">Đăng ký</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+</body>
+</html> 

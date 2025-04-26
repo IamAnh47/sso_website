@@ -1,0 +1,44 @@
+{
+  "name": "smart-study-space",
+  "version": "1.0.0",
+  "description": "A system for managing smart study spaces at HCMUT",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "setup": "node setup-and-run.js",
+    "setup:test": "node setup-and-run.js --with-test-data",
+    "setup:fresh": "node setup-and-run.js --clear-data --with-test-data",
+    "init": "node init-system.js",
+    "dev:skip-auth": "cross-env NODE_ENV=development SKIP_AUTH=true nodemon src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "HCMUT",
+    "smart study",
+    "IoT",
+    "booking",
+    "education"
+  ],
+  "author": "HCMUT",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "body-parser": "^1.20.2",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "helmet": "^6.0.1",
+    "jsonwebtoken": "^9.0.0",
+    "morgan": "^1.10.0",
+    "sqlite3": "^5.1.6",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "nodemon": "^2.0.22"
+  },
+  "readme": "# Smart Study Space\n\n## Hướng dẫn khởi tạo hệ thống\n\n### Khởi tạo database và tài khoản\n```\nnpm run init\n```\n\nScript này sẽ:\n- Kiểm tra database hiện tại và cho phép xóa để tạo mới nếu cần\n- Tạo tất cả các bảng cần thiết\n- Tạo sẵn 3 tài khoản mặc định (admin, staff, user)\n- Hỏi bạn có muốn tạo thêm tài khoản tùy chỉnh không\n\n### Chạy ứng dụng ở chế độ phát triển (bỏ qua xác thực)\n```\nnpm run dev:skip-auth\n```\n\n### Chạy ứng dụng bình thường\n```\nnpm start\n```\n\n## Thông tin tài khoản mặc định\n\n- **Admin**: \n  - Username: admin\n  - Password: admin123\n\n- **Staff**:\n  - Username: staff\n  - Password: staff123\n\n- **Student**:\n  - Username: user\n  - Password: user123"
+}

@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết người dùng - Admin Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --primary-dark: #2e59d9;
+            --secondary-color: #858796;
+            --success-color: #1cc88a;
+            --info-color: #36b9cc;
+            --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
+            --light-color: #f8f9fc;
+            --dark-color: #5a5c69;
+        }
+
+        .menu-item.logo-item {
+            padding: 10px 0;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .menu-item.active {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .user-detail-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .user-detail-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .user-avatar-container {
+            margin-right: 20px;
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #f0f0f0;
+        }
+
+        .user-avatar-upload {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .user-info-main {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .user-role {
+            display: inline-block;
+            background-color: #e9f5ff;
+            color: #0077cc;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .user-role.admin {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .user-role.staff {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .user-detail-section {
+            margin-top: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .info-label {
+            width: 150px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .info-value {
+            flex: 1;
+        }
+
+        .action-btn-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        #avatar-upload {
+            display: none;
+        }
+    </style>
+</head>
+<body class="admin-dashboard">
+    <div class="sidebar">
+        <div class="menu">
+            <div class="menu-item logo-item">
+                <img src="./images/hcmut_logo.png" alt="Logo" class="logo">
+            </div>
+            <div class="menu-item" id="overview-menu-item" data-title="Trang chủ">
+                <i class="fas fa-tachometer-alt"></i>
+            </div>
+            <div class="menu-item" id="room-management-menu-item" data-title="Quản lý phòng">
+                <i class="fas fa-door-open"></i>
+            </div>
+            <div class="menu-item active" id="user-management-menu-item" data-title="Quản lý người dùng">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="menu-item" id="booking-management-menu-item" data-title="Quản lý đặt phòng">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="menu-item" id="notifications-menu-item" data-title="Thông báo">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="menu-item" id="statistics-menu-item" data-title="Thống kê">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <div class="menu-item" id="logout-btn" data-title="Đăng xuất">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="header-container">
+            <h1 class="header-title">Chi tiết người dùng</h1>
+            <div class="user-controls">
+                <i class="fas fa-bell"></i>
+                <i class="fas fa-envelope"></i>
+                <i class="fas fa-user-circle"></i>
+            </div>
+        </div>
+        
+        <div class="content-container">
+            <div class="user-detail-container">
+                <div class="user-detail-header">
+                    <div class="user-avatar-container">
+                        <img id="user-avatar" src="./images/default-avatar.png" alt="User avatar" class="user-avatar">
+                        <div class="user-avatar-upload" id="avatar-upload-btn">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <input type="file" id="avatar-upload" accept="image/*">
+                    </div>
+                    <div class="user-info-main">
+                        <h2 class="user-name" id="display-name">Đang tải...</h2>
+                        <div class="user-role" id="user-role-badge">Sinh viên</div>
+                        <div class="action-btn-container">
+                            <button class="btn btn-primary" id="edit-user-btn">
+                                <i class="fas fa-edit"></i> Sửa thông tin
+                            </button>
+                            <button class="btn btn-outline" id="change-password-btn">
+                                <i class="fas fa-key"></i> Đổi mật khẩu
+                            </button>
+                            <button class="btn btn-outline" id="toggle-status-btn">
+                                <i class="fas fa-lock"></i> Khóa tài khoản
+                            </button>
+                            <button class="btn btn-danger" id="delete-user-btn">
+                                <i class="fas fa-trash"></i> Xóa người dùng
+                            </button>
+                            <button class="btn btn-outline" id="back-btn">
+                                <i class="fas fa-arrow-left"></i> Quay lại
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="user-detail-section">
+                    <h3 class="section-title">Thông tin tài khoản</h3>
+                    <div class="info-row">
+                        <div class="info-label">ID người dùng:</div>
+                        <div class="info-value" id="user-id">Đang tải...</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Tên đăng nhập:</div>
+                        <div class="info-value" id="username">Đang tải...</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Họ và tên:</div>
+                        <div class="info-value" id="full-name">Đang tải...</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Email:</div>
+                        <div class="info-value" id="email">Đang tải...</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">MSSV:</div>
+                        <div class="info-value" id="student-id">Đang tải...</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Số điện thoại:</div>
+                        <div class="info-value" id="phone">Đang tải...</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Khoa/Viện:</div>
+                        <div class="info-value" id="department">Đang tải...</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Vai trò:</div>
+                        <div class="info-value" id="role">Đang tải...</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Ngày tạo:</div>
+                        <div class="info-value" id="created-at">Đang tải...</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Trạng thái:</div>
+                        <div class="info-value">
+                            <span class="status" id="user-status">Đang tải...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="user-detail-section">
+                    <h3 class="section-title">Lịch sử hoạt động</h3>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Thời gian</th>
+                                    <th>Hoạt động</th>
+                                    <th>Chi tiết</th>
+                                    <th>IP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activity-history">
+                                <!-- Activity logs will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit User Modal -->
+    <div class="modal" id="edit-user-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Chỉnh sửa thông tin người dùng</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-user-form">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-fullname">Họ và tên</label>
+                        <input type="text" class="form-input" id="edit-fullname" placeholder="Nhập họ và tên">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="edit-email">Email</label>
+                        <input type="email" class="form-input" id="edit-email" placeholder="Nhập email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="edit-student-id">MSSV (nếu có)</label>
+                        <input type="text" class="form-input" id="edit-student-id" placeholder="Nhập mã số sinh viên">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="edit-phone">Số điện thoại</label>
+                        <input type="tel" class="form-input" id="edit-phone" placeholder="Nhập số điện thoại">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="edit-department">Khoa/Viện</label>
+                        <select class="form-input" id="edit-department">
+                            <option value="">Chọn Khoa/Viện</option>
+                            <option value="cse">Khoa Khoa học và Kỹ thuật Máy tính</option>
+                            <option value="eee">Khoa Điện – Điện tử</option>
+                            <option value="me">Khoa Cơ khí</option>
+                            <option value="mse">Khoa Công nghệ Vật liệu</option>
+                            <option value="as">Khoa Khoa học Ứng dụng</option>
+                            <option value="rm">Phòng quản lí phòng học</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="edit-role">Vai trò</label>
+                        <select class="form-input" id="edit-role">
+                            <option value="student">Sinh viên</option>
+                            <option value="staff">Nhân viên</option>
+                            <option value="admin">Quản trị viên</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancel-edit-btn">Hủy</button>
+                <button class="btn btn-primary" id="save-edit-btn">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Change Password Modal -->
+    <div class="modal" id="change-password-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Đổi mật khẩu</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="change-password-form">
+                    <div class="form-group">
+                        <label class="form-label" for="new-password">Mật khẩu mới</label>
+                        <input type="password" class="form-input" id="new-password" placeholder="Nhập mật khẩu mới">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="confirm-password">Xác nhận mật khẩu</label>
+                        <input type="password" class="form-input" id="confirm-password" placeholder="Nhập lại mật khẩu mới">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancel-password-btn">Hủy</button>
+                <button class="btn btn-primary" id="save-password-btn">Đổi mật khẩu</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API endpoints
+        const API_BASE_URL = '/api';
+        const ENDPOINTS = {
+            USERS: `${API_BASE_URL}/users`,
+            USER_ROLES: `${API_BASE_URL}/users/roles`,
+            USER_ACTIVITIES: `${API_BASE_URL}/users/:userId/activities`
+        };
+        
+        // Get user ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('id');
+        
+        // Store loaded user data
+        let userData = null;
+        let userRoles = [];
+        
+        // Document ready
+        document.addEventListener('DOMContentLoaded', function() {
+            setupNavigation();
+            initializeUserDetailsPage();
+        });
+        
+        // Get auth token from localStorage
+        function getAuthToken() {
+            return localStorage.getItem('authToken');
+        }
+
+        // Create headers with auth token
+        function createAuthHeaders() {
+            const token = getAuthToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': token ? `Bearer ${token}` : ''
+            };
+        }
+        
+        function setupNavigation() {
+            document.getElementById('overview-menu-item').addEventListener('click', function() {
+                window.location.href = 'admin-overview.html';
+            });
+            
+            document.getElementById('room-management-menu-item').addEventListener('click', function() {
+                window.location.href = 'admin-room-management.html';
+            });
+            
+            document.getElementById('user-management-menu-item').addEventListener('click', function() {
+                window.location.href = 'admin-user-management.html';
+            });
+            document.getElementById('booking-management-menu-item').addEventListener('click', function() {
+                window.location.href = 'admin-booking-management.html';
+            });
+            document.getElementById('notifications-menu-item').addEventListener('click', function() {
+                window.location.href = 'admin-notifications.html';
+            });
+            document.getElementById('statistics-menu-item').addEventListener('click', function() {
+                window.location.href = 'admin-statistics.html';
+            });
+            
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                // Clear token and redirect to login
+                localStorage.removeItem('authToken');
+                window.location.href = 'index.html';
+            });
+            
+            document.getElementById('back-btn').addEventListener('click', function() {
+                window.location.href = 'admin-user-management.html';
+            });
+        }
+        
+        async function initializeUserDetailsPage() {
+            try {
+                // Set up modals
+                setupModals();
+                
+                // Set up avatar upload
+                setupAvatarUpload();
+                
+                // Load user roles
+                await loadUserRoles();
+                
+                // Load user data
+                await loadUserData();
+                
+                // Load user activity history
+                await loadUserActivities();
+                
+                // Populate user details
+                populateUserDetails();
+            } catch (error) {
+                console.error('Error initializing user details page:', error);
+                alert('Đã xảy ra lỗi khi tải dữ liệu người dùng. Vui lòng thử lại sau.');
+            }
+        }
+        
+        function setupModals() {
+            // Edit User Modal
+            const editModal = document.getElementById('edit-user-modal');
+            const editBtn = document.getElementById('edit-user-btn');
+            const closeEditBtn = document.querySelector('#edit-user-modal .modal-close');
+            const cancelEditBtn = document.getElementById('cancel-edit-btn');
+            const saveEditBtn = document.getElementById('save-edit-btn');
+            
+            editBtn.addEventListener('click', function() {
+                openEditModal();
+            });
+            
+            closeEditBtn.addEventListener('click', function() {
+                editModal.style.display = 'none';
+            });
+            
+            cancelEditBtn.addEventListener('click', function() {
+                editModal.style.display = 'none';
+            });
+            
+            saveEditBtn.addEventListener('click', function() {
+                saveUserEdit();
+            });
+            
+            // Change Password Modal
+            const pwdModal = document.getElementById('change-password-modal');
+            const pwdBtn = document.getElementById('change-password-btn');
+            const closePwdBtn = document.querySelector('#change-password-modal .modal-close');
+            const cancelPwdBtn = document.getElementById('cancel-password-btn');
+            const savePwdBtn = document.getElementById('save-password-btn');
+            
+            pwdBtn.addEventListener('click', function() {
+                pwdModal.style.display = 'flex';
+            });
+            
+            closePwdBtn.addEventListener('click', function() {
+                pwdModal.style.display = 'none';
+            });
+            
+            cancelPwdBtn.addEventListener('click', function() {
+                pwdModal.style.display = 'none';
+            });
+            
+            savePwdBtn.addEventListener('click', function() {
+                changePassword();
+            });
+            
+            // Toggle status button
+            const toggleStatusBtn = document.getElementById('toggle-status-btn');
+            toggleStatusBtn.addEventListener('click', function() {
+                toggleUserStatus();
+            });
+            
+            // Delete user
+            const deleteBtn = document.getElementById('delete-user-btn');
+            deleteBtn.addEventListener('click', function() {
+                deleteUser();
+            });
+            
+            // Close modals when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target === editModal) {
+                    editModal.style.display = 'none';
+                }
+                if (event.target === pwdModal) {
+                    pwdModal.style.display = 'none';
+                }
+            });
+        }
+        
+        function setupAvatarUpload() {
+            const avatarUploadBtn = document.getElementById('avatar-upload-btn');
+            const avatarUpload = document.getElementById('avatar-upload');
+            
+            avatarUploadBtn.addEventListener('click', function() {
+                avatarUpload.click();
+            });
+            
+            avatarUpload.addEventListener('change', function(event) {
+                if (event.target.files && event.target.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        document.getElementById('user-avatar').src = e.target.result;
+                        // In a real application, you would upload the file to the server here
+                        alert('Ảnh đại diện đã được cập nhật (lưu ý: tính năng này chưa được kết nối với backend).');
+                    };
+                    
+                    reader.readAsDataURL(event.target.files[0]);
+                }
+            });
+        }
+        
+        async function loadUserRoles() {
+            try {
+                const response = await fetch(ENDPOINTS.USER_ROLES, {
+                    headers: createAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to fetch user roles');
+                
+                userRoles = await response.json();
+                
+                // Populate role select in the modal
+                const roleSelect = document.getElementById('edit-role');
+                roleSelect.innerHTML = '';
+                
+                userRoles.forEach(role => {
+                    const option = document.createElement('option');
+                    option.value = role.code;
+                    option.textContent = role.name;
+                    roleSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading user roles:', error);
+                throw error;
+            }
+        }
+        
+        async function loadUserData() {
+            if (!userId) {
+                alert('Không tìm thấy ID người dùng!');
+                window.location.href = 'admin-user-management.html';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${ENDPOINTS.USERS}/${userId}`, {
+                    headers: createAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to fetch user data');
+                
+                userData = await response.json();
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                throw error;
+            }
+        }
+        
+        async function loadUserActivities() {
+            try {
+                const response = await fetch(ENDPOINTS.USER_ACTIVITIES.replace(':userId', userId), {
+                    headers: createAuthHeaders()
+                });
+                
+                if (!response.ok) throw new Error('Failed to fetch user activities');
+                
+                const activities = await response.json();
+                
+                // Render activities
+                renderActivityHistory(activities);
+            } catch (error) {
+                console.error('Error loading user activities:', error);
+                // Don't throw error here to avoid blocking other parts of the page
+                document.getElementById('activity-history').innerHTML = 
+                    '<tr><td colspan="4">Không thể tải lịch sử hoạt động</td></tr>';
+            }
+        }
+        
+        function renderActivityHistory(activities) {
+            const tableBody = document.getElementById('activity-history');
+            tableBody.innerHTML = '';
+            
+            if (!activities || activities.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4">Chưa có hoạt động nào được ghi lại</td></tr>';
+                return;
+            }
+            
+            activities.forEach(activity => {
+                const row = document.createElement('tr');
+                
+                const timeCell = document.createElement('td');
+                const activityDate = new Date(activity.timestamp);
+                timeCell.textContent = activityDate.toLocaleString('vi-VN');
+                
+                const actionCell = document.createElement('td');
+                actionCell.textContent = activity.action;
+                
+                const detailsCell = document.createElement('td');
+                detailsCell.textContent = activity.details || '-';
+                
+                const ipCell = document.createElement('td');
+                ipCell.textContent = activity.ip_address || '-';
+                
+                row.appendChild(timeCell);
+                row.appendChild(actionCell);
+                row.appendChild(detailsCell);
+                row.appendChild(ipCell);
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function populateUserDetails() {
+            if (!userData) return;
+            
+            // Set user avatar if available
+            if (userData.avatar) {
+                document.getElementById('user-avatar').src = userData.avatar;
+            }
+            
+            // Set basic user info
+            document.getElementById('display-name').textContent = userData.full_name;
+            document.getElementById('user-id').textContent = userData.id;
+            document.getElementById('username').textContent = userData.username;
+            document.getElementById('full-name').textContent = userData.full_name;
+            document.getElementById('email').textContent = userData.email || 'Chưa cập nhật';
+            document.getElementById('student-id').textContent = userData.student_id || 'Không có';
+            document.getElementById('phone').textContent = userData.phone || 'Chưa cập nhật';
+            
+            // Map department_id to department name
+            const departmentMap = {
+                'cse': 'Khoa Khoa học và Kỹ thuật Máy tính',
+                'eee': 'Khoa Điện – Điện tử',
+                'me': 'Khoa Cơ khí',
+                'mse': 'Khoa Công nghệ Vật liệu',
+                'as': 'Khoa Khoa học Ứng dụng',
+                'rm': 'Phòng quản lí phòng học'
+            };
+            document.getElementById('department').textContent = userData.department_id ? 
+                departmentMap[userData.department_id] || userData.department_id : 'Chưa cập nhật';
+            
+            // Set role
+            const roleText = userRoles.find(r => r.code === userData.role)?.name || userData.role;
+            document.getElementById('role').textContent = roleText;
+            
+            // Set role badge class
+            const roleBadge = document.getElementById('user-role-badge');
+            roleBadge.textContent = roleText;
+            roleBadge.className = 'user-role';
+            
+            if (userData.role === 'admin') {
+                roleBadge.classList.add('admin');
+            } else if (userData.role === 'staff') {
+                roleBadge.classList.add('staff');
+            }
+            
+            // Format and set created date
+            const createdDate = userData.created_at ? new Date(userData.created_at) : null;
+            document.getElementById('created-at').textContent = createdDate ? 
+                createdDate.toLocaleDateString('vi-VN', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : 'Không có thông tin';
+                
+            // Set user status
+            const statusBadge = document.getElementById('user-status');
+            statusBadge.className = 'status';
+            
+            if (userData.status === 'locked') {
+                statusBadge.classList.add('status-occupied');
+                statusBadge.textContent = 'Đã khóa';
+                document.getElementById('toggle-status-btn').innerHTML = '<i class="fas fa-unlock"></i> Mở khóa tài khoản';
+            } else {
+                statusBadge.classList.add('status-available');
+                statusBadge.textContent = 'Hoạt động';
+                document.getElementById('toggle-status-btn').innerHTML = '<i class="fas fa-lock"></i> Khóa tài khoản';
+            }
+        }
+        
+        function openEditModal() {
+            if (!userData) return;
+            
+            // Populate form with current user data
+            document.getElementById('edit-fullname').value = userData.full_name;
+            document.getElementById('edit-email').value = userData.email || '';
+            document.getElementById('edit-student-id').value = userData.student_id || '';
+            document.getElementById('edit-phone').value = userData.phone || '';
+            document.getElementById('edit-department').value = userData.department_id || '';
+            document.getElementById('edit-role').value = userData.role;
+            
+            // Show modal
+            document.getElementById('edit-user-modal').style.display = 'flex';
+        }
+        
+        async function saveUserEdit() {
+            try {
+                const updatedData = {
+                    full_name: document.getElementById('edit-fullname').value,
+                    email: document.getElementById('edit-email').value,
+                    student_id: document.getElementById('edit-student-id').value,
+                    phone: document.getElementById('edit-phone').value,
+                    department_id: document.getElementById('edit-department').value,
+                    role: document.getElementById('edit-role').value
+                };
+                
+                // Validate form data
+                if (!updatedData.full_name) {
+                    alert('Họ và tên không được để trống!');
+                    return;
+                }
+                
+                const response = await fetch(`${ENDPOINTS.USERS}/${userId}`, {
+                    method: 'PUT',
+                    headers: createAuthHeaders(),
+                    body: JSON.stringify(updatedData)
+                });
+                
+                if (!response.ok) throw new Error('Failed to update user');
+                
+                // Update local data
+                const result = await response.json();
+                userData = result.user;
+                
+                // Close modal and update UI
+                document.getElementById('edit-user-modal').style.display = 'none';
+                populateUserDetails();
+                
+                alert('Cập nhật thông tin người dùng thành công!');
+            } catch (error) {
+                console.error('Error updating user:', error);
+                alert(`Lỗi khi cập nhật người dùng: ${error.message}`);
+            }
+        }
+        
+        async function changePassword() {
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            if (!newPassword) {
+                alert('Vui lòng nhập mật khẩu mới!');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                alert('Mật khẩu xác nhận không khớp!');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${ENDPOINTS.USERS}/${userId}/password`, {
+                    method: 'PUT',
+                    headers: createAuthHeaders(),
+                    body: JSON.stringify({
+                        new_password: newPassword
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to change password');
+                
+                // Reset form and close modal
+                document.getElementById('change-password-form').reset();
+                document.getElementById('change-password-modal').style.display = 'none';
+                
+                alert('Đổi mật khẩu thành công!');
+            } catch (error) {
+                console.error('Error changing password:', error);
+                alert(`Lỗi khi đổi mật khẩu: ${error.message}`);
+            }
+        }
+        
+        async function deleteUser() {
+            if (confirm(`Bạn có chắc chắn muốn xóa người dùng "${userData.full_name}"?`)) {
+                try {
+                    const response = await fetch(`${ENDPOINTS.USERS}/${userId}`, {
+                        method: 'DELETE',
+                        headers: createAuthHeaders()
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to delete user');
+                    
+                    alert('Xóa người dùng thành công!');
+                    window.location.href = 'admin-user-management.html';
+                } catch (error) {
+                    console.error('Error deleting user:', error);
+                    alert(`Lỗi khi xóa người dùng: ${error.message}`);
+                }
+            }
+        }
+        
+        async function toggleUserStatus() {
+            const newStatus = userData.status === 'locked' ? 'active' : 'locked';
+            const confirmMsg = newStatus === 'locked' ? 
+                `Bạn có chắc chắn muốn KHÓA tài khoản của "${userData.full_name}"?` : 
+                `Bạn có chắc chắn muốn MỞ KHÓA tài khoản của "${userData.full_name}"?`;
+                
+            if (confirm(confirmMsg)) {
+                try {
+                    const response = await fetch(`${ENDPOINTS.USERS}/${userId}/status`, {
+                        method: 'PATCH',
+                        headers: createAuthHeaders(),
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to update user status');
+                    
+                    // Update local data
+                    const result = await response.json();
+                    userData = result.user;
+                    
+                    // Update UI
+                    populateUserDetails();
+                    
+                    alert(`Tài khoản đã được ${newStatus === 'locked' ? 'khóa' : 'mở khóa'} thành công!`);
+                } catch (error) {
+                    console.error('Error toggling user status:', error);
+                    alert(`Lỗi khi cập nhật trạng thái tài khoản: ${error.message}`);
+                }
+            }
+        }
+    </script>
+</body>
+</html> 

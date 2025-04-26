@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thông tin cá nhân - HCMUT</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin-dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="js/auth.js" defer></script>
+  <style>
+    .menu-item.logo-item {
+      padding: 10px 0;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      width: 60px;
+      height: 60px;
+      max-width: 100%;
+      object-fit: contain;
+    }
+
+    .menu-item.active {
+      background-color: #28a745;
+      color: white;
+    }
+    .header {
+      background: var(--main-gradient);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 4px rgba(0,0,0,0.25);
+    }
+    .profile-container {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 30px;
+    }
+    
+    @media (max-width: 768px) {
+      .profile-container {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .profile-sidebar {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .profile-avatar {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      overflow: hidden;
+      background-color: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .profile-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .profile-avatar-placeholder {
+      font-size: 80px;
+      color: #ccc;
+    }
+    
+    .user-name {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .user-role {
+      display: inline-block;
+      padding: 3px 10px;
+      background-color: #e7f5ea;
+      color: #28a745;
+      border-radius: 20px;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .user-info-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .user-info-item i {
+      margin-right: 10px;
+      width: 20px;
+      text-align: center;
+    }
+    
+    .profile-content {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 30px;
+    }
+    
+    .profile-section {
+      margin-bottom: 30px;
+    }
+    
+    .profile-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 20px;
+      color: #333;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+    
+    .profile-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    @media (max-width: 576px) {
+      .profile-info-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .cancel-btn {
+      padding: 8px 15px;
+      border: 1px solid #ddd;
+      background-color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .save-btn {
+      padding: 8px 15px;
+      background-color: #005baa;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .password-requirements {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+      padding-left: 15px;
+    }
+    
+    .password-requirements li {
+      margin-bottom: 3px;
+    }
+    
+    .form-error {
+      color: #dc3545;
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
+    }
+  </style>
+</head>
+<body class="admin-dashboard">
+  <div class="sidebar">
+    <div class="menu">
+      <div class="menu-item logo-item">
+        <img src="./images/hcmut_logo.png" alt="Logo" class="logo">
+      </div>
+      <div class="menu-item" id="dashboard-menu-item" data-title="Trang chủ">
+        <i class="fas fa-tachometer-alt"></i>
+      </div>
+      <div class="menu-item" id="room-booking-menu-item" data-title="Đặt phòng">
+        <i class="fas fa-door-open"></i>
+      </div>
+      <div class="menu-item" id="booking-history-menu-item" data-title="Lịch sử đặt phòng">
+        <i class="fas fa-history"></i>
+      </div>
+      <div class="menu-item" id="notifications-menu-item" data-title="Thông báo">
+        <i class="fas fa-bell"></i>
+      </div>
+      <div class="menu-item active" id="profile-menu-item" data-title="Thông tin cá nhân">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="menu-item" id="statistics-menu-item" data-title="Thống kê">
+        <i class="fas fa-chart-bar"></i>
+      </div>
+      <div class="menu-item" id="logout-btn" data-title="Đăng xuất">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+    </div>
+  </div>
+  
+  <div class="main-content">
+    <div class="header">
+      <div class="header-title">Thông tin cá nhân</div>
+      <div class="user-info">
+        <div class="user-greeting" id="user-greeting">Xin chào, <span id="user-full-name">Sinh viên</span></div>
+        <div class="notification-bell" id="notification-bell">
+          <i class="fas fa-bell"></i>
+          <span class="notification-count" id="notification-count">0</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="dashboard-content">
+      <div class="section-header">
+        <h2>Thông tin cá nhân</h2>
+        <p>Xem và cập nhật thông tin cá nhân của bạn</p>
+      </div>
+      
+      <div class="profile-container">
+        <div class="profile-sidebar">
+          <div class="profile-avatar">
+            <div class="profile-avatar-placeholder" id="avatar-placeholder">
+              <i class="fas fa-user"></i>
+            </div>
+            <img id="user-avatar" style="display: none;" src="" alt="Avatar">
+          </div>
+          
+          <h2 class="user-name" id="user-name">Đang tải...</h2>
+          <div class="user-role">Sinh viên</div>
+          
+          <div class="user-info-item">
+            <i class="fas fa-id-card"></i>
+            <span id="user-student-id">Đang tải...</span>
+          </div>
+          
+          <div class="user-info-item">
+            <i class="fas fa-envelope"></i>
+            <span id="user-email">Đang tải...</span>
+          </div>
+          
+          <div class="user-info-item">
+            <i class="fas fa-mobile-alt"></i>
+            <span id="user-phone">Đang tải...</span>
+          </div>
+          
+          <div class="user-info-item">
+            <i class="fas fa-university"></i>
+            <span id="user-department">Đang tải...</span>
+          </div>
+        </div>
+        
+        <div class="profile-content">
+          <div class="profile-section">
+            <h3 class="section-title">Thông tin cá nhân</h3>
+            
+            <form id="profile-form">
+              <div class="profile-info-grid">
+                <div class="form-group">
+                  <label for="full-name">Họ và tên</label>
+                  <input type="text" id="full-name" name="full_name" class="form-control">
+                  <div class="form-error" id="full-name-error">Vui lòng nhập họ và tên</div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="student-id">Mã số sinh viên</label>
+                  <input type="text" id="student-id" name="student_id" class="form-control" readonly>
+                </div>
+                
+                <div class="form-group">
+                  <label for="email">Email</label>
+                  <input type="email" id="email" name="email" class="form-control">
+                  <div class="form-error" id="email-error">Vui lòng nhập email hợp lệ</div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="phone">Số điện thoại</label>
+                  <input type="tel" id="phone" name="phone" class="form-control">
+                  <div class="form-error" id="phone-error">Vui lòng nhập số điện thoại hợp lệ</div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="department">Khoa/Viện</label>
+                  <input type="text" id="department-display" class="form-control" readonly>
+                  <input type="hidden" id="department" name="department_id">
+                </div>
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" id="cancel-profile-btn" class="cancel-btn">Hủy</button>
+                <button type="submit" id="save-profile-btn" class="save-btn">Lưu thay đổi</button>
+              </div>
+            </form>
+          </div>
+          
+          <div class="profile-section">
+            <h3 class="section-title">Đổi mật khẩu</h3>
+            
+            <form id="password-form">
+              <div class="form-group">
+                <label for="current-password">Mật khẩu hiện tại</label>
+                <input type="password" id="current-password" name="current_password" class="form-control">
+                <div class="form-error" id="current-password-error">Vui lòng nhập mật khẩu hiện tại</div>
+              </div>
+              
+              <div class="form-group">
+                <label for="new-password">Mật khẩu mới</label>
+                <input type="password" id="new-password" name="new_password" class="form-control">
+                <div class="form-error" id="new-password-error">Vui lòng nhập mật khẩu mới</div>
+                <ul class="password-requirements">
+                  <li>Ít nhất 8 ký tự</li>
+                  <li>Bao gồm chữ hoa, chữ thường và số</li>
+                </ul>
+              </div>
+              
+              <div class="form-group">
+                <label for="confirm-password">Xác nhận mật khẩu mới</label>
+                <input type="password" id="confirm-password" name="confirm_password" class="form-control">
+                <div class="form-error" id="confirm-password-error">Mật khẩu xác nhận không khớp</div>
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" id="cancel-password-btn" class="cancel-btn">Hủy</button>
+                <button type="submit" id="save-password-btn" class="save-btn">Đổi mật khẩu</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // API endpoints
+    const API_BASE_URL = '/api';
+    const ENDPOINTS = {
+      USERS: `${API_BASE_URL}/users`,
+      USER_PROFILE: `${API_BASE_URL}/users/profile`,
+      CHANGE_PASSWORD: `${API_BASE_URL}/users/change-password`,
+      NOTIFICATIONS: `${API_BASE_URL}/notifications`,
+      UNREAD_NOTIFICATIONS: `${API_BASE_URL}/notifications/unread/count`,
+      AUTH_VERIFY: `${API_BASE_URL}/auth/verify`,
+      AUTH_LOGOUT: `${API_BASE_URL}/auth/logout`
+    };
+    
+    // State variables
+    let currentUser = null;
+    let originalProfileData = {};
+    
+    // Department map
+    const departmentMap = {
+      'cse': 'Khoa Khoa học và Kỹ thuật Máy tính',
+      'eee': 'Khoa Điện – Điện tử',
+      'me': 'Khoa Cơ khí',
+      'mse': 'Khoa Công nghệ Vật liệu',
+      'as': 'Khoa Khoa học Ứng dụng',
+      'rm': 'Phòng quản lí phòng học'
+    };
+    
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if user is authenticated
+      verifyAuth()
+        .then(userData => {
+          if (userData && userData.role === 'student') {
+            currentUser = userData;
+            setupNavigation();
+            initializePage();
+          } else {
+            console.error('User is not a student or is not authenticated');
+            clearAuthData();
+            window.location.href = 'index.html';
+          }
+        })
+        .catch(error => {
+          console.error('Authentication error:', error.message);
+          clearAuthData();
+          window.location.href = 'index.html';
+        });
+    });
+    
+    // Setup navigation
+    function setupNavigation() {
+      document.getElementById('dashboard-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-dashboard.html';
+      });
+      
+      document.getElementById('room-booking-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-room-reservation.html';
+      });
+      
+      document.getElementById('booking-history-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-booking-history.html';
+      });
+      
+      document.getElementById('notifications-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-notifications.html';
+      });
+      
+      document.getElementById('profile-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-profile.html';
+      });
+      
+      document.getElementById('statistics-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-statistics.html';
+      });
+      
+      document.getElementById('logout-btn').addEventListener('click', async function() {
+        try {
+          const response = await fetch(ENDPOINTS.AUTH_LOGOUT, {
+            method: 'POST',
+            credentials: 'include'
+          });
+          
+          clearAuthData();
+          window.location.href = 'index.html';
+        } catch (error) {
+          console.error('Logout error:', error);
+          clearAuthData();
+          window.location.href = 'index.html';
+        }
+      });
+      
+      // Set up notification bell click
+      document.getElementById('notification-bell').addEventListener('click', function() {
+        window.location.href = 'student-notifications.html';
+      });
+    }
+    
+    // Clear auth data
+    function clearAuthData() {
+      sessionStorage.removeItem('user');
+      localStorage.removeItem('authToken');
+    }
+    
+    // Initialize page
+    async function initializePage() {
+      // Set user greeting
+      document.getElementById('user-greeting').innerHTML = `Xin chào, <span id="user-full-name">${currentUser.full_name || currentUser.username}</span>`;
+      
+      // Load unread notifications count
+      loadNotificationsCount();
+      
+      // Set up form event listeners
+      document.getElementById('profile-form').addEventListener('submit', handleProfileSubmit);
+      document.getElementById('password-form').addEventListener('submit', handlePasswordSubmit);
+      
+      document.getElementById('cancel-profile-btn').addEventListener('click', resetProfileForm);
+      document.getElementById('cancel-password-btn').addEventListener('click', resetPasswordForm);
+      
+      // Load user data
+      await loadUserProfile();
+    }
+    
+    // Load notifications count
+    async function loadNotificationsCount() {
+      try {
+        const response = await fetch(ENDPOINTS.UNREAD_NOTIFICATIONS, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('notification-count').textContent = data.count;
+          
+          // Show notification count only if there are unread notifications
+          if (data.count > 0) {
+            document.getElementById('notification-count').style.display = 'inline-block';
+          } else {
+            document.getElementById('notification-count').style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.error('Error loading notifications count:', error);
+      }
+    }
+    
+    // Load user profile
+    async function loadUserProfile() {
+      try {
+        const response = await fetch(ENDPOINTS.USER_PROFILE, {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch user profile');
+        }
+        
+        const userData = await response.json();
+        originalProfileData = userData;
+        
+        // Fill in sidebar info
+        document.getElementById('user-name').textContent = userData.full_name || userData.username;
+        document.getElementById('user-student-id').textContent = userData.student_id || 'Chưa cập nhật';
+        document.getElementById('user-email').textContent = userData.email || 'Chưa cập nhật';
+        document.getElementById('user-phone').textContent = userData.phone || 'Chưa cập nhật';
+        document.getElementById('user-department').textContent = departmentMap[userData.department_id] || 'Chưa cập nhật';
+        
+        // If there's an avatar, display it
+        if (userData.avatar) {
+          document.getElementById('avatar-placeholder').style.display = 'none';
+          document.getElementById('user-avatar').src = userData.avatar;
+          document.getElementById('user-avatar').style.display = 'block';
+        }
+        
+        // Fill in form data
+        document.getElementById('full-name').value = userData.full_name || '';
+        document.getElementById('student-id').value = userData.student_id || '';
+        document.getElementById('email').value = userData.email || '';
+        document.getElementById('phone').value = userData.phone || '';
+        document.getElementById('department').value = userData.department_id || '';
+        document.getElementById('department-display').value = userData.department_id ? 
+          departmentMap[userData.department_id] || '' : '';
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+        alert('Không thể tải thông tin người dùng. Vui lòng thử lại sau.');
+      }
+    }
+    
+    // Reset profile form
+    function resetProfileForm() {
+      document.getElementById('full-name').value = originalProfileData.full_name || '';
+      document.getElementById('student-id').value = originalProfileData.student_id || '';
+      document.getElementById('email').value = originalProfileData.email || '';
+      document.getElementById('phone').value = originalProfileData.phone || '';
+      document.getElementById('department').value = originalProfileData.department_id || '';
+      document.getElementById('department-display').value = originalProfileData.department_id ? 
+        departmentMap[originalProfileData.department_id] || '' : '';
+      
+      // Hide all error messages
+      document.querySelectorAll('#profile-form .form-error').forEach(el => {
+        el.style.display = 'none';
+      });
+    }
+    
+    // Reset password form
+    function resetPasswordForm() {
+      document.getElementById('current-password').value = '';
+      document.getElementById('new-password').value = '';
+      document.getElementById('confirm-password').value = '';
+      
+      // Hide all error messages
+      document.querySelectorAll('#password-form .form-error').forEach(el => {
+        el.style.display = 'none';
+      });
+    }
+    
+    // Handle profile form submit
+    async function handleProfileSubmit(event) {
+      event.preventDefault();
+      
+      // Reset error messages
+      document.querySelectorAll('#profile-form .form-error').forEach(el => {
+        el.style.display = 'none';
+      });
+      
+      // Get form data
+      const fullName = document.getElementById('full-name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      
+      // Validate form
+      let isValid = true;
+      
+      if (!fullName) {
+        document.getElementById('full-name-error').style.display = 'block';
+        isValid = false;
+      }
+      
+      if (email && !isValidEmail(email)) {
+        document.getElementById('email-error').style.display = 'block';
+        isValid = false;
+      }
+      
+      if (phone && !isValidPhone(phone)) {
+        document.getElementById('phone-error').style.display = 'block';
+        isValid = false;
+      }
+      
+      if (!isValid) {
+        return;
+      }
+      
+      // Submit form
+      try {
+        const response = await fetch(ENDPOINTS.USER_PROFILE, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            full_name: fullName,
+            email: email,
+            phone: phone
+          })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to update profile');
+        }
+        
+        // Update original data
+        originalProfileData = {
+          ...originalProfileData,
+          full_name: fullName,
+          email: email,
+          phone: phone
+        };
+        
+        // Update sidebar info
+        document.getElementById('user-name').textContent = fullName;
+        document.getElementById('user-email').textContent = email || 'Chưa cập nhật';
+        document.getElementById('user-phone').textContent = phone || 'Chưa cập nhật';
+        document.getElementById('user-department').textContent = 
+          originalProfileData.department_id ? departmentMap[originalProfileData.department_id] || 'Chưa cập nhật' : 'Chưa cập nhật';
+        
+        // Update greeting
+        document.getElementById('user-greeting').innerHTML = `Xin chào, <span id="user-full-name">${fullName}</span>`;
+        
+        // Show success message
+        alert('Cập nhật thông tin thành công!');
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        alert(`Lỗi: ${error.message}`);
+      }
+    }
+    
+    // Handle password form submit
+    async function handlePasswordSubmit(event) {
+      event.preventDefault();
+      
+      // Reset error messages
+      document.querySelectorAll('#password-form .form-error').forEach(el => {
+        el.style.display = 'none';
+      });
+      
+      // Get form data
+      const currentPassword = document.getElementById('current-password').value;
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      
+      // Validate form
+      let isValid = true;
+      
+      if (!currentPassword) {
+        document.getElementById('current-password-error').style.display = 'block';
+        isValid = false;
+      }
+      
+      if (!newPassword) {
+        document.getElementById('new-password-error').style.display = 'block';
+        isValid = false;
+      } else if (!isValidPassword(newPassword)) {
+        document.getElementById('new-password-error').textContent = 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số';
+        document.getElementById('new-password-error').style.display = 'block';
+        isValid = false;
+      }
+      
+      if (newPassword !== confirmPassword) {
+        document.getElementById('confirm-password-error').style.display = 'block';
+        isValid = false;
+      }
+      
+      if (!isValid) {
+        return;
+      }
+      
+      // Submit form
+      try {
+        const response = await fetch(ENDPOINTS.CHANGE_PASSWORD, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            currentPassword: currentPassword,
+            newPassword: newPassword
+          })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to change password');
+        }
+        
+        // Reset form
+        resetPasswordForm();
+        
+        // Show success message
+        alert('Đổi mật khẩu thành công!');
+      } catch (error) {
+        console.error('Error changing password:', error);
+        
+        if (error.message.includes('current password')) {
+          document.getElementById('current-password-error').textContent = 'Mật khẩu hiện tại không đúng';
+          document.getElementById('current-password-error').style.display = 'block';
+        } else {
+          alert(`Lỗi: ${error.message}`);
+        }
+      }
+    }
+    
+    // Validate email
+    function isValidEmail(email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }
+    
+    // Validate phone
+    function isValidPhone(phone) {
+      const phoneRegex = /^[0-9]{10,11}$/;
+      return phoneRegex.test(phone);
+    }
+    
+    // Validate password
+    function isValidPassword(password) {
+      // At least 8 characters, with at least one uppercase, one lowercase, and one number
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+      return passwordRegex.test(password);
+    }
+  </script>
+</body>
+</html> 

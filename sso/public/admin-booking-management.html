@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý đặt phòng - Admin Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="js/auth.js" defer></script>
+    <script src="js/admin-booking-management.js" defer></script>
+    <style>
+        .booking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .booking-table th, .booking-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .booking-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .booking-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .booking-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-confirmed {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .status-in_use {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-completed {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .status-cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .btn {
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            border: none;
+            margin-right: 5px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid #ced4da;
+            color: #6c757d;
+        }
+        
+        .filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .filter-select, .filter-input {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+            font-size: 14px;
+        }
+        
+        .search-box {
+            flex: 1;
+            position: relative;
+            min-width: 250px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 8px 12px 8px 40px;
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+            font-size: 14px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 5px;
+        }
+        
+        .page-item {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: white;
+            border: 1px solid #dee2e6;
+            transition: background-color 0.2s;
+        }
+        
+        .page-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .page-item.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            font-size: 18px;
+            color: #6c757d;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            padding: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #343a40;
+        }
+        
+        .modal-close {
+            font-size: 24px;
+            color: #6c757d;
+            cursor: pointer;
+        }
+        
+        .menu-item.active {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .menu-item.logo-item {
+            padding: 10px 0;
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            max-width: 100%;
+            object-fit: contain;
+        }
+        
+        @media (max-width: 992px) {
+            .filter-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="admin-dashboard">
+    <div class="sidebar">
+        <div class="menu">
+            <div class="menu-item logo-item">
+                <img src="./images/hcmut_logo.png" alt="Logo" class="logo">
+            </div>
+            <div class="menu-item" id="overview-menu-item" data-title="Trang chủ">
+                <i class="fas fa-tachometer-alt"></i>
+            </div>
+            <div class="menu-item" id="room-management-menu-item" data-title="Quản lý phòng">
+                <i class="fas fa-door-open"></i>
+            </div>
+            <div class="menu-item" id="user-management-menu-item" data-title="Quản lý người dùng">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="menu-item active" id="booking-management-menu-item" data-title="Quản lý đặt phòng">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="menu-item" id="notifications-menu-item" data-title="Thông báo">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="menu-item" id="statistics-menu-item" data-title="Thống kê">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <div class="menu-item" id="logout-btn" data-title="Đăng xuất">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="header-container">
+            <h1 class="header-title">Quản lý đặt phòng</h1>
+            <div class="user-controls">
+                <i class="fas fa-bell"></i>
+                <i class="fas fa-envelope"></i>
+                <i class="fas fa-user-circle"></i>
+            </div>
+        </div>
+        
+        <div class="content-container">
+            <div class="filter-container">
+                <div class="search-box">
+                    <input type="text" id="search-input" class="search-input" placeholder="Tìm theo ID, người dùng hoặc phòng...">
+                    <div class="search-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                
+                <input type="date" id="date-filter" class="filter-input" placeholder="Ngày">
+                
+                <select id="status-filter" class="filter-select">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="pending">Chờ xác nhận</option>
+                    <option value="confirmed">Đã xác nhận</option>
+                    <option value="in_use">Đang sử dụng</option>
+                    <option value="completed">Đã hoàn thành</option>
+                    <option value="cancelled">Đã hủy</option>
+                </select>
+                
+                <select id="room-type-filter" class="filter-select">
+                    <option value="">Tất cả loại phòng</option>
+                    <option value="classroom">Phòng học</option>
+                    <option value="computer">Phòng máy tính</option>
+                    <option value="study">Phòng học tập</option>
+                    <option value="meeting">Phòng họp</option>
+                    <option value="lecture">Giảng đường</option>
+                </select>
+                
+                <button id="export-csv" class="btn btn-outline">
+                    <i class="fas fa-download"></i> Xuất CSV
+                </button>
+            </div>
+            
+            <div id="bookings-loading" class="loading">
+                <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...
+            </div>
+            
+            <div id="bookings-table-container" style="display: none;">
+                <table class="booking-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Người dùng</th>
+                            <th>Phòng</th>
+                            <th>Ngày</th>
+                            <th>Thời gian</th>
+                            <th>Trạng thái</th>
+                            <th>Mục đích</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookings-list">
+                        <!-- Booking rows will be added here -->
+                    </tbody>
+                </table>
+                
+                <div class="pagination" id="pagination">
+                    <!-- Pagination will be generated here -->
+                </div>
+            </div>
+            
+            <div id="no-bookings" class="no-data" style="display: none;">
+                <i class="fas fa-calendar-times" style="font-size: 48px; color: #6c757d; margin-bottom: 15px;"></i>
+                <p>Không tìm thấy đặt phòng nào</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Booking Details Modal -->
+    <div id="booking-details-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Chi tiết đặt phòng</h2>
+                <span class="modal-close">&times;</span>
+            </div>
+            <div id="booking-details-content">
+                <!-- Booking details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>

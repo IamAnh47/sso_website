@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đặt phòng học - HCMUT</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin-dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="js/auth.js" defer></script>
+  <style>
+    .menu-item.logo-item {
+      padding: 10px 0;
+      margin-bottom: 20px;
+    }
+    .header {
+      background: var(--main-gradient);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 4px rgba(0,0,0,0.25);
+    }
+    .logo {
+      width: 60px;
+      height: 60px;
+      max-width: 100%;
+      object-fit: contain;
+    }
+
+    .menu-item.active {
+      background-color: #28a745;
+      color: white;
+    }
+    
+    .room-filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .room-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .room-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .room-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .room-image {
+      height: 150px;
+      background-color: #f0f0f0;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    
+    .room-image::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.7) 100%);
+    }
+    
+    .room-type {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+    
+    .room-details {
+      padding: 15px;
+    }
+    
+    .room-title {
+      font-weight: 600;
+      margin: 0 0 5px 0;
+      color: #333;
+    }
+    
+    .room-location {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    
+    .room-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+    
+    .room-status {
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      margin-left: auto;
+    }
+    
+    .status-available {
+      background-color: #e7f5ea;
+      color: #28a745;
+    }
+    
+    .status-busy {
+      background-color: #fee9e7;
+      color: #dc3545;
+    }
+    
+    .room-book-btn {
+      background-color: #005baa;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s;
+    }
+    
+    .room-book-btn:hover {
+      background-color: #004387;
+    }
+    
+    .room-feature {
+      display: inline-block;
+      margin-right: 10px;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    
+    /* Modal styles */
+    .booking-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 500px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+    
+    .close-modal {
+      font-size: 24px;
+      cursor: pointer;
+      color: #999;
+    }
+    
+    .booking-form {
+      display: grid;
+      gap: 15px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .booking-form label {
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .booking-form input,
+    .booking-form select,
+    .booking-form textarea {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .booking-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .cancel-btn {
+      padding: 8px 15px;
+      border: 1px solid #ddd;
+      background-color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .book-btn {
+      padding: 8px 15px;
+      background-color: #005baa;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .form-error {
+      color: #dc3545;
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
+    }
+    
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      gap: 5px;
+    }
+    
+    .pagination-btn {
+      padding: 5px 10px;
+      border: 1px solid #ddd;
+      background: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    
+    .pagination-btn.active {
+      background: #005baa;
+      color: white;
+      border-color: #005baa;
+    }
+    
+    .no-rooms-message {
+      text-align: center;
+      padding: 30px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body class="admin-dashboard">
+  <div class="sidebar">
+    <div class="menu">
+      <div class="menu-item logo-item">
+        <img src="./images/hcmut_logo.png" alt="Logo" class="logo">
+      </div>
+      <div class="menu-item" id="dashboard-menu-item" data-title="Trang chủ">
+        <i class="fas fa-tachometer-alt"></i>
+      </div>
+      <div class="menu-item active" id="room-booking-menu-item" data-title="Đặt phòng">
+        <i class="fas fa-door-open"></i>
+      </div>
+      <div class="menu-item" id="booking-history-menu-item" data-title="Lịch sử đặt phòng">
+        <i class="fas fa-history"></i>
+      </div>
+      <div class="menu-item" id="notifications-menu-item" data-title="Thông báo">
+        <i class="fas fa-bell"></i>
+      </div>
+      <div class="menu-item" id="profile-menu-item" data-title="Thông tin cá nhân">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="menu-item" id="statistics-menu-item" data-title="Thống kê">
+        <i class="fas fa-chart-bar"></i>
+      </div>
+      <div class="menu-item" id="logout-btn" data-title="Đăng xuất">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+    </div>
+  </div>
+  
+  <div class="main-content">
+    <div class="header">
+      <div class="header-title">Đặt phòng học</div>
+      <div class="user-info">
+        <div class="user-greeting" id="user-greeting">Xin chào, <span id="user-full-name">Sinh viên</span></div>
+        <div class="notification-bell" id="notification-bell">
+          <i class="fas fa-bell"></i>
+          <span class="notification-count" id="notification-count">0</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="dashboard-content">
+      <div class="section-header">
+        <h2>Tìm kiếm phòng học</h2>
+        <p>Tìm và đặt phòng học phù hợp với nhu cầu của bạn</p>
+      </div>
+      
+      <div class="search-section">
+        <div class="room-filters">
+          <div class="form-group">
+            <label for="date-filter">Ngày</label>
+            <input type="date" id="date-filter" class="form-control" value="">
+          </div>
+          
+          <div class="form-group">
+            <label for="start-time-filter">Thời gian bắt đầu</label>
+            <input type="time" id="start-time-filter" class="form-control" value="08:00">
+          </div>
+          
+          <div class="form-group">
+            <label for="end-time-filter">Thời gian kết thúc</label>
+            <input type="time" id="end-time-filter" class="form-control" value="10:00">
+          </div>
+          
+          <div class="form-group">
+            <label for="capacity-filter">Số lượng người</label>
+            <input type="number" id="capacity-filter" class="form-control" min="1" value="1">
+          </div>
+          
+          <div class="form-group">
+            <label for="roomType">Loại phòng:</label>
+            <select id="roomType" name="roomType">
+              <option value="all">Tất cả các loại</option>
+              <option value="classroom">Phòng học</option>
+              <option value="meeting">Phòng họp</option>
+              <option value="computer">Phòng máy tính</option>
+              <option value="study">Không gian học tập</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="location-filter">Địa điểm</label>
+            <select id="location-filter" class="form-control">
+              <option value="all">Tất cả</option>
+              <option value="H1">Tòa H1</option>
+              <option value="H2">Tòa H2</option>
+              <option value="H3">Tòa H3</option>
+              <option value="H6">Tòa H6</option>
+            </select>
+          </div>
+        </div>
+        
+        <button id="search-btn" class="btn btn-primary">
+          <i class="fas fa-search"></i> Tìm kiếm
+        </button>
+      </div>
+      
+      <div id="room-results">
+        <div class="section-header">
+          <h3>Kết quả tìm kiếm</h3>
+          <p>Phòng phù hợp với tiêu chí của bạn: <span id="room-count">0</span> phòng</p>
+        </div>
+        
+        <div id="rooms-loading" class="loading-spinner">
+          <div class="spinner"></div>
+          <p>Đang tải phòng học...</p>
+        </div>
+        
+        <div id="room-list" class="room-list">
+          <!-- Room cards will be inserted here -->
+        </div>
+        
+        <div id="no-rooms-message" class="no-rooms-message" style="display:none;">
+          <i class="fas fa-info-circle"></i>
+          <p>Không tìm thấy phòng nào phù hợp với tiêu chí tìm kiếm.</p>
+          <p>Vui lòng thử lại với thời gian hoặc địa điểm khác.</p>
+        </div>
+        
+        <div id="pagination" class="pagination">
+          <!-- Pagination buttons will be inserted here -->
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Booking Modal -->
+  <div id="booking-modal" class="booking-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Đặt phòng</h2>
+        <span class="close-modal" id="close-modal">&times;</span>
+      </div>
+      
+      <form id="booking-form" class="booking-form">
+        <input type="hidden" id="room-id" name="room_id">
+        
+        <div class="room-info-display">
+          <h3 id="modal-room-name">Tên phòng</h3>
+          <p id="modal-room-location">Địa điểm</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="booking-date">Ngày đặt</label>
+          <input type="date" id="booking-date" name="booking_date" required>
+          <div class="form-error" id="date-error">Vui lòng chọn ngày hợp lệ</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="start-time">Thời gian bắt đầu</label>
+          <input type="time" id="start-time" name="start_time" required>
+          <div class="form-error" id="start-time-error">Vui lòng chọn thời gian hợp lệ</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="end-time">Thời gian kết thúc</label>
+          <input type="time" id="end-time" name="end_time" required>
+          <div class="form-error" id="end-time-error">Vui lòng chọn thời gian hợp lệ</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="participants">Số lượng người tham gia</label>
+          <input type="number" id="participants" name="participants" min="1" value="1" required>
+          <div class="form-error" id="participants-error">Vui lòng nhập số lượng hợp lệ</div>
+        </div>
+        
+        <div class="form-group">
+          <label for="purpose">Mục đích sử dụng</label>
+          <textarea id="purpose" name="purpose" rows="3" required></textarea>
+          <div class="form-error" id="purpose-error">Vui lòng nhập mục đích sử dụng</div>
+        </div>
+        
+        <div class="booking-actions">
+          <button type="button" id="cancel-booking" class="cancel-btn">Hủy</button>
+          <button type="submit" id="confirm-booking" class="book-btn">Xác nhận đặt phòng</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+    // API endpoints
+    const API_BASE_URL = '/api';
+    const ENDPOINTS = {
+      USERS: `${API_BASE_URL}/users`,
+      ROOMS: `${API_BASE_URL}/rooms`,
+      AVAILABLE_ROOMS: `${API_BASE_URL}/rooms/available`,
+      BOOKINGS: `${API_BASE_URL}/bookings`,
+      NOTIFICATIONS: `${API_BASE_URL}/notifications`,
+      UNREAD_NOTIFICATIONS: `${API_BASE_URL}/notifications/unread/count`,
+      AUTH_VERIFY: `${API_BASE_URL}/auth/verify`,
+      AUTH_LOGOUT: `${API_BASE_URL}/auth/logout`
+    };
+    
+    // State variables
+    let currentUser = null;
+    let allRooms = [];
+    let filteredRooms = [];
+    let currentPage = 1;
+    const roomsPerPage = 9;
+    
+    // Room types map
+    const roomTypeMap = {
+      'classroom': 'Phòng học',
+      'meeting': 'Phòng họp',
+      'computer': 'Phòng máy tính',
+      'study': 'Không gian học tập'
+    };
+    
+    // Room features map
+    const roomFeatureMap = {
+      'projector': 'Máy chiếu',
+      'whiteboard': 'Bảng trắng',
+      'computer': 'Máy tính',
+      'air_conditioning': 'Điều hòa',
+      'video_conference': 'Hội nghị truyền hình'
+    };
+    
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set default date to today
+      const today = new Date();
+      document.getElementById('date-filter').valueAsDate = today;
+      
+      // Check if user is authenticated
+      verifyAuth()
+        .then(userData => {
+          if (userData && userData.role === 'student') {
+            currentUser = userData;
+            setupNavigation();
+            initializePage();
+          } else {
+            console.error('User is not a student or is not authenticated');
+            clearAuthData();
+            window.location.href = 'index.html';
+          }
+        })
+        .catch(error => {
+          console.error('Authentication error:', error.message);
+          clearAuthData();
+          window.location.href = 'index.html';
+        });
+    });
+    
+    // Setup navigation
+    function setupNavigation() {
+      document.getElementById('dashboard-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-dashboard.html';
+      });
+      
+      document.getElementById('room-booking-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-room-reservation.html';
+      });
+      
+      document.getElementById('booking-history-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-booking-history.html';
+      });
+      
+      document.getElementById('notifications-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-notifications.html';
+      });
+      
+      document.getElementById('profile-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-profile.html';
+      });
+      
+      document.getElementById('statistics-menu-item').addEventListener('click', function() {
+        window.location.href = 'student-statistics.html';
+      });
+      
+      document.getElementById('logout-btn').addEventListener('click', async function() {
+        try {
+          const response = await fetch(ENDPOINTS.AUTH_LOGOUT, {
+            method: 'POST',
+            credentials: 'include'
+          });
+          
+          clearAuthData();
+          window.location.href = 'index.html';
+        } catch (error) {
+          console.error('Logout error:', error);
+          clearAuthData();
+          window.location.href = 'index.html';
+        }
+      });
+      
+      // Set up notification bell click
+      document.getElementById('notification-bell').addEventListener('click', function() {
+        window.location.href = 'student-notifications.html';
+      });
+    }
+    
+    // Clear auth data
+    function clearAuthData() {
+      sessionStorage.removeItem('user');
+      localStorage.removeItem('authToken');
+    }
+    
+    // Initialize page
+    async function initializePage() {
+      // Set user greeting
+      document.getElementById('user-greeting').innerHTML = `Xin chào, <span id="user-full-name">${currentUser.full_name || currentUser.username}</span>`;
+      
+      // Load unread notifications count
+      loadNotificationsCount();
+      
+      // Set up event listeners
+      document.getElementById('search-btn').addEventListener('click', searchRooms);
+      
+      // Modal event listeners
+      document.getElementById('close-modal').addEventListener('click', closeBookingModal);
+      document.getElementById('cancel-booking').addEventListener('click', closeBookingModal);
+      document.getElementById('booking-form').addEventListener('submit', handleBookingSubmit);
+      
+      // Perform initial search
+      searchRooms();
+    }
+    
+    // Load notifications count
+    async function loadNotificationsCount() {
+      try {
+        const response = await fetch(ENDPOINTS.UNREAD_NOTIFICATIONS, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('notification-count').textContent = data.count;
+          
+          // Show notification count only if there are unread notifications
+          if (data.count > 0) {
+            document.getElementById('notification-count').style.display = 'inline-block';
+          } else {
+            document.getElementById('notification-count').style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.error('Error loading notifications count:', error);
+      }
+    }
+    
+    // Search rooms
+    async function searchRooms() {
+      // Show loading spinner
+      document.getElementById('rooms-loading').style.display = 'flex';
+      document.getElementById('room-list').innerHTML = '';
+      document.getElementById('no-rooms-message').style.display = 'none';
+      
+      // Get search parameters
+      const date = document.getElementById('date-filter').value;
+      const startTime = document.getElementById('start-time-filter').value;
+      const endTime = document.getElementById('end-time-filter').value;
+      const capacity = document.getElementById('capacity-filter').value;
+      const roomType = document.getElementById('roomType').value;
+      const location = document.getElementById('location-filter').value;
+      
+      // Debug output
+      console.log('Search parameters:', {
+        date, startTime, endTime, capacity, roomType, location
+      });
+      
+      // Validate time inputs
+      if (startTime >= endTime) {
+        alert('Thời gian bắt đầu phải sớm hơn thời gian kết thúc');
+        document.getElementById('rooms-loading').style.display = 'none';
+        return;
+      }
+      
+      // Build query parameters
+      let queryParams = new URLSearchParams({
+        date: date,
+        start_time: startTime,
+        end_time: endTime,
+        capacity: capacity
+      });
+      
+      if (roomType !== 'all') {
+        queryParams.append('room_type', roomType);
+        console.log('Adding room_type filter:', roomType);
+      }
+      
+      if (location !== 'all') {
+        queryParams.append('location', location);
+        console.log('Adding location filter:', location);
+      }
+      
+      const requestUrl = `${ENDPOINTS.AVAILABLE_ROOMS}?${queryParams.toString()}`;
+      console.log('Request URL:', requestUrl);
+      
+      try {
+        const response = await fetch(requestUrl, {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(e => {
+            console.error('Error parsing error response:', e);
+            return { error: 'Unknown error', status: response.status };
+          });
+          
+          console.error('Server error response:', errorData);
+          console.error('Response status:', response.status, response.statusText);
+          
+          throw new Error(errorData.error || `Failed to fetch available rooms: ${response.status}`);
+        }
+        
+        // Hide loading spinner
+        document.getElementById('rooms-loading').style.display = 'none';
+        
+        const availableRooms = await response.json();
+        console.log('Available rooms response:', availableRooms);
+        
+        allRooms = availableRooms;
+        filteredRooms = availableRooms;
+        
+        document.getElementById('room-count').textContent = filteredRooms.length;
+        
+        if (filteredRooms.length === 0) {
+          document.getElementById('no-rooms-message').style.display = 'block';
+          document.getElementById('pagination').innerHTML = '';
+          return;
+        }
+        
+        // Reset to first page
+        currentPage = 1;
+        
+        // Display rooms
+        displayRooms();
+        
+        // Set up pagination
+        setupPagination();
+      } catch (error) {
+        console.error('Error searching rooms:', error);
+        document.getElementById('rooms-loading').style.display = 'none';
+        document.getElementById('no-rooms-message').style.display = 'block';
+        document.getElementById('no-rooms-message').innerHTML = `
+          <i class="fas fa-info-circle"></i>
+          <p>Không tìm thấy phòng nào phù hợp với tiêu chí tìm kiếm.</p>
+          <p>Vui lòng thử lại với thời gian hoặc địa điểm khác.</p>
+          <p class="error-details">${error.message}</p>
+        `;
+        document.getElementById('pagination').innerHTML = '';
+      }
+    }
+    
+    // Display rooms for current page
+    function displayRooms() {
+      const roomListContainer = document.getElementById('room-list');
+      roomListContainer.innerHTML = '';
+      
+      // Calculate rooms for the current page
+      const startIndex = (currentPage - 1) * roomsPerPage;
+      const endIndex = Math.min(startIndex + roomsPerPage, filteredRooms.length);
+      const roomsToDisplay = filteredRooms.slice(startIndex, endIndex);
+      
+      // Create room cards
+      roomsToDisplay.forEach(room => {
+        const roomCard = document.createElement('div');
+        roomCard.className = 'room-card';
+        
+        // Convert features to array if it's a string
+        const roomFeatures = typeof room.features === 'string' ? 
+                            room.features.split(',').map(f => f.trim()) : 
+                            (room.features || []);
+        
+        // Create HTML for room card
+        roomCard.innerHTML = `
+          <div class="room-image" style="background-image: url(${room.image || 'images/image.png'})">
+            <div class="room-type">${roomTypeMap[room.room_type] || room.room_type}</div>
+          </div>
+          <div class="room-details">
+            <h3 class="room-title">${room.room_name}</h3>
+            <p class="room-location"><i class="fas fa-map-marker-alt"></i> ${room.location}</p>
+            <div class="room-info">
+              <span><i class="fas fa-users"></i> ${room.capacity} người</span>
+              <span class="room-status status-available">Có sẵn</span>
+            </div>
+            <div class="room-features">
+              ${roomFeatures.map(feature => `
+                <span class="room-feature">
+                  <i class="fas fa-check-circle"></i> ${roomFeatureMap[feature] || feature}
+                </span>
+              `).join('')}
+            </div>
+            <button class="room-book-btn" data-room-id="${room.id}">Đặt phòng</button>
+          </div>
+        `;
+        
+        roomListContainer.appendChild(roomCard);
+      });
+      
+      // Add click listener to booking buttons
+      const bookButtons = document.querySelectorAll('.room-book-btn');
+      bookButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const roomId = this.getAttribute('data-room-id');
+          openBookingModal(roomId);
+        });
+      });
+    }
+    
+    // Setup pagination
+    function setupPagination() {
+      const totalPages = Math.ceil(filteredRooms.length / roomsPerPage);
+      const paginationContainer = document.getElementById('pagination');
+      paginationContainer.innerHTML = '';
+      
+      if (totalPages <= 1) {
+        return;
+      }
+      
+      // Previous button
+      if (currentPage > 1) {
+        const prevButton = document.createElement('button');
+        prevButton.className = 'pagination-btn';
+        prevButton.innerHTML = `<i class="fas fa-chevron-left"></i>`;
+        prevButton.addEventListener('click', () => {
+          currentPage--;
+          displayRooms();
+          setupPagination();
+        });
+        paginationContainer.appendChild(prevButton);
+      }
+      
+      // Page buttons
+      for (let i = 1; i <= totalPages; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+        pageButton.textContent = i;
+        pageButton.addEventListener('click', () => {
+          currentPage = i;
+          displayRooms();
+          setupPagination();
+        });
+        paginationContainer.appendChild(pageButton);
+      }
+      
+      // Next button
+      if (currentPage < totalPages) {
+        const nextButton = document.createElement('button');
+        nextButton.className = 'pagination-btn';
+        nextButton.innerHTML = `<i class="fas fa-chevron-right"></i>`;
+        nextButton.addEventListener('click', () => {
+          currentPage++;
+          displayRooms();
+          setupPagination();
+        });
+        paginationContainer.appendChild(nextButton);
+      }
+    }
+    
+    // Open booking modal
+    function openBookingModal(roomId) {
+      const room = allRooms.find(r => r.id == roomId);
+      if (!room) return;
+      
+      // Set room info in modal
+      document.getElementById('room-id').value = roomId;
+      document.getElementById('modal-room-name').textContent = room.room_name;
+      document.getElementById('modal-room-location').textContent = room.location;
+      
+      // Set date and time from filters
+      document.getElementById('booking-date').value = document.getElementById('date-filter').value;
+      document.getElementById('start-time').value = document.getElementById('start-time-filter').value;
+      document.getElementById('end-time').value = document.getElementById('end-time-filter').value;
+      document.getElementById('participants').value = document.getElementById('capacity-filter').value;
+      
+      // Reset any error messages
+      document.querySelectorAll('.form-error').forEach(el => el.style.display = 'none');
+      
+      // Show modal
+      document.getElementById('booking-modal').style.display = 'block';
+    }
+    
+    // Close booking modal
+    function closeBookingModal() {
+      document.getElementById('booking-modal').style.display = 'none';
+    }
+    
+    // Handle booking form submission
+    async function handleBookingSubmit(event) {
+      event.preventDefault();
+      
+      // Reset error messages
+      document.querySelectorAll('.form-error').forEach(el => el.style.display = 'none');
+      
+      // Get form data
+      const roomId = document.getElementById('room-id').value;
+      const bookingDate = document.getElementById('booking-date').value;
+      const startTime = document.getElementById('start-time').value;
+      const endTime = document.getElementById('end-time').value;
+      const participants = document.getElementById('participants').value;
+      const purpose = document.getElementById('purpose').value;
+      
+      // Validate form
+      let hasError = false;
+      
+      if (!bookingDate) {
+        document.getElementById('date-error').style.display = 'block';
+        hasError = true;
+      }
+      
+      if (!startTime) {
+        document.getElementById('start-time-error').style.display = 'block';
+        hasError = true;
+      }
+      
+      if (!endTime) {
+        document.getElementById('end-time-error').style.display = 'block';
+        hasError = true;
+      }
+      
+      if (startTime >= endTime) {
+        document.getElementById('end-time-error').textContent = 'Thời gian kết thúc phải sau thời gian bắt đầu';
+        document.getElementById('end-time-error').style.display = 'block';
+        hasError = true;
+      }
+      
+      if (!participants || participants < 1) {
+        document.getElementById('participants-error').style.display = 'block';
+        hasError = true;
+      }
+      
+      if (!purpose.trim()) {
+        document.getElementById('purpose-error').style.display = 'block';
+        hasError = true;
+      }
+      
+      if (hasError) {
+        return;
+      }
+      
+      // Submit booking
+      try {
+        const response = await fetch(ENDPOINTS.BOOKINGS, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            room_id: roomId,
+            booking_date: bookingDate,
+            start_time: startTime,
+            end_time: endTime,
+            participants: participants,
+            purpose: purpose
+          })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create booking');
+        }
+        
+        const bookingData = await response.json();
+        
+        // Close modal
+        closeBookingModal();
+        
+        // Show success message
+        alert('Đăng ký phòng thành công! Vui lòng kiểm tra lịch sử đặt phòng để xem trạng thái.');
+        
+        // Refresh room search
+        searchRooms();
+      } catch (error) {
+        console.error('Error creating booking:', error);
+        alert(`Lỗi: ${error.message}`);
+      }
+    }
+  </script>
+</body>
+</html> 

@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý người dùng - Admin Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin-dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="js/auth.js" defer></script>
+  <style>
+    .menu-item.logo-item {
+      padding: 10px 0;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      width: 60px;
+      height: 60px;
+      max-width: 100%;
+      object-fit: contain;
+    }
+
+    .menu-item.active {
+      background-color: #28a745;
+      color: white;
+    }
+  </style>
+</head>
+<body class="admin-dashboard">
+  <div class="sidebar">
+    <div class="menu">
+      <div class="menu-item logo-item">
+        <img src="./images/hcmut_logo.png" alt="Logo" class="logo">
+      </div>
+      <div class="menu-item" id="overview-menu-item" data-title="Trang chủ">
+        <i class="fas fa-tachometer-alt"></i>
+      </div>
+      <div class="menu-item" id="room-management-menu-item" data-title="Quản lý phòng">
+        <i class="fas fa-door-open"></i>
+      </div>
+      <div class="menu-item active" id="user-management-menu-item" data-title="Quản lý người dùng">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="menu-item" id="booking-management-menu-item" data-title="Quản lý đặt phòng">
+        <i class="fas fa-calendar-check"></i>
+      </div>
+      <div class="menu-item" id="notifications-menu-item" data-title="Thông báo">
+        <i class="fas fa-bell"></i>
+      </div>
+      <div class="menu-item" id="statistics-menu-item" data-title="Thống kê">
+        <i class="fas fa-chart-bar"></i>
+      </div>
+      <div class="menu-item" id="logout-btn" data-title="Đăng xuất">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+    </div>
+  </div>
+  
+  <div class="main-content">
+    <div class="header-container">
+      <h1 class="header-title">Quản lý người dùng</h1>
+      <div class="user-controls">
+        <i class="fas fa-bell"></i>
+        <i class="fas fa-envelope"></i>
+        <i class="fas fa-user-circle"></i>
+      </div>
+    </div>
+    
+    <div class="content-container">
+      <div class="filter-container">
+        <div class="search-box">
+          <input type="text" id="user-search" placeholder="Tìm kiếm người dùng...">
+          <div class="search-icon">
+            <i class="fas fa-search"></i>
+          </div>
+        </div>
+        
+        <select class="filter-select" id="role-filter">
+          <option value="all">Tất cả vai trò</option>
+          <option value="student">Sinh viên</option>
+          <option value="staff">Nhân viên</option>
+          <option value="admin">Quản trị viên</option>
+        </select>
+        
+        <select class="filter-select" id="status-filter">
+          <option value="all">Tất cả trạng thái</option>
+          <option value="active">Hoạt động</option>
+          <option value="locked">Đã khóa</option>
+        </select>
+        
+        <button class="btn btn-outline" id="manage-permissions-btn">
+          <i class="fas fa-key"></i>
+          Quản lý phân quyền
+        </button>
+        
+        <button class="btn btn-primary" id="add-user-btn">
+          <i class="fas fa-plus"></i>
+          Thêm người dùng
+        </button>
+      </div>
+      
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tên đăng nhập</th>
+              <th>Họ và tên</th>
+              <th>Email</th>
+              <th>MSSV</th>
+              <th>Vai trò</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="user-table-body">
+            <!-- User data will be inserted here via JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <!-- User Modal -->
+  <div class="modal" id="user-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Thêm người dùng mới</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="user-form">
+          <div class="form-group">
+            <label class="form-label" for="username">Tên đăng nhập</label>
+            <input type="text" class="form-input" id="username" placeholder="Nhập tên đăng nhập">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="fullname">Họ và tên</label>
+            <input type="text" class="form-input" id="fullname" placeholder="Nhập họ và tên">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="email">Email</label>
+            <input type="email" class="form-input" id="email" placeholder="Nhập email">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="student-id">MSSV (nếu có)</label>
+            <input type="text" class="form-input" id="student-id" placeholder="Nhập mã số sinh viên">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="phone">Số điện thoại</label>
+            <input type="tel" class="form-input" id="phone" placeholder="Nhập số điện thoại">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="department">Khoa/Viện</label>
+            <select class="form-input" id="department">
+              <option value="">Chọn Khoa/Viện</option>
+              <option value="cse">Khoa Khoa học và Kỹ thuật Máy tính</option>
+              <option value="eee">Khoa Điện – Điện tử</option>
+              <option value="me">Khoa Cơ khí</option>
+              <option value="mse">Khoa Công nghệ Vật liệu</option>
+              <option value="as">Khoa Khoa học Ứng dụng</option>
+              <option value="rm">Phòng quản lí phòng học</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="role">Vai trò</label>
+            <select class="form-input" id="role">
+              <option value="student">Sinh viên</option>
+              <option value="staff">Nhân viên</option>
+              <option value="admin">Quản trị viên</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="password">Mật khẩu</label>
+            <input type="password" class="form-input" id="password" placeholder="Nhập mật khẩu">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="cancel-btn">Hủy</button>
+        <button class="btn btn-primary" id="save-user-btn">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // API endpoints
+    const API_BASE_URL = '/api';
+    const ENDPOINTS = {
+      USERS: `${API_BASE_URL}/users`,
+      USER_ROLES: `${API_BASE_URL}/users/roles`,
+      AUTH_VERIFY: `${API_BASE_URL}/auth/verify`,
+      AUTH_LOGOUT: `${API_BASE_URL}/auth/logout`
+    };
+
+    // Initialize users data
+    let usersData = [];
+    let userRoles = [];
+
+    // Navigation setup
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if user is authenticated
+      verifyAuth()
+        .then(userData => {
+          if (userData && (userData.role === 'admin' || userData.role === 'staff')) {
+            // Initialize the page components
+            setupNavigation();
+            initializeUsersPage();
+          } else {
+            console.error('User does not have admin privileges or is not authenticated');
+            clearAuthData();
+            window.location.href = 'index.html';
+          }
+        })
+        .catch(error => {
+          console.error('Authentication error:', error.message);
+          clearAuthData();
+          window.location.href = 'index.html';
+        });
+    });
+    
+    // Verify authentication with server
+    async function verifyAuth() {
+      try {
+        console.log('Verifying authentication with server...');
+        const response = await fetch(`${ENDPOINTS.AUTH_VERIFY}`, {
+          credentials: 'include', // Include cookies in request
+        });
+
+        if (!response.ok) {
+          console.log('Authentication verification failed with status:', response.status);
+          return null;
+        }
+
+        const data = await response.json();
+        console.log('Authentication verification successful');
+        return data.user;
+      } catch (error) {
+        console.error('Auth verification error:', error);
+        return null;
+      }
+    }
+    
+    // Clear all authentication data
+    function clearAuthData() {
+      sessionStorage.removeItem('sso_user');
+      // The cookie will be cleared by the server
+    }
+
+    function setupNavigation() {
+      document.getElementById('overview-menu-item').addEventListener('click', function() {
+        window.location.href = 'admin-overview.html';
+      });
+      
+      document.getElementById('room-management-menu-item').addEventListener('click', function() {
+        window.location.href = 'admin-room-management.html';
+      });
+      document.getElementById('booking-management-menu-item').addEventListener('click', function() {
+        window.location.href = 'admin-booking-management.html';
+      });
+      document.getElementById('user-management-menu-item').addEventListener('click', function() {
+        // Current page, no need to navigate
+      });
+      
+      document.getElementById('statistics-menu-item').addEventListener('click', function() {
+        window.location.href = 'admin-statistics.html';
+      });
+      
+      document.getElementById('notifications-menu-item').addEventListener('click', function() {
+        window.location.href = 'admin-notifications.html';
+      });
+      
+      document.getElementById('manage-permissions-btn').addEventListener('click', function() {
+        window.location.href = 'admin-user-permissions.html';
+      });
+      
+      document.getElementById('logout-btn').addEventListener('click', function() {
+        // Use the logout function if available from auth.js
+        if (typeof window.logout === 'function') {
+            window.logout();
+        } else {
+            // Fallback if the logout function is not available
+            fetch(ENDPOINTS.AUTH_LOGOUT, {
+              method: 'POST',
+              credentials: 'include' // Include cookies
+            })
+            .then(() => {
+              clearAuthData();
+              window.location.href = 'index.html';
+            })
+            .catch(error => {
+              console.error('Logout error:', error);
+              clearAuthData();
+              window.location.href = 'index.html';
+            });
+        }
+      });
+    }
+
+    async function initializeUsersPage() {
+      try {
+        // Initialize modal functionality
+        setupModalFunctionality();
+        
+        // Set up filter handlers
+        setupFilterHandlers();
+        
+        // Load user roles
+        await loadUserRoles();
+        
+        // Load user data
+        await loadUsers();
+        
+        // Render user table based on loaded data
+        renderUserTable(usersData);
+      } catch (error) {
+        console.error('Error initializing users page:', error);
+        alert('Đã xảy ra lỗi khi tải dữ liệu người dùng. Vui lòng thử lại sau.');
+      }
+    }
+
+    // Create headers for API requests
+    function createAuthHeaders() {
+      return {
+        'Content-Type': 'application/json'
+        // The authentication is handled by cookies
+      };
+    }
+
+    function setupModalFunctionality() {
+      const modal = document.getElementById('user-modal');
+      const addUserBtn = document.getElementById('add-user-btn');
+      const closeBtn = document.querySelector('.modal-close');
+      const cancelBtn = document.getElementById('cancel-btn');
+      const saveUserBtn = document.getElementById('save-user-btn');
+      
+      addUserBtn.addEventListener('click', function() {
+        openAddModal();
+      });
+      
+      closeBtn.addEventListener('click', function() {
+        closeModal();
+      });
+      
+      cancelBtn.addEventListener('click', function() {
+        closeModal();
+      });
+      
+      saveUserBtn.addEventListener('click', function() {
+        saveUser();
+      });
+      
+      window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+          closeModal();
+        }
+      });
+    }
+
+    function setupFilterHandlers() {
+      const roleFilter = document.getElementById('role-filter');
+      const statusFilter = document.getElementById('status-filter');
+      const searchInput = document.getElementById('user-search');
+      
+      roleFilter.addEventListener('change', function() {
+        applyFilters();
+      });
+      
+      statusFilter.addEventListener('change', function() {
+        applyFilters();
+      });
+      
+      searchInput.addEventListener('input', function() {
+        applyFilters();
+      });
+    }
+
+    async function loadUserRoles() {
+      try {
+        const response = await fetch(ENDPOINTS.USER_ROLES, {
+          headers: createAuthHeaders(),
+          credentials: 'include'  // Include cookies with the request
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch user roles');
+        
+        userRoles = await response.json();
+        
+        // Populate role filter with dynamic options
+        const roleFilter = document.getElementById('role-filter');
+        roleFilter.innerHTML = '<option value="all">Tất cả vai trò</option>';
+        
+        userRoles.forEach(role => {
+          const option = document.createElement('option');
+          option.value = role.code;
+          option.textContent = role.name;
+          roleFilter.appendChild(option);
+        });
+        
+        // Populate role select in the modal
+        const roleSelect = document.getElementById('role');
+        roleSelect.innerHTML = '';
+        
+        userRoles.forEach(role => {
+          const option = document.createElement('option');
+          option.value = role.code;
+          option.textContent = role.name;
+          roleSelect.appendChild(option);
+        });
+      } catch (error) {
+        console.error('Error loading user roles:', error);
+        throw error;
+      }
+    }
+
+    async function loadUsers() {
+      try {
+        const response = await fetch(ENDPOINTS.USERS, {
+          headers: createAuthHeaders(),
+          credentials: 'include'  // Include cookies with the request
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch users');
+        
+        usersData = await response.json();
+      } catch (error) {
+        console.error('Error loading users:', error);
+        throw error;
+      }
+    }
+
+    function applyFilters() {
+      const roleValue = document.getElementById('role-filter').value;
+      const statusValue = document.getElementById('status-filter').value;
+      const searchValue = document.getElementById('user-search').value.toLowerCase();
+      
+      let filteredUsers = [...usersData];
+      
+      if (roleValue !== 'all') {
+        filteredUsers = filteredUsers.filter(user => user.role === roleValue);
+      }
+      
+      if (statusValue !== 'all') {
+        filteredUsers = filteredUsers.filter(user => user.status === statusValue);
+      }
+      
+      if (searchValue) {
+        filteredUsers = filteredUsers.filter(user => 
+          user.full_name?.toLowerCase().includes(searchValue) || 
+          user.username?.toLowerCase().includes(searchValue) || 
+          user.email?.toLowerCase().includes(searchValue) ||
+          user.student_id?.toLowerCase().includes(searchValue)
+        );
+      }
+      
+      renderUserTable(filteredUsers);
+    }
+    
+    function renderUserTable(users) {
+      const tableBody = document.getElementById('user-table-body');
+      tableBody.innerHTML = '';
+      
+      if (!users || users.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Không có người dùng nào phù hợp với bộ lọc.</td></tr>';
+        return;
+      }
+      
+      users.forEach(user => {
+        const row = document.createElement('tr');
+        
+        // Create table cells
+        const idCell = document.createElement('td');
+        idCell.textContent = user.id;
+        
+        const usernameCell = document.createElement('td');
+        usernameCell.textContent = user.username;
+        
+        const fullNameCell = document.createElement('td');
+        fullNameCell.textContent = user.full_name;
+        
+        const emailCell = document.createElement('td');
+        emailCell.textContent = user.email;
+        
+        const studentIdCell = document.createElement('td');
+        studentIdCell.textContent = user.student_id || '';
+        
+        const roleCell = document.createElement('td');
+        const roleSelect = document.createElement('select');
+        roleSelect.className = 'filter-select';
+        
+        // Add role options
+        userRoles.forEach(role => {
+          const option = document.createElement('option');
+          option.value = role.code;
+          option.textContent = role.name;
+          roleSelect.appendChild(option);
+        });
+        
+        roleSelect.value = user.role;
+        roleCell.appendChild(roleSelect);
+        
+        const statusCell = document.createElement('td');
+        const statusBadge = document.createElement('span');
+        statusBadge.className = 'status';
+        
+        if (user.status === 'locked') {
+          statusBadge.classList.add('status-occupied');
+          statusBadge.textContent = 'Đã khóa';
+        } else {
+          statusBadge.classList.add('status-available');
+          statusBadge.textContent = 'Hoạt động';
+        }
+        
+        statusCell.appendChild(statusBadge);
+        
+        // Actions cell
+        const actionsCell = document.createElement('td');
+        
+        const viewButton = document.createElement('button');
+        viewButton.className = 'btn btn-outline';
+        viewButton.style.marginRight = '5px';
+        viewButton.innerHTML = '<i class="fas fa-eye"></i> Chi tiết';
+        
+        const lockButton = document.createElement('button');
+        lockButton.className = user.status === 'locked' ? 'btn btn-success' : 'btn btn-warning';
+        lockButton.style.marginRight = '5px';
+        lockButton.innerHTML = user.status === 'locked' ? 
+          '<i class="fas fa-unlock"></i> Mở khóa' : 
+          '<i class="fas fa-lock"></i> Khóa';
+        
+        const saveButton = document.createElement('button');
+        saveButton.className = 'btn btn-primary';
+        saveButton.style.marginRight = '5px';
+        saveButton.innerHTML = '<i class="fas fa-save"></i> Lưu';
+        
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-danger';
+        deleteButton.innerHTML = '<i class="fas fa-trash"></i> Xóa';
+        
+        actionsCell.appendChild(viewButton);
+        actionsCell.appendChild(lockButton);
+        actionsCell.appendChild(saveButton);
+        actionsCell.appendChild(deleteButton);
+        
+        // Add event listeners
+        viewButton.addEventListener('click', function() {
+          window.location.href = `admin-user-details.html?id=${user.id}`;
+        });
+        
+        lockButton.addEventListener('click', function() {
+          toggleUserStatus(user.id, user.status === 'locked' ? 'active' : 'locked');
+        });
+        
+        saveButton.addEventListener('click', function() {
+          updateUserRole(user.id, roleSelect.value);
+        });
+        
+        deleteButton.addEventListener('click', function() {
+          deleteUser(user.id, user.full_name);
+        });
+        
+        // Append cells to row
+        row.appendChild(idCell);
+        row.appendChild(usernameCell);
+        row.appendChild(fullNameCell);
+        row.appendChild(emailCell);
+        row.appendChild(studentIdCell);
+        row.appendChild(roleCell);
+        row.appendChild(statusCell);
+        row.appendChild(actionsCell);
+        
+        // Append row to table body
+        tableBody.appendChild(row);
+      });
+    }
+    
+    async function updateUserRole(userId, newRole) {
+      try {
+        const response = await fetch(`${ENDPOINTS.USERS}/${userId}/role`, {
+          method: 'PATCH',
+          headers: createAuthHeaders(),
+          credentials: 'include',
+          body: JSON.stringify({ role: newRole })
+        });
+        
+        if (!response.ok) throw new Error('Failed to update user role');
+        
+        // Update local data
+        const updatedUserData = await response.json();
+        const userIndex = usersData.findIndex(u => u.id === userId);
+        
+        if (userIndex !== -1) {
+          usersData[userIndex] = { ...usersData[userIndex], ...updatedUserData.user };
+        }
+        
+        alert('Đã cập nhật vai trò người dùng!');
+      } catch (error) {
+        console.error('Error updating user role:', error);
+        alert(`Lỗi khi cập nhật vai trò: ${error.message}`);
+      }
+    }
+    
+    async function deleteUser(userId, userName) {
+      if (confirm(`Bạn có chắc chắn muốn xóa người dùng ${userName}?`)) {
+        try {
+          const response = await fetch(`${ENDPOINTS.USERS}/${userId}`, {
+            method: 'DELETE',
+            headers: createAuthHeaders(),
+            credentials: 'include'
+          });
+          
+          if (!response.ok) throw new Error('Failed to delete user');
+          
+          // Remove from local data
+          usersData = usersData.filter(user => user.id !== userId);
+          
+          // Re-render table
+          applyFilters();
+          
+          alert('Đã xóa người dùng!');
+        } catch (error) {
+          console.error('Error deleting user:', error);
+          alert(`Lỗi khi xóa người dùng: ${error.message}`);
+        }
+      }
+    }
+    
+    async function toggleUserStatus(userId, newStatus) {
+      try {
+        const response = await fetch(`${ENDPOINTS.USERS}/${userId}/status`, {
+          method: 'PATCH',
+          headers: createAuthHeaders(),
+          credentials: 'include',
+          body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (!response.ok) throw new Error('Failed to update user status');
+        
+        // Update local data
+        const updatedUserData = await response.json();
+        const userIndex = usersData.findIndex(u => u.id === userId);
+        
+        if (userIndex !== -1) {
+          usersData[userIndex] = { ...usersData[userIndex], ...updatedUserData.user };
+        }
+        
+        // Re-render table
+        applyFilters();
+        
+        alert(`Người dùng đã được ${newStatus === 'locked' ? 'khóa' : 'mở khóa'}!`);
+      } catch (error) {
+        console.error('Error updating user status:', error);
+        alert(`Lỗi khi cập nhật trạng thái: ${error.message}`);
+      }
+    }
+    
+    function openAddModal() {
+      const modal = document.getElementById('user-modal');
+      const modalTitle = document.querySelector('.modal-title');
+      const form = document.getElementById('user-form');
+      
+      modalTitle.textContent = 'Thêm người dùng mới';
+      form.reset();
+      
+      // Reset hidden user ID
+      form.dataset.userId = '';
+      
+      modal.style.display = 'flex';
+    }
+    
+    function closeModal() {
+      const modal = document.getElementById('user-modal');
+      modal.style.display = 'none';
+    }
+    
+    async function saveUser() {
+      const form = document.getElementById('user-form');
+      
+      // Gather form data
+      const userData = {
+        username: document.getElementById('username').value,
+        full_name: document.getElementById('fullname').value,
+        email: document.getElementById('email').value,
+        student_id: document.getElementById('student-id').value,
+        phone: document.getElementById('phone').value,
+        department_id: document.getElementById('department').value,
+        role: document.getElementById('role').value,
+        password: document.getElementById('password').value
+      };
+      
+      // Validate form data
+      if (!userData.username || !userData.full_name || !userData.email) {
+        alert('Vui lòng điền đầy đủ thông tin bắt buộc: Tên đăng nhập, họ tên và email!');
+        return;
+      }
+      
+      if (!userData.password) {
+        alert('Vui lòng nhập mật khẩu!');
+        return;
+      }
+      
+      try {
+        const response = await fetch(ENDPOINTS.USERS, {
+          method: 'POST',
+          headers: createAuthHeaders(),
+          credentials: 'include',
+          body: JSON.stringify(userData)
+        });
+        
+        if (!response.ok) throw new Error('Failed to create user');
+        
+        // Add to local data
+        const result = await response.json();
+        usersData.push(result.user);
+        
+        // Re-render table and close modal
+        applyFilters();
+        closeModal();
+        
+        alert('Đã thêm người dùng mới thành công!');
+      } catch (error) {
+        console.error('Error creating user:', error);
+        alert(`Lỗi khi tạo người dùng: ${error.message}`);
+      }
+    }
+  </script>
+</body>
+</html> 
