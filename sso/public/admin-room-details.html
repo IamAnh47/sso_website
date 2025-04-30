@@ -498,6 +498,72 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        .equipment-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .equipment-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 0;
+        }
+        
+        .equipment-count {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        
+        .iot-checkbox {
+            margin-left: 10px;
+            width: 16px;
+            height: 16px;
+        }
+        
+        .iot-label {
+            font-size: 12px;
+            color: #007bff;
+            margin-left: 0;
+        }
+        
+        .equipment-display {
+            margin-top: 10px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .equipment-item-display {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background-color: #e9ecef;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .equipment-iot-badge {
+            display: inline-block;
+            margin-left: 5px;
+            padding: 2px 6px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .empty-equipment-message {
+            color: #6c757d;
+            font-style: italic;
+        }
     </style>
 </head>
 <body class="admin-dashboard">
@@ -791,47 +857,9 @@
                     
                     <div class="form-group">
                         <label class="form-label" for="room-equipment">Thiết bị</label>
-                        <div class="equipment-options">
-                            <div class="equipment-item">
-                                <input type="checkbox" id="projector" name="equipment" value="projector">
-                                <label for="projector">Máy chiếu</label>
-                                <input type="number" class="equipment-count" id="projector-count" min="0" max="10" value="0">
-                            </div>
-                            <div class="equipment-item">
-                                <input type="checkbox" id="computer" name="equipment" value="computer">
-                                <label for="computer">Máy tính</label>
-                                <input type="number" class="equipment-count" id="computer-count" min="0" max="100" value="0">
-                            </div>
-                            <div class="equipment-item">
-                                <input type="checkbox" id="air_conditioner" name="equipment" value="air_conditioner">
-                                <label for="air_conditioner">Điều hòa</label>
-                                <input type="number" class="equipment-count" id="air_conditioner-count" min="0" max="10" value="0">
-                            </div>
-                            <div class="equipment-item">
-                                <input type="checkbox" id="whiteboard" name="equipment" value="whiteboard">
-                                <label for="whiteboard">Bảng</label>
-                                <input type="number" class="equipment-count" id="whiteboard-count" min="0" max="10" value="0">
-                            </div>
-                            <div class="equipment-item">
-                                <input type="checkbox" id="table" name="equipment" value="table">
-                                <label for="table">Bàn</label>
-                                <input type="number" class="equipment-count" id="table-count" min="0" max="50" value="0">
-                            </div>
-                            <div class="equipment-item">
-                                <input type="checkbox" id="chair" name="equipment" value="chair">
-                                <label for="chair">Ghế</label>
-                                <input type="number" class="equipment-count" id="chair-count" min="0" max="500" value="0">
-                            </div>
-                            <div class="equipment-item">
-                                <input type="checkbox" id="sound_system" name="equipment" value="sound_system">
-                                <label for="sound_system">Hệ thống âm thanh</label>
-                                <input type="number" class="equipment-count" id="sound_system-count" min="0" max="5" value="0">
-                            </div>
-                            <div class="equipment-item">
-                                <input type="checkbox" id="wifi" name="equipment" value="wifi">
-                                <label for="wifi">Hệ thống wifi</label>
-                                <input type="number" class="equipment-count" id="wifi-count" min="0" max="5" value="0">
-                            </div>
+                        <div class="equipment-display" id="equipment-display">
+                            <!-- Thông tin thiết bị sẽ được hiển thị ở đây -->
+                            <div class="empty-equipment-message">Không có thông tin về thiết bị</div>
                         </div>
                     </div>
                     
@@ -913,6 +941,72 @@
         const editRoomModal = document.getElementById('edit-room-modal');
         const uploadImageModal = document.getElementById('upload-image-modal');
         
+        function displayEquipment(facilities, containerId = 'equipment-display') {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (!facilities || (typeof facilities === 'object' && Object.keys(facilities).length === 0)) {
+                container.innerHTML = '<div class="empty-equipment-message">Không có thông tin về thiết bị</div>';
+                return;
+            }
+            
+            let equipmentData = {};
+            
+            // Parse facilities if it's a string
+            if (typeof facilities === 'string') {
+                try {
+                    equipmentData = JSON.parse(facilities);
+                } catch (e) {
+                    // If can't parse, split by comma
+                    const items = facilities.split(',').map(item => item.trim());
+                    items.forEach(item => {
+                        equipmentData[item] = 1;
+                    });
+                }
+            } else if (typeof facilities === 'object') {
+                equipmentData = facilities;
+            }
+            
+            // Equipment type names
+            const equipmentTypeNames = {
+                'projector': 'Máy chiếu',
+                'computer': 'Máy tính',
+                'air_conditioner': 'Điều hòa',
+                'speaker': 'Loa',
+                'light': 'Đèn',
+                'fan': 'Quạt'
+            };
+            
+            // Get IoT devices for this room
+            const roomId = document.getElementById('room-id').value;
+            
+            // Display equipment items
+            for (const [type, count] of Object.entries(equipmentData)) {
+                if (count > 0) {
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'equipment-item-display';
+                    
+                    // Use friendly name if available
+                    const typeName = equipmentTypeNames[type] || type;
+                    
+                    itemElement.textContent = `${typeName} (${count})`;
+                    
+                    // Add IoT badge if this has IoT enabled equipment
+                    // Note: in a production environment, you'd check if IoT devices exist
+                    if (roomId) {
+                        const iotBadge = document.createElement('span');
+                        iotBadge.className = 'equipment-iot-badge';
+                        iotBadge.textContent = 'IoT';
+                        itemElement.appendChild(iotBadge);
+                    }
+                    
+                    container.appendChild(itemElement);
+                }
+            }
+        }
+
         document.getElementById('edit-room-btn').addEventListener('click', function() {
             // Make sure the form has the latest data before showing
             if (roomData && roomData.details) {
@@ -927,8 +1021,8 @@
                 const description = roomData.details.description;
                 document.getElementById('room-description').value = description !== null && description !== undefined ? description : '';
                 
-                // Set up equipment checkboxes
-                setupEquipmentCheckboxes(roomData.details.facilities);
+                // Display equipment instead of setting up checkboxes
+                displayEquipment(roomData.details.facilities);
             }
             
             // Show the modal
@@ -1086,7 +1180,8 @@
             ROOMS: `${API_BASE_URL}/rooms`,
             ROOM_DETAIL: `${API_BASE_URL}/rooms/${roomId}`,
             ROOM_STATS: `${API_BASE_URL}/dashboard/room/${roomId}`,
-            ROOM_BOOKINGS: `${API_BASE_URL}/bookings/room/${roomId}`
+            ROOM_BOOKINGS: `${API_BASE_URL}/bookings/room/${roomId}`,
+            IOT: `${API_BASE_URL}/iot`
         };
         
         // For development without a proper backend
@@ -1182,19 +1277,57 @@
             // Equipment checkbox event listeners
             document.querySelectorAll('input[name="equipment"]').forEach(checkbox => {
                 const countInput = document.getElementById(`${checkbox.value}-count`);
+                const iotCheckbox = document.getElementById(`${checkbox.value}-iot`);
                 
                 // Enable/disable count input based on checkbox
                 checkbox.addEventListener('change', function() {
                     countInput.disabled = !this.checked;
                     if (!this.checked) {
                         countInput.value = 0;
+                        // If equipment is unchecked, also uncheck IoT
+                        if (iotCheckbox) {
+                            iotCheckbox.checked = false;
+                            iotCheckbox.disabled = true;
+                        }
                     } else {
                         countInput.value = 1;
+                        // Enable IoT checkbox when equipment is checked
+                        if (iotCheckbox) {
+                            iotCheckbox.disabled = false;
+                        }
+                    }
+                });
+                
+                // When count changes, check if it's 0 and update checkbox
+                countInput.addEventListener('change', function() {
+                    if (parseInt(this.value) <= 0) {
+                        checkbox.checked = false;
+                        this.disabled = true;
+                        if (iotCheckbox) {
+                            iotCheckbox.checked = false;
+                            iotCheckbox.disabled = true;
+                        }
                     }
                 });
                 
                 // Initially disable count inputs
                 countInput.disabled = !checkbox.checked;
+                
+                // IoT checkbox setup
+                if (iotCheckbox) {
+                    iotCheckbox.disabled = !checkbox.checked;
+                    
+                    // When IoT is checked, ensure equipment is checked too
+                    iotCheckbox.addEventListener('change', function() {
+                        if (this.checked && !checkbox.checked) {
+                            checkbox.checked = true;
+                            countInput.disabled = false;
+                            if (parseInt(countInput.value) <= 0) {
+                                countInput.value = 1;
+                            }
+                        }
+                    });
+                }
             });
         }
         
@@ -1450,7 +1583,9 @@
                 'microphone': 'Micro',
                 'speaker': 'Loa',
                 'screen': 'Màn hình',
-                'camera': 'Camera'
+                'camera': 'Camera',
+                'light': 'Đèn',
+                'fan': 'Quạt'
             };
             
             return equipmentMap[key] || key;
@@ -1744,8 +1879,15 @@
                 checkbox.checked = false;
                 const countInput = document.getElementById(`${checkbox.value}-count`);
                 if (countInput) {
-                    countInput.value = "1";
+                    countInput.value = "0";
                     countInput.disabled = true;
+                }
+                
+                // Reset IoT checkboxes
+                const iotCheckbox = document.getElementById(`${checkbox.value}-iot`);
+                if (iotCheckbox) {
+                    iotCheckbox.checked = false;
+                    iotCheckbox.disabled = true;
                 }
             });
 
@@ -1790,9 +1932,18 @@
                                 countInput.value = count;
                                 countInput.disabled = false;
                             }
+                            
+                            // Enable IoT checkbox
+                            const iotCheckbox = document.getElementById(`${checkbox.value}-iot`);
+                            if (iotCheckbox) {
+                                iotCheckbox.disabled = false;
                         }
                     }
                 }
+                }
+                
+                // Fetch and set IoT devices after setting up equipment
+                populateIoTDeviceInputs(roomId);
             } catch (error) {
                 console.error('Error setting up equipment checkboxes:', error);
             }
@@ -1814,22 +1965,214 @@
             return equipment;
         }
         
-        // Helper function to get equipment translation map
-        function getEquipmentMap() {
-            return {
-                'projector': 'Máy chiếu',
-                'computer': 'Máy tính',
-                'air_conditioner': 'Điều hòa',
-                'whiteboard': 'Bảng',
-                'table': 'Bàn',
-                'chair': 'Ghế',
-                'sound_system': 'Hệ thống âm thanh',
-                'wifi': 'Hệ thống wifi',
-                'microphone': 'Micro',
-                'speaker': 'Loa',
-                'screen': 'Màn hình',
-                'camera': 'Camera'
-            };
+        // Get IoT device data
+        function getIoTDeviceData() {
+            let iotDevices = [];
+            
+            // Loop through all IoT-enabled checkboxes
+            document.querySelectorAll('input[name="iot-enabled"]').forEach(checkbox => {
+                if (checkbox.checked) {
+                    const equipmentType = checkbox.dataset.equipment;
+                    const countInput = document.getElementById(`${equipmentType}-count`);
+                    const count = parseInt(countInput.value) || 0;
+                    
+                    // Skip if count is 0
+                    if (count <= 0) return;
+                    
+                    // Define a friendly name for device type
+                    const deviceTypeNames = {
+                        'projector': 'Máy chiếu',
+                        'computer': 'Máy tính',
+                        'air_conditioner': 'Điều hòa',
+                        'speaker': 'Loa',
+                        'light': 'Đèn',
+                        'fan': 'Quạt'
+                    };
+                    
+                    // Create device objects with auto-incrementing names
+                    for (let i = 1; i <= count; i++) {
+                        iotDevices.push({
+                            device_type: equipmentType,
+                            device_name: `${deviceTypeNames[equipmentType] || equipmentType} ${i}`
+                        });
+                    }
+                }
+            });
+            
+            return iotDevices;
+        }
+        
+        // Get IoT devices for a room and populate inputs
+        function populateIoTDeviceInputs(roomId) {
+            // Reset all IoT device checkboxes first
+            document.querySelectorAll('input[name="iot-enabled"]').forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.disabled = true;
+            });
+            
+            // Fetch existing IoT devices for the room
+            if (!roomId) return;
+            
+            fetch(`${ENDPOINTS.IOT}?room_id=${roomId}`, {
+                credentials: 'include'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to load IoT devices');
+                return response.json();
+            })
+            .then(devices => {
+                if (!devices || devices.length === 0) return;
+                
+                // Count devices by type
+                const deviceCounts = {};
+                devices.forEach(device => {
+                    deviceCounts[device.device_type] = (deviceCounts[device.device_type] || 0) + 1;
+                });
+                
+                // Update checkboxes and counts
+                for (const [deviceType, count] of Object.entries(deviceCounts)) {
+                    // Ensure the equipment is checked
+                    const equipmentCheckbox = document.getElementById(deviceType);
+                    if (equipmentCheckbox) {
+                        equipmentCheckbox.checked = true;
+                        
+                        // Update count
+                        const countInput = document.getElementById(`${deviceType}-count`);
+                        if (countInput) {
+                            countInput.value = count;
+                            countInput.disabled = false;
+                        }
+                        
+                        // Check IoT checkbox
+                        const iotCheckbox = document.getElementById(`${deviceType}-iot`);
+                        if (iotCheckbox) {
+                            iotCheckbox.checked = true;
+                            iotCheckbox.disabled = false;
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading IoT devices:', error);
+            });
+        }
+        
+        // Add IoT devices to a room
+        async function addIoTDevicesToRoom(roomId, iotDevices) {
+            try {
+                // Kiểm tra roomId có hợp lệ không
+                if (!roomId) {
+                    console.error('Không thể thêm thiết bị IoT: Thiếu room_id');
+                    return;
+                }
+                
+                // Convert roomId to number if it's a string (optional)
+                const roomIdNumber = Number(roomId) || roomId;
+                
+                // Create each device one by one
+                for (const device of iotDevices) {
+                    console.log(`Thêm thiết bị IoT: ${device.device_name} (${device.device_type}) cho phòng ${roomIdNumber}`);
+                    
+                    const deviceData = {
+                        device_name: device.device_name,
+                        device_type: device.device_type,
+                        room_id: roomIdNumber,
+                        status: 'off'
+                    };
+                    
+                    // Log device data for debugging
+                    console.log('Dữ liệu thiết bị gửi đi:', JSON.stringify(deviceData));
+                    
+                    const response = await fetch(ENDPOINTS.IOT, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(deviceData)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        console.error(`Error adding IoT device ${device.device_name}:`, errorData);
+                    } else {
+                        console.log(`Thêm thiết bị IoT ${device.device_name} thành công`);
+                    }
+                }
+                
+                console.log(`Added ${iotDevices.length} IoT devices to room ${roomId}`);
+            } catch (error) {
+                console.error('Error adding IoT devices:', error);
+            }
+        }
+        
+        // Update IoT devices for a room
+        async function updateRoomIoTDevices(roomId, newIotDevices) {
+            try {
+                // Lấy danh sách thiết bị hiện tại
+                const response = await fetch(`${ENDPOINTS.IOT}?room_id=${roomId}`, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to get current IoT devices');
+                }
+                
+                const currentDevices = await response.json();
+                
+                // Tạo map thiết bị hiện tại theo loại
+                const currentDevicesByType = {};
+                currentDevices.forEach(device => {
+                    if (!currentDevicesByType[device.device_type]) {
+                        currentDevicesByType[device.device_type] = [];
+                    }
+                    currentDevicesByType[device.device_type].push(device);
+                });
+                
+                // Tạo map thiết bị mới theo loại
+                const newDevicesByType = {};
+                newIotDevices.forEach(device => {
+                    if (!newDevicesByType[device.device_type]) {
+                        newDevicesByType[device.device_type] = [];
+                    }
+                    newDevicesByType[device.device_type].push(device);
+                });
+                
+                // Xử lý từng loại thiết bị
+                const deviceTypes = [...new Set([
+                    ...Object.keys(currentDevicesByType),
+                    ...Object.keys(newDevicesByType)
+                ])];
+                
+                for (const deviceType of deviceTypes) {
+                    const currentTypeDevices = currentDevicesByType[deviceType] || [];
+                    const newTypeDevices = newDevicesByType[deviceType] || [];
+                    
+                    // Nếu số lượng thiết bị hiện tại ít hơn số lượng mới, thêm thiết bị
+                    if (currentTypeDevices.length < newTypeDevices.length) {
+                        // Tính số lượng thiết bị cần thêm
+                        const devicesToAdd = newTypeDevices.slice(currentTypeDevices.length);
+                        // Thêm thiết bị mới với tên tự tăng
+                        await addIoTDevicesToRoom(roomId, devicesToAdd);
+                    } 
+                    // Nếu số lượng thiết bị hiện tại nhiều hơn số lượng mới, xóa bớt
+                    else if (currentTypeDevices.length > newTypeDevices.length) {
+                        // Tính số lượng thiết bị cần xóa
+                        const devicesToRemove = currentTypeDevices.slice(newTypeDevices.length);
+                        // Xóa từng thiết bị
+                        for (const device of devicesToRemove) {
+                            await fetch(`${ENDPOINTS.IOT}/${device.id}`, {
+                                method: 'DELETE',
+                                credentials: 'include'
+                            });
+                        }
+                    }
+                }
+                
+                console.log(`Updated IoT devices for room ${roomId}`);
+            } catch (error) {
+                console.error('Error updating IoT devices:', error);
+            }
         }
         
         // Update statistics in the UI
@@ -2092,6 +2435,7 @@
             
             // Get equipment data from checkboxes
             const facilities = getEquipmentData();
+            const iotDevices = getIoTDeviceData();
             
             // Prepare room data
             const roomData = {
@@ -2147,6 +2491,11 @@
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => null);
                     throw new Error(errorData?.message || 'Không thể cập nhật thông tin phòng');
+                }
+                
+                // Xử lý thiết bị IoT sau khi cập nhật phòng thành công
+                if (roomId && iotDevices.length > 0) {
+                    await updateRoomIoTDevices(roomId, iotDevices);
                 }
                 
                 alert('Phòng đã được cập nhật thành công!');

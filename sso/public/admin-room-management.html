@@ -381,6 +381,18 @@
             border-radius: 4px;
         }
         
+        .iot-checkbox {
+            margin-left: 10px;
+            width: 16px;
+            height: 16px;
+        }
+        
+        .iot-label {
+            font-size: 12px;
+            color: #007bff;
+            margin-left: 0;
+        }
+        
         .form-help {
             display: block;
             margin-top: 5px;
@@ -588,6 +600,40 @@
             justify-content: flex-end;
             gap: 10px;
         }
+        
+        .equipment-display {
+            margin-top: 10px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .equipment-item-display {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background-color: #e9ecef;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .equipment-iot-badge {
+            display: inline-block;
+            margin-left: 5px;
+            padding: 2px 6px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .empty-equipment-message {
+            color: #6c757d;
+            font-style: italic;
+        }
     </style>
 </head>
 <body class="admin-dashboard">
@@ -688,7 +734,7 @@
     <div class="modal" id="room-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Thêm phòng mới</h3>
+                <h3 class="modal-title" id="room-modal-title">Thêm phòng mới</h3>
                 <button class="modal-close">&times;</button>
             </div>
             <div class="modal-body">
@@ -763,11 +809,22 @@
                                 <input type="number" class="equipment-count" id="air_conditioner-count" min="0" max="10" value="0">
                             </div>
                             <div class="equipment-item">
-                                <input type="checkbox" id="whiteboard" name="equipment" value="whiteboard">
-                                <label for="whiteboard">Bảng</label>
-                                <input type="number" class="equipment-count" id="whiteboard-count" min="0" max="10" value="0">
+                                <input type="checkbox" id="speaker" name="equipment" value="speaker">
+                                <label for="speaker">Loa</label>
+                                <input type="number" class="equipment-count" id="speaker-count" min="0" max="10" value="0">
+                            </div>
+                            <div class="equipment-item">
+                                <input type="checkbox" id="light" name="equipment" value="light">
+                                <label for="light">Đèn</label>
+                                <input type="number" class="equipment-count" id="light-count" min="0" max="20" value="0">
+                            </div>
+                            <div class="equipment-item">
+                                <input type="checkbox" id="fan" name="equipment" value="fan">
+                                <label for="fan">Quạt</label>
+                                <input type="number" class="equipment-count" id="fan-count" min="0" max="10" value="0">
                             </div>
                         </div>
+                        <span class="form-help">Tất cả thiết bị được thêm sẽ tự động kích hoạt IoT (tự động đặt tên: Đèn 1, Đèn 2...)</span>
                     </div>
                     
                     <div class="form-group">
@@ -812,7 +869,8 @@
         const API_BASE_URL = '/api';
         const ENDPOINTS = {
             ROOMS: `${API_BASE_URL}/rooms`,
-            ROOM_TYPES: `${API_BASE_URL}/rooms/types`
+            ROOM_TYPES: `${API_BASE_URL}/rooms/types`,
+            IOT: `${API_BASE_URL}/iot`
         };
 
         // Initialize rooms data
@@ -886,6 +944,15 @@
                         countInput.value = 0;
                     } else {
                         countInput.value = 1;
+                    }
+                });
+                
+                // Khi thay đổi số lượng, kiểm tra và cập nhật thiết bị
+                countInput.addEventListener('change', function() {
+                    // Nếu số lượng = 0, bỏ chọn thiết bị
+                    if (parseInt(this.value) <= 0) {
+                        checkbox.checked = false;
+                        countInput.disabled = true;
                     }
                 });
                 
@@ -1009,7 +1076,7 @@
                 }
                 
                 // Load rooms
-                await loadRooms();
+                roomsData = await loadRooms();
                 
                 // Generate room cards
                 generateRoomCards(roomsData);
@@ -1058,6 +1125,42 @@
             });
             
             return equipment;
+        }
+        
+        function getIoTDeviceData() {
+            let iotDevices = [];
+            
+            // Loop through all equipment checkboxes
+            document.querySelectorAll('input[name="equipment"]').forEach(checkbox => {
+                if (checkbox.checked) {
+                    const equipmentType = checkbox.value;
+                    const countInput = document.getElementById(`${equipmentType}-count`);
+                    const count = parseInt(countInput.value) || 0;
+                    
+                    // Skip if count is 0
+                    if (count <= 0) return;
+                    
+                    // Define a friendly name for device type
+                    const deviceTypeNames = {
+                        'projector': 'Máy chiếu',
+                        'computer': 'Máy tính',
+                        'air_conditioner': 'Điều hòa',
+                        'speaker': 'Loa',
+                        'light': 'Đèn',
+                        'fan': 'Quạt'
+                    };
+                    
+                    // Create device objects with auto-incrementing names
+                    for (let i = 1; i <= count; i++) {
+                        iotDevices.push({
+                            device_type: equipmentType,
+                            device_name: `${deviceTypeNames[equipmentType] || equipmentType} ${i}`
+                        });
+                    }
+                }
+            });
+            
+            return iotDevices;
         }
         
         function populateEquipmentInputs(facilities) {
@@ -1167,13 +1270,12 @@
         async function saveRoom() {
             const form = document.getElementById('room-form');
             const roomId = form.dataset.roomId;
-            // alert(document.getElementById('edit-room-description').value);
+            const isEditMode = !!roomId;
             
             // Lấy dữ liệu input
             const roomName = document.getElementById('room-name').value.trim();
             const location = document.getElementById('room-location-select').value;
-            // const description = document.getElementById('edit-room-description').value;
-            // alert(description);
+            
             // Validate dữ liệu chính
             if (!roomName) {
                 alert('Vui lòng nhập tên phòng!');
@@ -1185,9 +1287,6 @@
                 return;
             }
             
-            // Lấy dữ liệu thiết bị
-            const equipment = getEquipmentData();
-            
             // Tạo đối tượng dữ liệu để gửi lên server
             const roomData = {
                 room_name: roomName,
@@ -1196,11 +1295,15 @@
                 room_type: document.getElementById('room-type').value,
                 description: document.getElementById('edit-room-description').value,
                 status: document.getElementById('room-status').value,
-                facilities: equipment,
                 updated_at: new Date().toISOString()
             };
-            // Nếu là phòng mới, thêm ngày tạo
-            if (!roomId) {
+            
+            // Chỉ cập nhật thiết bị nếu đang thêm phòng mới, không phải chỉnh sửa
+            if (!isEditMode) {
+                // Lấy dữ liệu thiết bị
+                const equipment = getEquipmentData();
+                const iotDevices = getIoTDeviceData();
+                roomData.facilities = equipment;
                 roomData.created_at = new Date().toISOString();
             }
             
@@ -1223,13 +1326,52 @@
                     throw new Error(errorData.message || 'Không thể lưu thông tin phòng');
                 }
                 
+                const savedRoomData = await response.json();
+                // Lấy ID phòng từ dữ liệu trả về HOẶC từ roomId hiện tại (nếu đang cập nhật)
+                let savedRoomId;
+                
+                // Xử lý các cấu trúc phản hồi khác nhau từ API
+                if (typeof savedRoomData === 'object') {
+                    if (savedRoomData.id) {
+                        savedRoomId = savedRoomData.id;
+                    } else if (savedRoomData.room && savedRoomData.room.id) {
+                        savedRoomId = savedRoomData.room.id;
+                    } else if (savedRoomData.data && savedRoomData.data.id) {
+                        savedRoomId = savedRoomData.data.id;
+                    }
+                }
+                
+                // Nếu không thể lấy ID từ phản hồi, sử dụng ID hiện tại (nếu có)
+                if (!savedRoomId && roomId) {
+                    savedRoomId = roomId;
+                }
+                
+                // Kiểm tra nếu không có ID phòng
+                if (!savedRoomId) {
+                    console.error('Không thể xác định ID phòng');
+                    alert('Phòng đã được lưu nhưng không thể xác định ID phòng. Vui lòng thử lại sau.');
+                    
+                    // Tải lại danh sách phòng và đóng modal
+                    await loadRooms();
+                    generateRoomCards(roomsData);
+                    closeModal();
+                    return;
+                }
+                
+                // Chỉ xử lý thiết bị IoT khi thêm phòng mới
+                if (!isEditMode) {
+                    // Lấy dữ liệu thiết bị
+                    const iotDevices = getIoTDeviceData();
+                    
+                    // Thêm thiết bị IoT nếu có
+                    if (iotDevices.length > 0) {
+                        await addIoTDevicesToRoom(savedRoomId, iotDevices);
+                    }
+                }
+                
                 // Xử lý upload ảnh nếu có file được chọn
                 const imageInput = document.getElementById('room-image');
                 if (imageInput.files && imageInput.files[0]) {
-                    const responseData = await response.json();
-                    const savedRoomId = responseData.id || roomId;
-                    
-                    // Upload ảnh sau khi đã lưu thông tin phòng
                     const formData = new FormData();
                     formData.append('image', imageInput.files[0]);
                     
@@ -1269,124 +1411,193 @@
         }
         
         function openAddModal() {
-            const modal = document.getElementById('room-modal');
-            const modalTitle = document.querySelector('.modal-title');
-            const form = document.getElementById('room-form');
-            const imagePreview = document.getElementById('image-preview');
-            
-            modalTitle.textContent = 'Thêm phòng mới';
-            form.reset();
+            document.getElementById('room-form').dataset.roomId = '';
+            document.getElementById('room-modal-title').textContent = 'Thêm phòng mới';
+            document.getElementById('room-form').reset();
+            document.getElementById('room-status').value = 'available';
+            document.getElementById('room-type').value = 'classroom';
             
             // Reset equipment
             document.querySelectorAll('input[name="equipment"]').forEach(checkbox => {
                 checkbox.checked = false;
-                const countInput = document.getElementById(`${checkbox.value}-count`);
-                countInput.value = 0;
-                countInput.disabled = true;
+                document.getElementById(`${checkbox.value}-count`).disabled = true;
+                document.getElementById(`${checkbox.value}-count`).value = 0;
             });
             
             // Reset image preview
+            const imagePreview = document.getElementById('image-preview');
             imagePreview.innerHTML = '<div class="image-preview-placeholder">Chưa có ảnh phòng</div>';
             
-            // Set default status to available
-            document.getElementById('room-status').value = 'available';
-            
-            // Reset hidden room ID and remove image flag
-            form.dataset.roomId = '';
-            form.dataset.removeImage = 'false';
-            
-            modal.style.display = 'flex';
+            // Show modal
+            document.getElementById('room-modal').style.display = 'flex';
         }
         
-        function openEditModal(roomId) {
-            const modal = document.getElementById('room-modal');
-            const modalTitle = document.querySelector('.modal-title');
-            const form = document.getElementById('room-form');
-            const imagePreview = document.getElementById('image-preview');
+        function displayEquipment(facilities, containerId = 'equipment-display') {
+            const container = document.getElementById(containerId);
+            if (!container) return;
             
-            modalTitle.textContent = 'Chỉnh sửa phòng';
+            container.innerHTML = '';
             
-            // Find the room data
-            const room = roomsData.find(r => r.id.toString() === roomId.toString());
-            if (!room) {
-                alert('Không tìm thấy dữ liệu phòng!');
+            if (!facilities || (typeof facilities === 'object' && Object.keys(facilities).length === 0)) {
+                container.innerHTML = '<div class="empty-equipment-message">Không có thông tin về thiết bị</div>';
                 return;
             }
             
-            // Parse location from room_id or use existing location
-            let location = '';
-            let roomName = '';
+            let equipmentData = {};
             
-            // Chuyển đổi id thành string trước khi kiểm tra
-            const roomIdStr = String(room.id);
-            if (roomIdStr && roomIdStr.includes('.')) {
-                const parts = roomIdStr.split('.');
-                location = parts[0];
-                roomName = parts[1];
-            } else {
-                location = room.location || '';
-                roomName = room.room_name || '';
+            // Parse facilities if it's a string
+            if (typeof facilities === 'string') {
+                try {
+                    equipmentData = JSON.parse(facilities);
+                } catch (e) {
+                    // If can't parse, split by comma
+                    const items = facilities.split(',').map(item => item.trim());
+                    items.forEach(item => {
+                        equipmentData[item] = 1;
+                    });
+                }
+            } else if (typeof facilities === 'object') {
+                equipmentData = facilities;
             }
             
-            // Fill the form with room data
-            document.getElementById('room-name').value = roomName;
-            document.getElementById('room-location-select').value = location;
+            // Equipment type names
+            const equipmentTypeNames = {
+                'projector': 'Máy chiếu',
+                'computer': 'Máy tính',
+                'air_conditioner': 'Điều hòa',
+                'speaker': 'Loa',
+                'light': 'Đèn',
+                'fan': 'Quạt'
+            };
+            
+            // Get IoT devices for this room
+            const roomId = document.getElementById('room-form').dataset.roomId;
+            
+            // Display equipment items
+            for (const [type, count] of Object.entries(equipmentData)) {
+                if (count > 0) {
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'equipment-item-display';
+                    
+                    // Use friendly name if available
+                    const typeName = equipmentTypeNames[type] || type;
+                    
+                    itemElement.textContent = `${typeName} (${count})`;
+                    
+                    // Add IoT badge if this has IoT enabled equipment
+                    // Note: in a production environment, you'd check if IoT devices exist
+                    if (roomId) {
+                        const iotBadge = document.createElement('span');
+                        iotBadge.className = 'equipment-iot-badge';
+                        iotBadge.textContent = 'IoT';
+                        itemElement.appendChild(iotBadge);
+                    }
+                    
+                    container.appendChild(itemElement);
+                }
+            }
+        }
+        
+        function openEditModal(room) {
+            document.getElementById('room-form').dataset.roomId = room.id;
+            document.getElementById('room-modal-title').textContent = 'Chỉnh sửa phòng';
+            document.getElementById('room-name').value = room.room_name || '';
             document.getElementById('room-id').value = room.id || '';
-            document.getElementById('room-type').value = room.room_type || '';
+            document.getElementById('room-location-select').value = room.location || '';
             document.getElementById('room-capacity').value = room.capacity || '';
+            document.getElementById('room-type').value = room.room_type || 'classroom';
             document.getElementById('room-status').value = room.status || 'available';
             document.getElementById('edit-room-description').value = room.description || '';
             
-            // Reset image input
-            document.getElementById('room-image').value = '';
+            // Reset image preview
+            const imagePreview = document.getElementById('image-preview');
+            imagePreview.innerHTML = '<div class="image-preview-placeholder">Chọn hình ảnh để thay đổi</div>';
             
-            // Show image preview if available
-            if (room.image_url) {
-                imagePreview.innerHTML = `
-                    <img src="${room.image_url}" alt="Ảnh phòng" />
-                    <div class="image-preview-remove" id="remove-image">
-                        <i class="fas fa-times"></i>
-                    </div>
-                `;
-                
-                // Add event listener for remove button
-                document.getElementById('remove-image').addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    document.getElementById('room-image').value = '';
-                    imagePreview.innerHTML = '<div class="image-preview-placeholder">Chưa có ảnh phòng</div>';
-                    form.dataset.removeImage = 'true';
-                });
+            // Thiết lập hiển thị thiết bị chỉ để xem
+            const equipmentOptions = document.querySelector('.equipment-options');
+            const originalEquipmentOptions = equipmentOptions.innerHTML;
+            
+            // Lưu lại HTML gốc để khôi phục khi đóng modal
+            document.getElementById('room-form').dataset.originalEquipment = originalEquipmentOptions;
+            
+            // Hiển thị thiết bị dạng chỉ đọc
+            let readOnlyEquipment = '<div class="equipment-display">';
+            
+            if (!room.facilities || (typeof room.facilities === 'object' && Object.keys(room.facilities).length === 0)) {
+                readOnlyEquipment += '<div class="empty-equipment-message">Không có thông tin về thiết bị</div>';
             } else {
-                imagePreview.innerHTML = '<div class="image-preview-placeholder">Chưa có ảnh phòng</div>';
+                let facilitiesObj = {};
+                
+                // Parse facilities if it's a string
+                if (typeof room.facilities === 'string') {
+                    try {
+                        facilitiesObj = JSON.parse(room.facilities);
+                    } catch (e) {
+                        const facilitiesArray = room.facilities.split(',').map(item => item.trim());
+                        facilitiesArray.forEach(item => {
+                            facilitiesObj[item] = 1;
+                        });
+                    }
+                } else if (typeof room.facilities === 'object') {
+                    facilitiesObj = room.facilities;
+                }
+                
+                // Equipment type names
+                const equipmentTypeNames = {
+                    'projector': 'Máy chiếu',
+                    'computer': 'Máy tính',
+                    'air_conditioner': 'Điều hòa',
+                    'speaker': 'Loa',
+                    'light': 'Đèn',
+                    'fan': 'Quạt'
+                };
+                
+                // Display equipment items
+                for (const [type, count] of Object.entries(facilitiesObj)) {
+                    if (count > 0) {
+                        const typeName = equipmentTypeNames[type] || type;
+                        readOnlyEquipment += `<div class="equipment-item-display">${typeName} (${count}) <span class="equipment-iot-badge">IoT</span></div>`;
+                    }
+                }
             }
             
-            // Reset remove image flag
-            form.dataset.removeImage = 'false';
+            readOnlyEquipment += '</div>';
+            equipmentOptions.innerHTML = readOnlyEquipment;
             
-            // Set equipment
-            populateEquipmentInputs(room.facilities);
-            
-            // Store room ID for update
-            form.dataset.roomId = room.id;
-            
-            modal.style.display = 'flex';
+            // Show modal
+            document.getElementById('room-modal').style.display = 'flex';
         }
         
         function closeModal() {
             const modal = document.getElementById('room-modal');
             modal.style.display = 'none';
+            
+            // Khôi phục HTML gốc của phần thiết bị nếu cần
+            const roomForm = document.getElementById('room-form');
+            const originalEquipment = roomForm.dataset.originalEquipment;
+            
+            if (originalEquipment) {
+                document.querySelector('.equipment-options').innerHTML = originalEquipment;
+                delete roomForm.dataset.originalEquipment;
+            }
         }
         
         function generateRoomCards(rooms) {
             const roomGrid = document.getElementById('room-grid');
-            roomGrid.innerHTML = '';
             
             if (!rooms || rooms.length === 0) {
-                roomGrid.innerHTML = '<div class="no-data">Không tìm thấy phòng nào phù hợp</div>';
+                roomGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <p>Không tìm thấy phòng nào. Thêm phòng mới hoặc thay đổi bộ lọc tìm kiếm.</p>
+                    </div>
+                `;
                 return;
             }
             
-            // Room type labels
+            roomGrid.innerHTML = '';
+            
+            // Room type labels for display
             const roomTypeLabels = {
                 'classroom': 'Phòng học',
                 'meeting': 'Phòng họp',
@@ -1396,160 +1607,125 @@
                 'study': 'Không gian học tập'
             };
             
-            // Status texts
-            const statusTexts = {
-                'available': 'Còn trống',
-                'occupied': 'Đang sử dụng',
-                'maintenance': 'Bảo trì'
-            };
-            
-            // Create room cards
+            // Generate room cards
             rooms.forEach(room => {
-                const card = document.createElement('div');
-                card.className = 'room-card';
-                
-                // Get room type label
-                const roomTypeLabel = roomTypeLabels[room.room_type] || room.room_type;
-                
-                // Get status text and CSS class
-                const statusText = statusTexts[room.status] || 'Không rõ';
+                // Create room status element
                 let statusClass = '';
+                let statusText = '';
                 
-                switch(room.status) {
-                    case 'available': statusClass = 'status-available'; break;
-                    case 'occupied': statusClass = 'status-occupied'; break;
-                    case 'maintenance': statusClass = 'status-maintenance'; break;
+                switch (room.status) {
+                    case 'available':
+                        statusClass = 'status-available';
+                        statusText = 'Trống';
+                        break;
+                    case 'occupied':
+                        statusClass = 'status-occupied';
+                        statusText = 'Đang sử dụng';
+                        break;
+                    case 'maintenance':
+                        statusClass = 'status-maintenance';
+                        statusText = 'Bảo trì';
+                        break;
+                    default:
+                        statusClass = 'status-available';
+                        statusText = 'Trống';
                 }
                 
                 // Parse facilities if it's a string
-                let facilitiesObj = {};
-                try {
-                    if (room.facilities) {
-                        if (typeof room.facilities === 'string') {
-                            facilitiesObj = JSON.parse(room.facilities);
-                        } else if (typeof room.facilities === 'object') {
-                            facilitiesObj = room.facilities;
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error parsing facilities for room', room.id, e);
+                let facilitiesDisplay = '';
+                if (room.facilities) {
+                    let facilitiesObj = {};
                     
-                    // Nếu không thể parse, hiển thị dạng tên thiết bị thay vì số
-                    try {
-                        if (typeof room.facilities === 'string') {
-                            const facilityPairs = room.facilities.split(',').map(pair => pair.trim());
-                            facilitiesObj = {};
-                            facilityPairs.forEach(pair => {
-                                const [key, value] = pair.split(':').map(item => item.trim());
-                                facilitiesObj[key] = value;
+                    if (typeof room.facilities === 'string') {
+                        try {
+                            facilitiesObj = JSON.parse(room.facilities);
+                        } catch (e) {
+                            // If can't parse, split by comma
+                            const facilitiesArray = room.facilities.split(',').map(item => item.trim());
+                            facilitiesArray.forEach(item => {
+                                facilitiesObj[item] = 1;
                             });
                         }
-                    } catch (innerError) {
-                        console.error('Cannot format facilities string:', innerError);
+                    } else if (typeof room.facilities === 'object') {
+                        facilitiesObj = room.facilities;
                     }
+                    
+                    // Format facilities for display
+                    facilitiesDisplay = Object.entries(facilitiesObj)
+                        .map(([key, value]) => {
+                            const facilityLabels = {
+                                'projector': 'Máy chiếu',
+                                'computer': 'Máy tính',
+                                'air_conditioner': 'Điều hòa',
+                                'speaker': 'Loa',
+                                'fan': 'Quạt',
+                                'light': 'Đèn'
+                            };
+                            return `${facilityLabels[key] || key} (${value})`;
+                        })
+                        .join(', ');
                 }
-                
-                // Create facilities text
-                const facilitiesArray = [];
-                const equipmentLabels = {
-                    'projector': 'Máy chiếu',
-                    'computer': 'Máy tính',
-                    'air_conditioner': 'Điều hòa',
-                    'whiteboard': 'Bảng',
-                    '13': 'Máy chiếu',
-                    '26': 'Máy tính',
-                    '46': 'Điều hòa',
-                    '61': 'Bảng'
-                };
-                
-                for (const [key, value] of Object.entries(facilitiesObj)) {
-                    if (value && value > 0) {
-                        const label = equipmentLabels[key] || key;
-                        facilitiesArray.push(`${label}: ${value}`);
-                    }
-                }
-                
-                const facilitiesText = facilitiesArray.length > 0 ? facilitiesArray.join(', ') : 'Không có';
                 
                 // Create card HTML
+                const card = document.createElement('div');
+                card.className = 'room-card';
                 card.innerHTML = `
                     <div class="room-info">
                         <div class="room-status ${statusClass}">${statusText}</div>
                         <div class="room-name">
-                            ${room.room_name || room.id}
-                            <span class="room-code">#${room.id}</span>
+                            ${room.room_name}
+                            <span class="room-code">${room.id}</span>
                         </div>
                         <div class="room-details">
                             <div class="room-detail">
-                                <i class="fas fa-door-open"></i>
-                                <span>${roomTypeLabel}</span>
-                            </div>
-                            <div class="room-detail">
                                 <i class="fas fa-map-marker-alt"></i>
-                                <span>${room.location || 'Chưa xác định'}</span>
+                                ${room.location}
                             </div>
                             <div class="room-detail">
                                 <i class="fas fa-users"></i>
-                                <span>${room.capacity || 0} người</span>
+                                Sức chứa: ${room.capacity || 'Không xác định'} chỗ
                             </div>
                             <div class="room-detail">
-                                <i class="fas fa-cogs"></i>
-                                <span>${facilitiesText}</span>
+                                <i class="fas fa-tasks"></i>
+                                Loại phòng: ${roomTypeLabels[room.room_type] || room.room_type || 'Không xác định'}
                             </div>
                             <div class="room-detail">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>Cập nhật: ${formatDate(room.updated_at) || 'Chưa cập nhật'}</span>
+                                <i class="fas fa-laptop"></i>
+                                Thiết bị: ${facilitiesDisplay || 'Không có'}
                             </div>
                         </div>
                         <div class="room-actions">
-                            <div class="action-icon edit-btn" data-room-id="${room.id}">
-                                <i class="fas fa-edit"></i>
-                            </div>
-                            <div class="action-icon delete-btn" data-room-id="${room.id}">
-                                <i class="fas fa-trash"></i>
-                            </div>
-                            <div class="action-icon view-btn" data-room-id="${room.id}">
+                            <span class="action-icon view-btn" title="Xem chi tiết">
                                 <i class="fas fa-eye"></i>
-                            </div>
-                            <div class="action-icon toggle-status-btn" data-room-id="${room.id}" data-current-status="${room.status}">
-                                <i class="fas ${room.status === 'maintenance' ? 'fa-check-circle' : 'fa-ban'}"></i>
-                            </div>
+                            </span>
+                            <span class="action-icon edit-btn" title="Chỉnh sửa" data-room-id="${room.id}">
+                                <i class="fas fa-edit"></i>
+                            </span>
+                            <span class="action-icon delete-btn" title="Xóa" data-room-id="${room.id}">
+                                <i class="fas fa-trash"></i>
+                            </span>
+                            <span class="action-icon toggle-status-btn" title="Đổi trạng thái" data-room-id="${room.id}">
+                                <i class="fas fa-power-off"></i>
+                            </span>
                         </div>
                     </div>
                 `;
                 
-                roomGrid.appendChild(card);
-                
-                // Thêm event listeners cho các nút chỉnh sửa và xóa
+                // Add event listeners to action buttons
                 const editBtn = card.querySelector('.edit-btn');
+                editBtn.addEventListener('click', () => openEditModal(room));
+                
                 const deleteBtn = card.querySelector('.delete-btn');
+                deleteBtn.addEventListener('click', () => showDeleteConfirmation(room.id, room.room_name));
+                
                 const viewBtn = card.querySelector('.view-btn');
+                viewBtn.addEventListener('click', () => viewRoomDetails(room.id));
+                
                 const toggleStatusBtn = card.querySelector('.toggle-status-btn');
+                toggleStatusBtn.addEventListener('click', () => toggleRoomStatus(room.id));
                 
-                editBtn.addEventListener('click', function() {
-                    openEditModal(this.getAttribute('data-room-id'));
-                });
-                
-                deleteBtn.addEventListener('click', function() {
-                    deleteRoom(this.getAttribute('data-room-id'));
-                });
-                
-                viewBtn.addEventListener('click', function() {
-                    openDetailModal(this.getAttribute('data-room-id'));
-                });
-                
-                toggleStatusBtn.addEventListener('click', function() {
-                    const roomId = this.getAttribute('data-room-id');
-                    const currentStatus = this.getAttribute('data-current-status');
-                    
-                    if (currentStatus === 'maintenance') {
-                        // Mở lại phòng (đặt về available)
-                        toggleRoomStatus(roomId, 'available');
-                    } else {
-                        // Đóng phòng (đặt về maintenance)
-                        toggleRoomStatus(roomId, 'maintenance');
-                    }
-                });
+                // Add card to grid
+                roomGrid.appendChild(card);
             });
         }
         
@@ -1610,19 +1786,25 @@
             document.body.removeChild(link);
         }
 
-        async function toggleRoomStatus(roomId, newStatus) {
+        async function toggleRoomStatus(roomId) {
             try {
                 const room = roomsData.find(r => r.id.toString() === roomId.toString());
                 if (!room) {
                     throw new Error('Không tìm thấy thông tin phòng!');
                 }
                 
-                const message = newStatus === 'maintenance' 
-                    ? 'Bạn có chắc chắn muốn đóng phòng này không?' 
-                    : 'Bạn có chắc chắn muốn mở lại phòng này không?';
-                
-                if (!confirm(message)) {
-                    return;
+                // Xác định trạng thái mới (đối lập với trạng thái hiện tại)
+                let newStatus;
+                if (room.status === 'available') {
+                    newStatus = 'maintenance';
+                    if (!confirm('Bạn có chắc chắn muốn đóng phòng này (đặt sang trạng thái bảo trì) không?')) {
+                        return;
+                    }
+                } else {
+                    newStatus = 'available';
+                    if (!confirm('Bạn có chắc chắn muốn mở lại phòng này (đặt sang trạng thái có sẵn) không?')) {
+                        return;
+                    }
                 }
                 
                 // Cập nhật trạng thái phòng
@@ -1669,6 +1851,22 @@
             window.location.href = `admin-room-details.html?id=${roomId}`;
         }
         
+        // Hàm xem chi tiết phòng
+        function viewRoomDetails(roomId) {
+            const room = roomsData.find(r => r.id.toString() === roomId.toString());
+            if (!room) {
+                alert('Không tìm thấy thông tin phòng!');
+                return;
+            }
+            
+            // Chuyển hướng đến trang chi tiết phòng hoặc hiển thị modal chi tiết
+            // Thay thế bằng cách mở trang chi tiết phòng 
+            window.location.href = `admin-room-details.html?id=${roomId}`;
+            
+            // Hoặc có thể mở modal thông tin chi tiết phòng nếu có
+            // openDetailModal(roomId);
+        }
+        
         function formatDate(dateString) {
             if (!dateString) return null;
             
@@ -1692,6 +1890,134 @@
                 console.error('Error formatting date:', error);
                 return null;
             }
+        }
+
+        async function addIoTDevicesToRoom(roomId, iotDevices) {
+            try {
+                // Kiểm tra roomId có hợp lệ không
+                if (!roomId) {
+                    console.error('Không thể thêm thiết bị IoT: Thiếu room_id');
+                    return;
+                }
+                
+                // Convert roomId to number if it's a string (optional)
+                const roomIdNumber = Number(roomId) || roomId;
+                
+                // Create each device one by one
+                for (const device of iotDevices) {
+                    console.log(`Thêm thiết bị IoT: ${device.device_name} (${device.device_type}) cho phòng ${roomIdNumber}`);
+                    
+                    const deviceData = {
+                        device_name: device.device_name,
+                        device_type: device.device_type,
+                        room_id: roomIdNumber,
+                        status: 'off'
+                    };
+                    
+                    // Log device data for debugging
+                    console.log('Dữ liệu thiết bị gửi đi:', JSON.stringify(deviceData));
+                    
+                    const response = await fetch(ENDPOINTS.IOT, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(deviceData)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        console.error(`Error adding IoT device ${device.device_name}:`, errorData);
+                    } else {
+                        console.log(`Thêm thiết bị IoT ${device.device_name} thành công`);
+                    }
+                }
+                
+                console.log(`Added ${iotDevices.length} IoT devices to room ${roomId}`);
+            } catch (error) {
+                console.error('Error adding IoT devices:', error);
+            }
+        }
+        
+        async function updateRoomIoTDevices(roomId, newIotDevices) {
+            try {
+                // Lấy danh sách thiết bị hiện tại
+                const response = await fetch(`${ENDPOINTS.IOT}?room_id=${roomId}`, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to get current IoT devices');
+                }
+                
+                const currentDevices = await response.json();
+                
+                // Tạo map thiết bị hiện tại theo loại
+                const currentDevicesByType = {};
+                currentDevices.forEach(device => {
+                    if (!currentDevicesByType[device.device_type]) {
+                        currentDevicesByType[device.device_type] = [];
+                    }
+                    currentDevicesByType[device.device_type].push(device);
+                });
+                
+                // Tạo map thiết bị mới theo loại
+                const newDevicesByType = {};
+                newIotDevices.forEach(device => {
+                    if (!newDevicesByType[device.device_type]) {
+                        newDevicesByType[device.device_type] = [];
+                    }
+                    newDevicesByType[device.device_type].push(device);
+                });
+                
+                // Xử lý từng loại thiết bị
+                const deviceTypes = [...new Set([
+                    ...Object.keys(currentDevicesByType),
+                    ...Object.keys(newDevicesByType)
+                ])];
+                
+                for (const deviceType of deviceTypes) {
+                    const currentTypeDevices = currentDevicesByType[deviceType] || [];
+                    const newTypeDevices = newDevicesByType[deviceType] || [];
+                    
+                    // Nếu số lượng thiết bị hiện tại ít hơn số lượng mới, thêm thiết bị
+                    if (currentTypeDevices.length < newTypeDevices.length) {
+                        // Tính số lượng thiết bị cần thêm
+                        const devicesToAdd = newTypeDevices.slice(currentTypeDevices.length);
+                        // Thêm thiết bị mới với tên tự tăng
+                        await addIoTDevicesToRoom(roomId, devicesToAdd);
+                    } 
+                    // Nếu số lượng thiết bị hiện tại nhiều hơn số lượng mới, xóa bớt
+                    else if (currentTypeDevices.length > newTypeDevices.length) {
+                        // Tính số lượng thiết bị cần xóa
+                        const devicesToRemove = currentTypeDevices.slice(newTypeDevices.length);
+                        // Xóa từng thiết bị
+                        for (const device of devicesToRemove) {
+                            await fetch(`${ENDPOINTS.IOT}/${device.id}`, {
+                                method: 'DELETE',
+                                credentials: 'include'
+                            });
+                        }
+                    }
+                }
+                
+                console.log(`Updated IoT devices for room ${roomId}`);
+            } catch (error) {
+                console.error('Error updating IoT devices:', error);
+            }
+        }
+
+        // Hàm hiển thị modal xác nhận xóa phòng
+        function showDeleteConfirmation(roomId, roomName) {
+            // Set the room ID to be deleted
+            roomToDeleteId = roomId;
+            
+            // Display room info in the confirmation message
+            document.getElementById('delete-room-id').textContent = roomName ? `${roomId} (${roomName})` : roomId;
+            
+            // Show confirmation modal
+            document.getElementById('confirm-delete-modal').style.display = 'flex';
         }
     </script>
 </body>
