@@ -434,6 +434,53 @@
                 </div>
             </div>
             
+            <!-- Add Filter Container -->
+            <div class="filter-container" style="margin-bottom: 20px; background-color: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center; width: 100%;">
+                    <!-- Search by name -->
+                    <div style="position: relative; flex: 1; min-width: 200px;">
+                        <input type="text" id="device-name-search" placeholder="Tìm kiếm theo tên..." style="width: 100%; padding: 10px 15px 10px 40px; border-radius: 5px; border: 1px solid #ced4da; font-size: 14px;">
+                        <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #6c757d;"></i>
+                    </div>
+                    
+                    <!-- Filter by type -->
+                    <div style="min-width: 150px;">
+                        <select id="device-type-filter" style="width: 100%; padding: 10px 15px; border-radius: 5px; border: 1px solid #ced4da; font-size: 14px;">
+                            <option value="">Tất cả loại thiết bị</option>
+                            <option value="projector">Máy chiếu</option>
+                            <option value="computer">Máy tính</option>
+                            <option value="air_conditioner">Điều hòa</option>
+                            <option value="speaker">Loa</option>
+                            <option value="light">Đèn</option>
+                            <option value="fan">Quạt</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Filter by status -->
+                    <div style="min-width: 150px;">
+                        <select id="device-status-filter" style="width: 100%; padding: 10px 15px; border-radius: 5px; border: 1px solid #ced4da; font-size: 14px;">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="on">Đang bật</option>
+                            <option value="off">Đang tắt</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Filter by maintenance -->
+                    <div style="min-width: 150px;">
+                        <select id="device-maintenance-filter" style="width: 100%; padding: 10px 15px; border-radius: 5px; border: 1px solid #ced4da; font-size: 14px;">
+                            <option value="">Tất cả tình trạng</option>
+                            <option value="maintenance">Đang bảo trì</option>
+                            <option value="normal">Hoạt động bình thường</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Reset filters button -->
+                    <button id="reset-filters" class="btn btn-outline" style="padding: 10px 15px; border-radius: 5px; background-color: transparent; border: 1px solid #dee2e6; color: #6c757d; cursor: pointer;">
+                        <i class="fas fa-sync-alt"></i> Đặt lại bộ lọc
+                    </button>
+                </div>
+            </div>
+            
             <div class="devices-grid" id="devices-container">
                 <!-- Devices will be populated by JavaScript -->
                 <div class="loading-message">Đang tải thiết bị...</div>
@@ -553,6 +600,9 @@
                 
                 // Add device button
                 createAddDeviceButton(roomId);
+                
+                // Setup filter event listeners
+                setupFilters();
             } catch (error) {
                 console.error('Error initializing page:', error);
                 showError(`Đã xảy ra lỗi: ${error.message}`);
@@ -673,7 +723,7 @@
         }
         
         // Display devices in UI
-        function displayDevices() {
+        function displayDevices(filtered = false) {
             const container = document.getElementById('devices-container');
             
             // Clear container
@@ -698,15 +748,54 @@
                 container.appendChild(mockNotice);
             }
             
-            if (!devicesList || devicesList.length === 0) {
-                container.innerHTML += '<div class="empty-message">Không có thiết bị IoT nào trong phòng này.</div>';
+            // Get filtered devices based on current filter settings
+            let devicesToDisplay = filtered ? getFilteredDevices() : devicesList;
+            
+            if (!devicesToDisplay || devicesToDisplay.length === 0) {
+                container.innerHTML += '<div class="empty-message" style="text-align: center; padding: 30px; color: #6c757d;">Không có thiết bị IoT nào phù hợp với bộ lọc.</div>';
                 return;
             }
             
             // Create device cards
-            devicesList.forEach(device => {
+            devicesToDisplay.forEach(device => {
                 const card = createDeviceCard(device);
                 container.appendChild(card);
+            });
+        }
+        
+        // Filter devices based on current filter settings
+        function getFilteredDevices() {
+            const nameSearch = document.getElementById('device-name-search').value.toLowerCase();
+            const typeFilter = document.getElementById('device-type-filter').value;
+            const statusFilter = document.getElementById('device-status-filter').value;
+            const maintenanceFilter = document.getElementById('device-maintenance-filter').value;
+            
+            return devicesList.filter(device => {
+                // Filter by name
+                if (nameSearch && !device.device_name.toLowerCase().includes(nameSearch)) {
+                    return false;
+                }
+                
+                // Filter by type
+                if (typeFilter && device.device_type !== typeFilter) {
+                    return false;
+                }
+                
+                // Filter by status (not maintenance)
+                if (statusFilter && statusFilter !== 'maintenance' && device.status !== statusFilter) {
+                    return false;
+                }
+                
+                // Filter by maintenance
+                if (maintenanceFilter === 'maintenance' && device.status !== 'maintenance') {
+                    return false;
+                }
+                
+                if (maintenanceFilter === 'normal' && device.status === 'maintenance') {
+                    return false;
+                }
+                
+                return true;
             });
         }
         
@@ -1370,6 +1459,19 @@
                     // Add to device list
                     devicesList.push(newDevice);
                     
+                    // Update mock room's facilities
+                    if (!roomData.facilities) {
+                        roomData.facilities = {};
+                    }
+                    if (typeof roomData.facilities === 'string') {
+                        try {
+                            roomData.facilities = JSON.parse(roomData.facilities);
+                        } catch (e) {
+                            roomData.facilities = {};
+                        }
+                    }
+                    roomData.facilities[deviceData.device_type] = (roomData.facilities[deviceData.device_type] || 0) + 1;
+                    
                     // Display the new device
                     const container = document.getElementById('devices-container');
                     const card = createDeviceCard(newDevice);
@@ -1414,6 +1516,9 @@
                 if (result.device) {
                     devicesList.push(result.device);
                     
+                    // Update room's facilities count
+                    await updateRoomFacilities(roomId, result.device.device_type, 1);
+                    
                     // Display the new device
                     const container = document.getElementById('devices-container');
                     const card = createDeviceCard(result.device);
@@ -1436,10 +1541,27 @@
                     return false;
                 }
                 
+                // Find device before deleting
+                const deviceToDelete = devicesList.find(d => d.id === deviceId);
+                if (!deviceToDelete) {
+                    throw new Error('Không tìm thấy thiết bị để xóa');
+                }
+                
+                const deviceType = deviceToDelete.device_type;
+                const roomId = deviceToDelete.room_id;
+                
                 // If we're using mock data, just remove from list
                 if (usingMockData) {
                     // Remove from device list
                     devicesList = devicesList.filter(d => d.id !== deviceId);
+                    
+                    // Update mock room's facilities
+                    if (roomData.facilities && roomData.facilities[deviceType]) {
+                        roomData.facilities[deviceType] = Math.max(0, roomData.facilities[deviceType] - 1);
+                        if (roomData.facilities[deviceType] === 0) {
+                            delete roomData.facilities[deviceType];
+                        }
+                    }
                     
                     // Remove from UI
                     const deviceCard = document.querySelector(`.device-card[data-device-id="${deviceId}"]`);
@@ -1472,6 +1594,9 @@
                     }
                 }
                 
+                // Update room's facilities count after successful deletion
+                await updateRoomFacilities(roomId, deviceType, -1);
+                
                 // Remove from device list
                 devicesList = devicesList.filter(d => d.id !== deviceId);
                 
@@ -1493,6 +1618,76 @@
             } catch (error) {
                 console.error('Error deleting device:', error);
                 alert(`Lỗi khi xóa thiết bị: ${error.message}`);
+                return false;
+            }
+        }
+        
+        // Function to update room facilities when IoT devices are added or removed
+        async function updateRoomFacilities(roomId, deviceType, changeAmount) {
+            try {
+                console.log(`Updating room ${roomId} facilities for ${deviceType} by ${changeAmount}`);
+                
+                // Get current room data
+                const roomResponse = await fetch(`${ENDPOINTS.ROOMS}/${roomId}`, {
+                    credentials: 'include'
+                });
+                
+                if (!roomResponse.ok) {
+                    throw new Error(`Failed to fetch room data: ${roomResponse.status}`);
+                }
+                
+                const room = await roomResponse.json();
+                let facilities = room.facilities;
+                
+                // Parse facilities if it's a string
+                if (typeof facilities === 'string') {
+                    try {
+                        facilities = JSON.parse(facilities);
+                    } catch (e) {
+                        facilities = {};
+                    }
+                } else if (!facilities) {
+                    facilities = {};
+                }
+                
+                // Update count for the device type
+                if (!facilities[deviceType]) {
+                    facilities[deviceType] = 0;
+                }
+                
+                facilities[deviceType] = Math.max(0, facilities[deviceType] + changeAmount);
+                
+                // Remove property if count is 0
+                if (facilities[deviceType] === 0) {
+                    delete facilities[deviceType];
+                }
+                
+                // Prepare update data
+                const updateData = {
+                    ...room,
+                    facilities: facilities
+                };
+                
+                // Update room with new facilities
+                const updateResponse = await fetch(`${ENDPOINTS.ROOMS}/${roomId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(updateData)
+                });
+                
+                if (!updateResponse.ok) {
+                    throw new Error(`Failed to update room facilities: ${updateResponse.status}`);
+                }
+                
+                console.log(`Successfully updated room ${roomId} facilities`);
+                return true;
+                
+            } catch (error) {
+                console.error('Error updating room facilities:', error);
+                // Don't show alert to user, just log the error
                 return false;
             }
         }
@@ -1657,6 +1852,40 @@
                 if (e.target === formContainer) {
                     formContainer.remove();
                 }
+            });
+        }
+        
+        // Setup filter event listeners
+        function setupFilters() {
+            // Input events for search box (with debounce)
+            let debounceTimeout;
+            document.getElementById('device-name-search').addEventListener('input', function() {
+                clearTimeout(debounceTimeout);
+                debounceTimeout = setTimeout(() => {
+                    displayDevices(true);
+                }, 300);
+            });
+            
+            // Change events for dropdowns
+            document.getElementById('device-type-filter').addEventListener('change', function() {
+                displayDevices(true);
+            });
+            
+            document.getElementById('device-status-filter').addEventListener('change', function() {
+                displayDevices(true);
+            });
+            
+            document.getElementById('device-maintenance-filter').addEventListener('change', function() {
+                displayDevices(true);
+            });
+            
+            // Reset filters button
+            document.getElementById('reset-filters').addEventListener('click', function() {
+                document.getElementById('device-name-search').value = '';
+                document.getElementById('device-type-filter').value = '';
+                document.getElementById('device-status-filter').value = '';
+                document.getElementById('device-maintenance-filter').value = '';
+                displayDevices(false);
             });
         }
     </script>

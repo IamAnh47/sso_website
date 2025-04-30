@@ -817,7 +817,7 @@
                                 <input type="checkbox" id="light" name="equipment" value="light">
                                 <label for="light">Đèn</label>
                                 <input type="number" class="equipment-count" id="light-count" min="0" max="20" value="0">
-                            </div>
+                        </div>
                             <div class="equipment-item">
                                 <input type="checkbox" id="fan" name="equipment" value="fan">
                                 <label for="fan">Quạt</label>
@@ -1046,15 +1046,28 @@
                 if (iotResponse.ok) {
                     const iotDevices = await iotResponse.json();
                     if (iotDevices && iotDevices.length > 0) {
-                        // Room has IoT devices, ask user if they want to delete them first
-                        if (confirm(`Phòng này có ${iotDevices.length} thiết bị IoT. Bạn cần xóa thiết bị trước khi xóa phòng. Chuyển đến trang quản lý thiết bị IoT?`)) {
-                            window.location.href = 'admin-iot-devices.html';
+                        // Room has IoT devices, automatically delete them
+                        console.log(`Deleting ${iotDevices.length} IoT devices for room ${roomToDeleteId}`);
+                        
+                        // Delete each IoT device
+                        for (const device of iotDevices) {
+                            try {
+                                const deleteResponse = await fetch(`${ENDPOINTS.IOT}/${device.id}`, {
+                                    method: 'DELETE',
+                                    credentials: 'include'
+                                });
+                                
+                                if (!deleteResponse.ok) {
+                                    console.warn(`Failed to delete IoT device ${device.id}: ${deleteResponse.status}`);
+                                }
+                            } catch (deviceError) {
+                                console.error(`Error deleting IoT device ${device.id}:`, deviceError);
+                            }
                         }
-                        return;
                     }
                 }
                 
-                // If no IoT devices or check failed, proceed with room deletion
+                // Now proceed with room deletion
                 const response = await fetch(`${ENDPOINTS.ROOMS}/${roomToDeleteId}`, {
                     method: 'DELETE',
                     credentials: 'include'
@@ -1062,7 +1075,7 @@
                 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
-                    const errorMessage = errorData.message || errorData.error || 'Không thể xóa phòng. Phòng có thể đang sử dụng hoặc có thiết bị IoT.';
+                    const errorMessage = errorData.message || errorData.error || 'Không thể xóa phòng.';
                     throw new Error(errorMessage);
                 }
                 
@@ -1488,10 +1501,7 @@
                 'fan': 'Quạt'
             };
             
-            // Get IoT devices for this room
-            const roomId = document.getElementById('room-form').dataset.roomId;
-            
-            // Display equipment items
+            // Display equipment items as a list
             for (const [type, count] of Object.entries(equipmentData)) {
                 if (count > 0) {
                     const itemElement = document.createElement('div');
@@ -1500,15 +1510,29 @@
                     // Use friendly name if available
                     const typeName = equipmentTypeNames[type] || type;
                     
-                    itemElement.textContent = `${typeName} (${count})`;
+                    // Format display based on count
+                    if (count > 1) {
+                        itemElement.textContent = `${typeName} x${count}`;
+                    } else {
+                        itemElement.textContent = typeName;
+                    }
                     
-                    // Add IoT badge if this has IoT enabled equipment
-                    // Note: in a production environment, you'd check if IoT devices exist
+                    // Add IoT badge if needed
+                    const roomId = document.getElementById('room-form').dataset.roomId;
                     if (roomId) {
-                        const iotBadge = document.createElement('span');
-                        iotBadge.className = 'equipment-iot-badge';
-                        iotBadge.textContent = 'IoT';
-                        itemElement.appendChild(iotBadge);
+                        fetch(`${ENDPOINTS.IOT}?room_id=${roomId}&device_type=${type}`, {
+                            credentials: 'include'
+                        })
+                        .then(response => response.json())
+                        .then(devices => {
+                            if (devices && devices.length > 0) {
+                                const iotBadge = document.createElement('span');
+                                iotBadge.className = 'equipment-iot-badge';
+                                iotBadge.textContent = 'IoT';
+                                itemElement.appendChild(iotBadge);
+                            }
+                        })
+                        .catch(error => console.error(`Error checking IoT status for ${type}:`, error));
                     }
                     
                     container.appendChild(itemElement);
@@ -1570,15 +1594,74 @@
                     'fan': 'Quạt'
                 };
                 
-                // Display equipment items
-                for (const [type, count] of Object.entries(facilitiesObj)) {
-                    if (count > 0) {
-                        const typeName = equipmentTypeNames[type] || type;
-                        readOnlyEquipment += `<div class="equipment-item-display">${typeName} (${count}) <span class="equipment-iot-badge">IoT</span></div>`;
+                // Fetch IoT devices for this room to check which are IoT-enabled
+                fetch(`${ENDPOINTS.IOT}?room_id=${room.id}`, {
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(iotDevices => {
+                    let iotDevicesByType = {};
+                    if (iotDevices && iotDevices.length > 0) {
+                        // Group IoT devices by type
+                        iotDevices.forEach(device => {
+                            if (!iotDevicesByType[device.device_type]) {
+                                iotDevicesByType[device.device_type] = [];
+                            }
+                            iotDevicesByType[device.device_type].push(device);
+                        });
                     }
-                }
+                    
+                    // Display equipment items
+                    for (const [type, count] of Object.entries(facilitiesObj)) {
+                        if (count > 0) {
+                            const typeName = equipmentTypeNames[type] || type;
+                            const iotDevicesOfType = iotDevicesByType[type] || [];
+                            
+                            const itemElement = document.createElement('div');
+                            itemElement.className = 'equipment-item-display';
+                            
+                            if (count > 1) {
+                                itemElement.textContent = `${typeName} x${count}`;
+                            } else {
+                                itemElement.textContent = typeName;
+                            }
+                            
+                            // Add IoT badge if there are IoT devices of this type
+                            if (iotDevicesOfType.length > 0) {
+                                const iotBadge = document.createElement('span');
+                                iotBadge.className = 'equipment-iot-badge';
+                                iotBadge.textContent = 'IoT';
+                                itemElement.appendChild(iotBadge);
+                            }
+                            
+                            document.querySelector('.equipment-display').appendChild(itemElement);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching IoT devices:', error);
+                    
+                    // Display equipment without IoT information if fetch fails
+                    for (const [type, count] of Object.entries(facilitiesObj)) {
+                        if (count > 0) {
+                            const typeName = equipmentTypeNames[type] || type;
+                            readOnlyEquipment += `<div class="equipment-item-display">`;
+                            
+                            if (count > 1) {
+                                readOnlyEquipment += `${typeName} x${count}`;
+                            } else {
+                                readOnlyEquipment += typeName;
+                            }
+                            
+                            readOnlyEquipment += `</div>`;
+                        }
+                    }
+                    
+                    equipmentOptions.innerHTML = readOnlyEquipment + '</div>';
+                });
             }
             
+            // Initial display before IoT data loads
             readOnlyEquipment += '</div>';
             equipmentOptions.innerHTML = readOnlyEquipment;
             
@@ -1689,8 +1772,10 @@
                         
                         if (Object.keys(facilitiesObj).length > 0) {
                             facilitiesDisplay = Object.entries(facilitiesObj)
+                                .filter(([key, value]) => value > 0)  // Only show equipment with count > 0
                                 .map(([key, value]) => {
-                                    return `${facilityLabels[key] || key} (${value})`;
+                                    const label = facilityLabels[key] || key;
+                                    return value > 1 ? `${label} (${value})` : label;
                                 })
                                 .join(', ');
                         } else {
@@ -1861,7 +1946,7 @@
                 if (room.status === 'available') {
                     newStatus = 'maintenance';
                     if (!confirm('Bạn có chắc chắn muốn đóng phòng này (đặt sang trạng thái bảo trì) không?')) {
-                        return;
+                    return;
                     }
                 } else {
                     newStatus = 'available';

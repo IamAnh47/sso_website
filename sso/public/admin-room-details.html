@@ -2563,16 +2563,76 @@
         
         // Delete room
         async function deleteRoom(roomId) {
+            if (!confirm("Bạn có chắc chắn muốn xóa phòng này? Tất cả thiết bị IoT của phòng cũng sẽ bị xóa.")) {
+                return;
+            }
+            
             try {
+                // First, fetch all IoT devices associated with this room
+                console.log(`Fetching IoT devices for room ${roomId} before deletion`);
+                const iotResponse = await fetch(`${ENDPOINTS.IOT}?room_id=${roomId}`, {
+                    credentials: 'include'
+                });
+                
+                if (iotResponse.ok) {
+                    const iotDevices = await iotResponse.json();
+                    
+                    // If there are IoT devices, delete them one by one
+                    if (iotDevices && iotDevices.length > 0) {
+                        console.log(`Found ${iotDevices.length} IoT devices to delete`);
+                        
+                        // Show loading message
+                        const loadingMessage = document.createElement('div');
+                        loadingMessage.className = 'loading-message';
+                        loadingMessage.style.position = 'fixed';
+                        loadingMessage.style.top = '50%';
+                        loadingMessage.style.left = '50%';
+                        loadingMessage.style.transform = 'translate(-50%, -50%)';
+                        loadingMessage.style.padding = '20px';
+                        loadingMessage.style.borderRadius = '5px';
+                        loadingMessage.style.backgroundColor = 'rgba(0,0,0,0.7)';
+                        loadingMessage.style.color = 'white';
+                        loadingMessage.style.zIndex = '9999';
+                        loadingMessage.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang xóa ${iotDevices.length} thiết bị IoT...`;
+                        document.body.appendChild(loadingMessage);
+                        
+                        // Delete each IoT device
+                        for (const device of iotDevices) {
+                            try {
+                                const deleteResponse = await fetch(`${ENDPOINTS.IOT}/${device.id}`, {
+                                    method: 'DELETE',
+                                    credentials: 'include'
+                                });
+                                
+                                if (!deleteResponse.ok) {
+                                    console.warn(`Failed to delete IoT device ${device.id}: ${deleteResponse.status}`);
+                                } else {
+                                    console.log(`Successfully deleted IoT device ${device.id}`);
+                                }
+                            } catch (deviceError) {
+                                console.error(`Error deleting IoT device ${device.id}:`, deviceError);
+                            }
+                        }
+                        
+                        // Remove loading message
+                        document.body.removeChild(loadingMessage);
+                    } else {
+                        console.log('No IoT devices found for this room');
+                    }
+                } else {
+                    console.warn(`Could not fetch IoT devices: ${iotResponse.status}`);
+                }
+                
+                // Now proceed with room deletion
+                console.log(`Deleting room ${roomId}`);
                 const response = await fetch(`${ENDPOINTS.ROOMS}/${roomId}`, {
                     method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     credentials: 'include'
                 });
                 
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server response:', errorText);
                     throw new Error('Không thể xóa phòng');
                 }
                 
