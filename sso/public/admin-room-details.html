@@ -1010,7 +1010,7 @@
                 }
             }
         }
-
+        
         document.getElementById('edit-room-btn').addEventListener('click', function() {
             // Make sure the form has the latest data before showing
             if (roomData && roomData.details) {
@@ -1250,8 +1250,8 @@
             document.getElementById('period-select').addEventListener('change', async function() {
                 // Add any additional logic you want to execute when period changes
                 console.log('Period selected:', this.value);
-                await fetchRoomStats();
-                updateRoomStats();
+                    await fetchRoomStats();
+                    updateRoomStats();
             });
         });
         
@@ -1964,10 +1964,10 @@
                     
                     // Define a friendly name for device type
                     const deviceTypeNames = {
-                        'projector': 'Máy chiếu',
-                        'computer': 'Máy tính',
-                        'air_conditioner': 'Điều hòa',
-                        'speaker': 'Loa',
+                'projector': 'Máy chiếu',
+                'computer': 'Máy tính',
+                'air_conditioner': 'Điều hòa',
+                'speaker': 'Loa',
                         'light': 'Đèn',
                         'fan': 'Quạt'
                     };
@@ -2080,7 +2080,7 @@
                         device_type: device.device_type,
                         room_id: roomIdNumber,
                         status: 'off'
-                    };
+            };
                     
                     // Log device data for debugging
                     console.log('Dữ liệu thiết bị gửi đi:', JSON.stringify(deviceData));

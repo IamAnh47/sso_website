@@ -1038,6 +1038,23 @@
             if (!roomToDeleteId) return;
             
             try {
+                // First, check if the room has IoT devices
+                const iotResponse = await fetch(`${ENDPOINTS.IOT}?room_id=${roomToDeleteId}`, {
+                    credentials: 'include'
+                });
+                
+                if (iotResponse.ok) {
+                    const iotDevices = await iotResponse.json();
+                    if (iotDevices && iotDevices.length > 0) {
+                        // Room has IoT devices, ask user if they want to delete them first
+                        if (confirm(`Phòng này có ${iotDevices.length} thiết bị IoT. Bạn cần xóa thiết bị trước khi xóa phòng. Chuyển đến trang quản lý thiết bị IoT?`)) {
+                            window.location.href = 'admin-iot-devices.html';
+                        }
+                        return;
+                    }
+                }
+                
+                // If no IoT devices or check failed, proceed with room deletion
                 const response = await fetch(`${ENDPOINTS.ROOMS}/${roomToDeleteId}`, {
                     method: 'DELETE',
                     credentials: 'include'
@@ -1045,7 +1062,8 @@
                 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || 'Không thể xóa phòng');
+                    const errorMessage = errorData.message || errorData.error || 'Không thể xóa phòng. Phòng có thể đang sử dụng hoặc có thiết bị IoT.';
+                    throw new Error(errorMessage);
                 }
                 
                 // Hide confirmation modal
@@ -1638,32 +1656,47 @@
                     
                     if (typeof room.facilities === 'string') {
                         try {
+                            // Try to parse JSON string
                             facilitiesObj = JSON.parse(room.facilities);
                         } catch (e) {
-                            // If can't parse, split by comma
-                            const facilitiesArray = room.facilities.split(',').map(item => item.trim());
-                            facilitiesArray.forEach(item => {
-                                facilitiesObj[item] = 1;
-                            });
+                            console.log('Error parsing facilities:', e);
+                            // Check if it looks like JSON but failed to parse
+                            if (room.facilities.includes('{') && room.facilities.includes('}')) {
+                                facilitiesDisplay = 'Không có';
+                            } else {
+                                // If not JSON, split by comma
+                                const facilitiesArray = room.facilities.split(',').map(item => item.trim());
+                                facilitiesArray.forEach(item => {
+                                    if (item) facilitiesObj[item] = 1;
+                                });
+                            }
                         }
                     } else if (typeof room.facilities === 'object') {
                         facilitiesObj = room.facilities;
                     }
                     
-                    // Format facilities for display
-                    facilitiesDisplay = Object.entries(facilitiesObj)
-                        .map(([key, value]) => {
-                            const facilityLabels = {
-                                'projector': 'Máy chiếu',
-                                'computer': 'Máy tính',
-                                'air_conditioner': 'Điều hòa',
-                                'speaker': 'Loa',
-                                'fan': 'Quạt',
-                                'light': 'Đèn'
-                            };
-                            return `${facilityLabels[key] || key} (${value})`;
-                        })
-                        .join(', ');
+                    // Only create display if we don't have an error message already
+                    if (!facilitiesDisplay) {
+                        // Format facilities for display
+                        const facilityLabels = {
+                            'projector': 'Máy chiếu',
+                            'computer': 'Máy tính',
+                            'air_conditioner': 'Điều hòa',
+                            'speaker': 'Loa',
+                            'fan': 'Quạt',
+                            'light': 'Đèn'
+                        };
+                        
+                        if (Object.keys(facilitiesObj).length > 0) {
+                            facilitiesDisplay = Object.entries(facilitiesObj)
+                                .map(([key, value]) => {
+                                    return `${facilityLabels[key] || key} (${value})`;
+                                })
+                                .join(', ');
+                        } else {
+                            facilitiesDisplay = 'Không có';
+                        }
+                    }
                 }
                 
                 // Create card HTML
@@ -1771,7 +1804,35 @@
                     default: statusText = room.status;
                 }
                 
-                csvContent += `${room.id},"${room.room_name}","${roomTypeLabel}","${room.location}",${room.capacity},"${statusText}","${room.facilities || ''}"\n`;
+                // Format facilities for CSV
+                let facilitiesText = '';
+                if (room.facilities) {
+                    try {
+                        // Try to parse if it's a string
+                        const facilities = typeof room.facilities === 'string' 
+                            ? JSON.parse(room.facilities) 
+                            : room.facilities;
+                        
+                        // Convert to a simple text format for CSV
+                        const facilityLabels = {
+                            'projector': 'Máy chiếu',
+                            'computer': 'Máy tính',
+                            'air_conditioner': 'Điều hòa',
+                            'speaker': 'Loa',
+                            'fan': 'Quạt',
+                            'light': 'Đèn'
+                        };
+                        
+                        facilitiesText = Object.entries(facilities)
+                            .map(([key, value]) => `${facilityLabels[key] || key}:${value}`)
+                            .join('; ');
+                    } catch (e) {
+                        console.log('Error parsing facilities for CSV:', e);
+                        facilitiesText = 'Lỗi định dạng';
+                    }
+                }
+                
+                csvContent += `${room.id},"${room.room_name}","${roomTypeLabel}","${room.location}",${room.capacity},"${statusText}","${facilitiesText}"\n`;
             });
             
             // Create download link
@@ -1788,6 +1849,8 @@
 
         async function toggleRoomStatus(roomId) {
             try {
+                console.log(`Toggling room status for room ID: ${roomId}`);
+                
                 const room = roomsData.find(r => r.id.toString() === roomId.toString());
                 if (!room) {
                     throw new Error('Không tìm thấy thông tin phòng!');
@@ -1807,12 +1870,21 @@
                     }
                 }
                 
-                // Cập nhật trạng thái phòng
+                // Create a simplified update payload with just the necessary fields
+                // This avoids sending the entire room object with potentially pre-stringified facilities
                 const updatedRoom = {
-                    ...room,
+                    id: room.id,
+                    room_name: room.room_name,
+                    location: room.location,
+                    capacity: room.capacity,
+                    room_type: room.room_type,
+                    description: room.description,
                     status: newStatus,
+                    // Don't include facilities to avoid double-encoding
                     updated_at: new Date().toISOString()
                 };
+                
+                console.log(`Sending update request with data:`, JSON.stringify(updatedRoom));
                 
                 const response = await fetch(`${ENDPOINTS.ROOMS}/${roomId}`, {
                     method: 'PUT',
@@ -1824,8 +1896,44 @@
                 });
                 
                 if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.message || 'Không thể cập nhật trạng thái phòng');
+                    // Check response content type for proper error handling
+                    const contentType = response.headers.get('Content-Type');
+                    let errorMessage = '';
+                    
+                    if (contentType && contentType.includes('application/json')) {
+                        try {
+                            const errorData = await response.json();
+                            errorMessage = errorData.message || errorData.error || `Lỗi: ${response.status} ${response.statusText}`;
+                        } catch (parseError) {
+                            console.error('Error parsing error response:', parseError);
+                            // Try to get the text response if JSON parsing fails
+                            const textResponse = await response.text();
+                            console.log('Response text:', textResponse);
+                            errorMessage = `Lỗi: ${response.status} ${response.statusText}`;
+                        }
+                    } else {
+                        // If not JSON, get text response
+                        const textResponse = await response.text();
+                        console.warn('Non-JSON error response:', textResponse);
+                        errorMessage = `Lỗi: ${response.status} ${response.statusText}`;
+                    }
+                    
+                    throw new Error(errorMessage || 'Không thể cập nhật trạng thái phòng');
+                }
+                
+                // Handle successful response
+                let responseData;
+                try {
+                    // Validate content type and parse JSON
+                    const contentType = response.headers.get('Content-Type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        console.warn(`Expected JSON response but got ${contentType}. Attempting to parse anyway.`);
+                    }
+                    responseData = await response.json();
+                } catch (parseError) {
+                    console.error('Error parsing success response:', parseError);
+                    // Success but couldn't parse response - still continue
+                    console.log('Response text:', await response.text());
                 }
                 
                 // Tải lại danh sách phòng
@@ -1927,8 +2035,27 @@
                     });
                     
                     if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({}));
-                        console.error(`Error adding IoT device ${device.device_name}:`, errorData);
+                        // Check if response has Content-Type header and it contains 'application/json'
+                        const contentType = response.headers.get('Content-Type');
+                        let errorMessage = '';
+                        
+                        if (contentType && contentType.includes('application/json')) {
+                            try {
+                                const errorData = await response.json();
+                                errorMessage = errorData.message || errorData.error || `Error: ${response.status} ${response.statusText}`;
+                            } catch (parseError) {
+                                console.error('Error parsing error response:', parseError);
+                                errorMessage = `Error: ${response.status} ${response.statusText}`;
+                            }
+                        } else {
+                            // If not JSON, get text response
+                            const textResponse = await response.text();
+                            console.warn('Non-JSON error response:', textResponse);
+                            errorMessage = `Error: ${response.status} ${response.statusText}`;
+                        }
+                        
+                        console.error(`Error adding IoT device ${device.device_name}:`, errorMessage);
+                        alert(`Lỗi khi thêm thiết bị IoT ${device.device_name}: ${errorMessage}`);
                     } else {
                         console.log(`Thêm thiết bị IoT ${device.device_name} thành công`);
                     }
@@ -1937,21 +2064,37 @@
                 console.log(`Added ${iotDevices.length} IoT devices to room ${roomId}`);
             } catch (error) {
                 console.error('Error adding IoT devices:', error);
+                alert(`Lỗi khi thêm thiết bị IoT: ${error.message}`);
             }
         }
         
         async function updateRoomIoTDevices(roomId, newIotDevices) {
             try {
+                console.log(`Updating IoT devices for room ${roomId}`);
+                
                 // Lấy danh sách thiết bị hiện tại
                 const response = await fetch(`${ENDPOINTS.IOT}?room_id=${roomId}`, {
                     credentials: 'include'
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Failed to get current IoT devices');
+                    throw new Error(`Failed to get current IoT devices: ${response.status} ${response.statusText}`);
                 }
                 
-                const currentDevices = await response.json();
+                // Check if response has Content-Type header and it contains 'application/json'
+                const contentType = response.headers.get('Content-Type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.warn(`Expected JSON response but got ${contentType}. Attempting to parse anyway.`);
+                }
+                
+                let currentDevices;
+                try {
+                    currentDevices = await response.json();
+                } catch (parseError) {
+                    console.error('Error parsing devices JSON:', parseError);
+                    console.log('Response text:', await response.text());
+                    throw new Error('Failed to parse device data as JSON');
+                }
                 
                 // Tạo map thiết bị hiện tại theo loại
                 const currentDevicesByType = {};
@@ -2005,6 +2148,7 @@
                 console.log(`Updated IoT devices for room ${roomId}`);
             } catch (error) {
                 console.error('Error updating IoT devices:', error);
+                alert(`Lỗi cập nhật thiết bị IoT: ${error.message}`);
             }
         }
 
