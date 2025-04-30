@@ -685,7 +685,11 @@
                         </div>
                         
                         <div class="detail-section">
-                            <h3 class="detail-section-title">Trang thiết bị</h3>
+                            <h3 class="detail-section-title">Trang thiết bị
+                                <button class="btn btn-sm btn-primary" id="manage-iot-btn" style="margin-left: 10px; padding: 3px 10px; font-size: 12px;">
+                                    <i class="fas fa-cogs"></i> Quản lý thiết bị IoT
+                                </button>
+                            </h3>
                             <ul id="equipment-list">
                                 <!-- Equipment will be populated by JavaScript -->
                             </ul>
@@ -1232,43 +1236,22 @@
                 hideLoading();
             }
             
+            // Setup IoT device management button
+            document.getElementById('manage-iot-btn').addEventListener('click', function() {
+                const roomId = getRoomIdFromUrl();
+                if (roomId) {
+                    window.location.href = `admin-iot-devices.html?room_id=${roomId}`;
+                } else {
+                    alert('Không thể xác định ID phòng!');
+                }
+            });
+            
             // Event listeners for period selection
             document.getElementById('period-select').addEventListener('change', async function() {
-                try {
-                    showStatsLoading();
-                    await fetchRoomStats();
-                    updateRoomStats();
-                    hideStatsLoading();
-                } catch (error) {
-                    console.error("Error refreshing stats:", error);
-                    alert("Không thể cập nhật dữ liệu thống kê");
-                    hideStatsLoading();
-                    showPlaceholderStats();
-                }
-            });
-            
-            document.getElementById('refresh-stats').addEventListener('click', async function() {
-                try {
-                    showStatsLoading();
-                    await fetchRoomStats();
-                    updateRoomStats();
-                    hideStatsLoading();
-                } catch (error) {
-                    console.error("Error refreshing stats:", error);
-                    alert("Không thể cập nhật dữ liệu thống kê");
-                    hideStatsLoading();
-                    showPlaceholderStats();
-                }
-            });
-            
-            // Export history button
-            document.getElementById('export-history-btn').addEventListener('click', function() {
-                exportBookingHistory();
-            });
-            
-            // Save room button
-            document.getElementById('save-room-btn').addEventListener('click', function() {
-                updateRoomInfo();
+                // Add any additional logic you want to execute when period changes
+                console.log('Period selected:', this.value);
+                await fetchRoomStats();
+                updateRoomStats();
             });
         });
         
@@ -2013,12 +1996,31 @@
             // Fetch existing IoT devices for the room
             if (!roomId) return;
             
+            console.log(`Fetching IoT devices for room ID: ${roomId}`);
+            
             fetch(`${ENDPOINTS.IOT}?room_id=${roomId}`, {
                 credentials: 'include'
             })
             .then(response => {
-                if (!response.ok) throw new Error('Failed to load IoT devices');
-                return response.json();
+                if (!response.ok) {
+                    throw new Error(`Failed to load IoT devices: ${response.status} ${response.statusText}`);
+                }
+                
+                return response.text().then(text => {
+                    try {
+                        // Try to parse as JSON
+                        if (text.trim() === '') return []; // Handle empty response
+                        if (text.includes('<!DOCTYPE')) {
+                            console.error('Received HTML instead of JSON. API endpoint might be incorrect.');
+                            return []; // Return empty array to continue without error
+                        }
+                        return JSON.parse(text);
+                    } catch (e) {
+                        console.error('Error parsing IoT devices response:', e);
+                        console.error('Response text:', text.substring(0, 100) + '...');
+                        return []; // Return empty array to continue without error
+                    }
+                });
             })
             .then(devices => {
                 if (!devices || devices.length === 0) return;
@@ -2115,10 +2117,24 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error('Failed to get current IoT devices');
+                    throw new Error(`Failed to get current IoT devices: ${response.status} ${response.statusText}`);
                 }
                 
-                const currentDevices = await response.json();
+                let currentDevices = [];
+                try {
+                    const text = await response.text();
+                    if (text.trim() === '') {
+                        currentDevices = [];
+                    } else if (text.includes('<!DOCTYPE')) {
+                        console.error('Received HTML instead of JSON. API endpoint might be incorrect.');
+                        currentDevices = [];
+                    } else {
+                        currentDevices = JSON.parse(text);
+                    }
+                } catch (e) {
+                    console.error('Error parsing IoT devices response:', e);
+                    currentDevices = [];
+                }
                 
                 // Tạo map thiết bị hiện tại theo loại
                 const currentDevicesByType = {};
@@ -2651,6 +2667,14 @@
                 reader.readAsDataURL(file);
             }
         }
+
+        // Get room ID from URL parameters
+        function getRoomIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+
+        // Show loading indicators
     </script>
 </body>
 </html> 

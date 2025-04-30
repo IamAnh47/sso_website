@@ -14,13 +14,13 @@ class IoTDevice {
   }
 
   static create(deviceData) {
-    const { device_name, device_type, room_id, status = 'off' } = deviceData;
+    const { device_name, device_type, room_id, status = 'off', image_url = null } = deviceData;
     
     return new Promise((resolve, reject) => {
       db.run(
-        `INSERT INTO iot_devices (device_name, device_type, room_id, status) 
-         VALUES (?, ?, ?, ?)`,
-        [device_name, device_type, room_id, status],
+        `INSERT INTO iot_devices (device_name, device_type, room_id, status, image_url) 
+         VALUES (?, ?, ?, ?, ?)`,
+        [device_name, device_type, room_id, status, image_url],
         function(err) {
           if (err) {
             reject(err);
@@ -36,21 +36,53 @@ class IoTDevice {
   }
 
   static update(id, deviceData) {
-    const { device_name, device_type, status } = deviceData;
+    const { device_name, device_type, status, image_url, maintenance_mode } = deviceData;
+    
+    let query = `UPDATE iot_devices SET `;
+    const params = [];
+    
+    // Build the dynamic update query
+    if (device_name !== undefined) {
+      query += `device_name = ?, `;
+      params.push(device_name);
+    }
+    
+    if (device_type !== undefined) {
+      query += `device_type = ?, `;
+      params.push(device_type);
+    }
+    
+    if (status !== undefined) {
+      query += `status = ?, `;
+      params.push(status);
+    }
+    
+    if (image_url !== undefined) {
+      query += `image_url = ?, `;
+      params.push(image_url);
+    }
+    
+    if (maintenance_mode !== undefined) {
+      query += `maintenance_mode = ?, `;
+      params.push(maintenance_mode ? 1 : 0);
+    }
+    
+    // Add updated timestamp
+    query += `updated_at = CURRENT_TIMESTAMP WHERE id = ?`;
+    params.push(id);
     
     return new Promise((resolve, reject) => {
-      db.run(
-        `UPDATE iot_devices SET device_name = ?, device_type = ?, status = ?,
-         updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-        [device_name, device_type, status, id],
-        function(err) {
-          if (err) {
-            reject(err);
-          } else {
-            resolve({ id, ...deviceData });
-          }
+      db.run(query, params, function(err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ 
+            id, 
+            ...deviceData, 
+            changes: this.changes 
+          });
         }
-      );
+      });
     });
   }
 
@@ -65,6 +97,51 @@ class IoTDevice {
             reject(err);
           } else {
             resolve({ id, status });
+          }
+        }
+      );
+    });
+  }
+
+  static setMaintenanceMode(id, maintenanceMode) {
+    const status = maintenanceMode ? 'maintenance' : 'off';
+    
+    return new Promise((resolve, reject) => {
+      db.run(
+        `UPDATE iot_devices SET status = ?, maintenance_mode = ?, 
+         last_activity = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP 
+         WHERE id = ?`,
+        [status, maintenanceMode ? 1 : 0, id],
+        function(err) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve({ 
+              id, 
+              status, 
+              maintenance_mode: maintenanceMode,
+              changes: this.changes 
+            });
+          }
+        }
+      );
+    });
+  }
+
+  static updateImage(id, imageUrl) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        `UPDATE iot_devices SET image_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        [imageUrl, id],
+        function(err) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve({ 
+              id, 
+              image_url: imageUrl,
+              changes: this.changes 
+            });
           }
         }
       );
@@ -132,6 +209,11 @@ class IoTDevice {
         throw new Error('Device not found');
       }
       
+      // Check if device is in maintenance mode
+      if (device.maintenance_mode === 1) {
+        throw new Error('Device is in maintenance mode and cannot be controlled');
+      }
+      
       // Process command (on/off)
       let newStatus;
       if (command === 'turnOn') {
@@ -176,10 +258,10 @@ class IoTDevice {
         throw new Error('Invalid command');
       }
       
-      // Update all devices
-      const promises = devices.map(device => 
-        this.updateStatus(device.id, newStatus)
-      );
+      // Update only devices not in maintenance mode
+      const promises = devices
+        .filter(device => device.maintenance_mode !== 1)
+        .map(device => this.updateStatus(device.id, newStatus));
       
       await Promise.all(promises);
       
@@ -187,7 +269,7 @@ class IoTDevice {
         roomId,
         status: newStatus,
         deviceCount: devices.length,
-        message: `All devices in room ${roomId} are now ${newStatus}`
+        message: `All available devices in room ${roomId} are now ${newStatus}`
       };
     } catch (error) {
       throw error;
