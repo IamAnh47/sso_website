@@ -337,6 +337,19 @@ class Room {
       });
     });
   }
+
+  static getCount() {
+    return new Promise((resolve, reject) => {
+      db.get('SELECT COUNT(*) as count FROM rooms', (err, row) => {
+        if (err) {
+          console.error('Error getting room count:', err);
+          reject(err);
+        } else {
+          resolve(row.count);
+        }
+      });
+    });
+  }
 }
 
 module.exports = Room; 

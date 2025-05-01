@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const iotController = require('../controllers/iotController');
-const { authenticate, isAdmin, isStaff } = require('../middlewares/auth');
+const { authenticate, isAdmin, isStaff, isITStaffOrAdmin } = require('../middlewares/auth');
 const multer = require('multer');
 
 // Configure multer for memory storage
@@ -23,25 +23,31 @@ router.get('/room/:room_id', authenticate, iotController.getDevicesByRoom);
 // Điều khiển thiết bị IoT (lệnh turnOn/turnOff)
 router.post('/control', authenticate, iotController.controlIoTDevice);
 
-// [CHỈ ADMIN/STAFF] Tạo thiết bị IoT mới
-router.post('/', authenticate, isStaff, iotController.createIoTDevice);
+// Lấy số liệu tổng quan về thiết bị IoT (số lượng, trạng thái)
+router.get('/devices/count', authenticate, isITStaffOrAdmin, iotController.getDevicesCount);
 
-// [CHỈ ADMIN/STAFF] Cập nhật thông tin thiết bị IoT
-router.put('/:id', authenticate, isStaff, iotController.updateIoTDevice);
+// Lấy các hoạt động gần đây của thiết bị IoT
+router.get('/devices/activities', authenticate, isITStaffOrAdmin, iotController.getRecentActivities);
 
-// [CHỈ ADMIN/STAFF] Xoá thiết bị IoT
-router.delete('/:id', authenticate, isStaff, iotController.deleteIoTDevice);
+// [ADMIN/IT STAFF] Tạo thiết bị IoT mới
+router.post('/', authenticate, isITStaffOrAdmin, iotController.createIoTDevice);
 
-// [CHỈ ADMIN/STAFF] Bật/tắt thiết bị (on/off)
-router.put('/:id/status', authenticate, isStaff, iotController.toggleDeviceStatus);
+// [ADMIN/IT STAFF] Cập nhật thông tin thiết bị IoT
+router.put('/:id', authenticate, isITStaffOrAdmin, iotController.updateIoTDevice);
 
-// [CHỈ ADMIN/STAFF] Bật/tắt chế độ bảo trì
-router.put('/:id/maintenance', authenticate, isStaff, iotController.toggleMaintenanceMode);
+// [ADMIN/IT STAFF] Xoá thiết bị IoT
+router.delete('/:id', authenticate, isITStaffOrAdmin, iotController.deleteIoTDevice);
 
-// [CHỈ ADMIN/STAFF] Đổi tên thiết bị
-router.put('/:id/rename', authenticate, isStaff, iotController.renameDevice);
+// [ADMIN/IT STAFF] Bật/tắt thiết bị (on/off)
+router.put('/:id/status', authenticate, isITStaffOrAdmin, iotController.toggleDeviceStatus);
 
-// [CHỈ ADMIN/STAFF] Upload hình ảnh cho thiết bị
-router.post('/:id/image', authenticate, isStaff, upload.single('image'), iotController.uploadDeviceImage);
+// [ADMIN/IT STAFF] Bật/tắt chế độ bảo trì
+router.put('/:id/maintenance', authenticate, isITStaffOrAdmin, iotController.toggleMaintenanceMode);
+
+// [ADMIN/IT STAFF] Đổi tên thiết bị
+router.put('/:id/rename', authenticate, isITStaffOrAdmin, iotController.renameDevice);
+
+// [ADMIN/IT STAFF] Upload hình ảnh cho thiết bị
+router.post('/:id/image', authenticate, isITStaffOrAdmin, upload.single('image'), iotController.uploadDeviceImage);
 
 module.exports = router; 

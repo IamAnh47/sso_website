@@ -79,6 +79,7 @@
         <select class="filter-select" id="role-filter">
           <option value="all">Tất cả vai trò</option>
           <option value="student">Sinh viên</option>
+          <option value="it_staff">Nhân viên IT</option>
           <option value="staff">Nhân viên</option>
           <option value="admin">Quản trị viên</option>
         </select>
@@ -173,6 +174,7 @@
             <label class="form-label" for="role">Vai trò</label>
             <select class="form-input" id="role">
               <option value="student">Sinh viên</option>
+              <option value="it_staff">Nhân viên IT</option>
               <option value="staff">Nhân viên</option>
               <option value="admin">Quản trị viên</option>
             </select>
@@ -394,26 +396,54 @@
         
         userRoles = await response.json();
         
-        // Populate role filter with dynamic options
-        const roleFilter = document.getElementById('role-filter');
-        roleFilter.innerHTML = '<option value="all">Tất cả vai trò</option>';
+        // Debug - Log the received roles
+        console.log('User roles received from API:', JSON.stringify(userRoles));
         
+        // Check if it_staff role exists in the API response
+        const hasITStaffRole = userRoles.some(role => role.code === 'it_staff');
+        console.log('IT Staff role found in API:', hasITStaffRole);
+        
+        // If it_staff is missing, add it manually
+        if (!hasITStaffRole) {
+          console.log('Adding IT Staff role manually');
+          userRoles.push({ id: 4, name: 'Nhân viên IT', code: 'it_staff' });
+        }
+        
+        // KEEP THE EXISTING ROLE FILTERS - Don't clear them
+        // Just ensure all API roles are represented
+        const roleFilter = document.getElementById('role-filter');
+        // Preserve the "all" option
+        let allOption = roleFilter.querySelector('option[value="all"]');
+        
+        // Get all existing role codes in the filter
+        const existingRoleCodes = Array.from(roleFilter.querySelectorAll('option'))
+          .map(option => option.value);
+        
+        // Add any roles from API that aren't already in the filter
         userRoles.forEach(role => {
-          const option = document.createElement('option');
-          option.value = role.code;
-          option.textContent = role.name;
-          roleFilter.appendChild(option);
+          if (!existingRoleCodes.includes(role.code) && role.code !== 'all') {
+            const option = document.createElement('option');
+            option.value = role.code;
+            option.textContent = role.name;
+            roleFilter.appendChild(option);
+            console.log(`Added missing option to filter: ${role.name} (${role.code})`);
+          }
         });
         
-        // Populate role select in the modal
+        // Do the same for the role select in the modal
         const roleSelect = document.getElementById('role');
-        roleSelect.innerHTML = '';
+        const existingModalRoleCodes = Array.from(roleSelect.querySelectorAll('option'))
+          .map(option => option.value);
         
+        // Add any roles from API that aren't already in the modal
         userRoles.forEach(role => {
-          const option = document.createElement('option');
-          option.value = role.code;
-          option.textContent = role.name;
-          roleSelect.appendChild(option);
+          if (!existingModalRoleCodes.includes(role.code)) {
+            const option = document.createElement('option');
+            option.value = role.code;
+            option.textContent = role.name;
+            roleSelect.appendChild(option);
+            console.log(`Added missing option to modal: ${role.name} (${role.code})`);
+          }
         });
       } catch (error) {
         console.error('Error loading user roles:', error);

@@ -266,4 +266,55 @@ exports.getAvailableRooms = async (req, res) => {
     console.error('Get available rooms error:', error);
     res.status(500).json({ error: 'Error fetching available rooms' });
   }
+};
+
+// Lấy số lượng phòng trong hệ thống
+exports.getRoomCount = async (req, res) => {
+  try {
+    const count = await Room.getCount();
+    return res.status(200).json({ count });
+  } catch (error) {
+    console.error('Error getting room count:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Lấy danh sách các tòa nhà
+exports.getBuildingList = async (req, res) => {
+  try {
+    // Use the db imported from config instead of req.app.locals.db
+    const { db } = require('../config/database');
+    
+    const buildingsResult = await new Promise((resolve, reject) => {
+      db.all('SELECT DISTINCT location FROM rooms ORDER BY location', [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows.map(row => row.location).filter(Boolean));
+      });
+    });
+    
+    return res.status(200).json(buildingsResult);
+  } catch (error) {
+    console.error('Error getting building list:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Lấy danh sách các tầng
+exports.getFloorList = async (req, res) => {
+  try {
+    // Use the db imported from config instead of req.app.locals.db
+    const { db } = require('../config/database');
+    
+    const floorsResult = await new Promise((resolve, reject) => {
+      db.all('SELECT DISTINCT floor FROM rooms ORDER BY floor', [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows.map(row => row.floor).filter(Boolean));
+      });
+    });
+    
+    return res.status(200).json(floorsResult);
+  } catch (error) {
+    console.error('Error getting floor list:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
 }; 

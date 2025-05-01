@@ -107,6 +107,21 @@ exports.isAdmin = (req, res, next) => {
   next();
 };
 
+// Middleware to check if user is IT staff or admin
+exports.isITStaffOrAdmin = (req, res, next) => {
+  // Skip in development if flag is set
+  if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH === 'true') {
+    console.log('DEVELOPMENT MODE: IT staff check skipped');
+    return next();
+  }
+  
+  if (!req.user || (req.user.role !== 'it_staff' && req.user.role !== 'admin')) {
+    return res.status(403).json({ error: 'Forbidden - IT staff or admin access required' });
+  }
+  
+  next();
+};
+
 // Middleware to check if user is staff or admin
 exports.isStaff = (req, res, next) => {
   // Skip in development if flag is set

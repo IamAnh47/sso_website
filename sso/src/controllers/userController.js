@@ -95,7 +95,7 @@ exports.changeUserRole = async (req, res) => {
     const { role } = req.body;
     
     // Kiểm tra role hợp lệ
-    if (!['student', 'staff', 'admin'].includes(role)) {
+    if (!['student', 'staff', 'admin', 'it_staff'].includes(role)) {
       return res.status(400).json({ error: 'Invalid role' });
     }
     
@@ -132,7 +132,8 @@ exports.getUserRoles = async (req, res) => {
     const roles = [
       { id: 1, name: 'Sinh viên', code: 'student' },
       { id: 2, name: 'Nhân viên', code: 'staff' },
-      { id: 3, name: 'Quản trị viên', code: 'admin' }
+      { id: 3, name: 'Quản trị viên', code: 'admin' },
+      { id: 4, name: 'Nhân viên IT', code: 'it_staff' }
     ];
     
     res.json(roles);

@@ -101,6 +101,19 @@ function initializeDatabase() {
         FOREIGN KEY (room_id) REFERENCES rooms (id)
       )`);
 
+      // Tạo bảng IoT device activities
+      db.run(`CREATE TABLE IF NOT EXISTS iot_device_activities (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        device_id INTEGER NOT NULL,
+        action TEXT NOT NULL,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        status TEXT DEFAULT 'success',
+        details TEXT,
+        user_id INTEGER,
+        FOREIGN KEY (device_id) REFERENCES iot_devices(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+      )`);
+
       // Tạo bảng Notifications
       db.run(`CREATE TABLE IF NOT EXISTS notifications (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

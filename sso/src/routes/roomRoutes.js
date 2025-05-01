@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const roomController = require('../controllers/FixedRoomController');
-const { authenticate, isAdmin, isStaff } = require('../middlewares/auth');
+const { authenticate, isAdmin, isStaff, isITStaffOrAdmin } = require('../middlewares/auth');
 
 // Lấy danh sách tất cả các phòng (công khai)
 router.get('/', roomController.getAllRooms);
@@ -11,6 +11,11 @@ router.get('/types', roomController.getRoomTypes);
 
 // Lấy danh sách các phòng trống theo thời gian (công khai)
 router.get('/available', roomController.getAvailableRooms);
+
+// API endpoints để lấy dữ liệu cho IT staff dashboard
+router.get('/count', authenticate, isITStaffOrAdmin, roomController.getRoomCount);
+router.get('/buildings', authenticate, roomController.getBuildingList);
+router.get('/floors', authenticate, roomController.getFloorList);
 
 // Lấy thông tin chi tiết của một phòng (công khai)
 router.get('/:id', roomController.getRoomById);

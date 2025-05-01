@@ -245,22 +245,24 @@ function redirectToDashboard() {
       if (currentPath !== '/admin-overview.html') {
         window.location.href = '/admin-overview.html';
       }
+    } else if (user.role === 'it_staff') {
+      // IT staff go to their dashboard
+      if (currentPath !== '/it-staff-dashboard.html') {
+        window.location.href = '/it-staff-dashboard.html';
+      }
     } else if (user.role === 'student') {
       // Chỉ chuyển hướng nếu không phải đã ở trang student dashboard
       if (currentPath !== '/student-dashboard.html') {
         window.location.href = '/student-dashboard.html';
       }
     } else {
-      // Chỉ chuyển hướng nếu không phải đã ở trang dashboard mặc định
-      if (currentPath !== '/dashboard.html') {
-        window.location.href = '/dashboard.html';
-      }
+      // Default to home
+      window.location.href = '/index.html';
     }
-  } catch (e) {
-    console.error('Error parsing user data:', e);
-    if (currentPath !== '/dashboard.html') {
-      window.location.href = '/dashboard.html';
-    }
+  } catch (error) {
+    console.error('Error parsing user data:', error);
+    // Fallback to login page if there's an error
+    window.location.href = '/index.html';
   }
 }
 

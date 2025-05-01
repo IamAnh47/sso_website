@@ -17,10 +17,10 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com"],
-      styleSrc: ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com", "cdn.jsdelivr.net"],
+      styleSrc: ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com", "cdn.jsdelivr.net"],
       imgSrc: ["'self'", "data:"],
-      fontSrc: ["'self'", "cdnjs.cloudflare.com"]
+      fontSrc: ["'self'", "cdnjs.cloudflare.com", "cdn.jsdelivr.net"]
     }
   }
 })); // Bảo mật HTTP headers nhưng cho phép inline scripts

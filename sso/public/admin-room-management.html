@@ -1513,7 +1513,7 @@
                     // Format display based on count
                     if (count > 1) {
                         itemElement.textContent = `${typeName} x${count}`;
-                    } else {
+            } else {
                         itemElement.textContent = typeName;
                     }
                     
@@ -1622,7 +1622,7 @@
                             
                             if (count > 1) {
                                 itemElement.textContent = `${typeName} x${count}`;
-                            } else {
+            } else {
                                 itemElement.textContent = typeName;
                             }
                             
@@ -1734,14 +1734,14 @@
                 
                 // Parse facilities if it's a string
                 let facilitiesDisplay = '';
-                if (room.facilities) {
+                    if (room.facilities) {
                     let facilitiesObj = {};
                     
-                    if (typeof room.facilities === 'string') {
+                        if (typeof room.facilities === 'string') {
                         try {
                             // Try to parse JSON string
                             facilitiesObj = JSON.parse(room.facilities);
-                        } catch (e) {
+                } catch (e) {
                             console.log('Error parsing facilities:', e);
                             // Check if it looks like JSON but failed to parse
                             if (room.facilities.includes('{') && room.facilities.includes('}')) {
@@ -1751,7 +1751,7 @@
                                 const facilitiesArray = room.facilities.split(',').map(item => item.trim());
                                 facilitiesArray.forEach(item => {
                                     if (item) facilitiesObj[item] = 1;
-                                });
+                            });
                             }
                         }
                     } else if (typeof room.facilities === 'object') {
@@ -1762,14 +1762,14 @@
                     if (!facilitiesDisplay) {
                         // Format facilities for display
                         const facilityLabels = {
-                            'projector': 'Máy chiếu',
-                            'computer': 'Máy tính',
-                            'air_conditioner': 'Điều hòa',
+                    'projector': 'Máy chiếu',
+                    'computer': 'Máy tính',
+                    'air_conditioner': 'Điều hòa',
                             'speaker': 'Loa',
                             'fan': 'Quạt',
                             'light': 'Đèn'
-                        };
-                        
+                };
+                
                         if (Object.keys(facilitiesObj).length > 0) {
                             facilitiesDisplay = Object.entries(facilitiesObj)
                                 .filter(([key, value]) => value > 0)  // Only show equipment with count > 0
@@ -1947,7 +1947,7 @@
                     newStatus = 'maintenance';
                     if (!confirm('Bạn có chắc chắn muốn đóng phòng này (đặt sang trạng thái bảo trì) không?')) {
                     return;
-                    }
+                }
                 } else {
                     newStatus = 'available';
                     if (!confirm('Bạn có chắc chắn muốn mở lại phòng này (đặt sang trạng thái có sẵn) không?')) {

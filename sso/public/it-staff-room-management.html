@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý phòng | IT Staff</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.css">
+    <script src="js/auth.js" defer></script>
+    <style>
+        .filter-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+        
+        .table-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 10px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .data-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-action {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .btn-view {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-edit {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .modal-custom {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 800px;
+            padding: 20px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .menu-item.logo-item {
+            padding: 10px 0;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            max-width: 100%;
+            object-fit: contain;
+        }
+        
+        .device-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .device-item {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .device-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .device-icon {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: #e9ecef;
+        }
+        
+        @media (max-width: 768px) {
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .device-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="admin-dashboard">
+    <div class="sidebar">
+        <div class="menu">
+            <div class="menu-item logo-item">
+                <img src="./images/hcmut_logo.png" alt="Logo" class="logo">
+            </div>
+            <div class="menu-item" id="dashboard-menu-item" data-title="Dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+            </div>
+            <div class="menu-item active" id="rooms-menu-item" data-title="Quản lý phòng">
+                <i class="fas fa-door-open"></i>
+            </div>
+            <div class="menu-item" id="devices-menu-item" data-title="Thiết bị IoT">
+                <i class="fas fa-microchip"></i>
+            </div>
+            <div class="menu-item" id="logout-btn" data-title="Đăng xuất">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+        </div>
+    </div>
+  
+    <div class="main-content">
+        <div class="header-container">
+            <h1 class="header-title">Quản lý phòng học</h1>
+            <div class="user-controls">
+                <i class="fas fa-bell"></i>
+                <i class="fas fa-envelope"></i>
+                <i class="fas fa-user-circle"></i>
+            </div>
+        </div>
+        
+        <div class="content-container">
+            <!-- Room Filter Controls -->
+            <div class="filter-card">
+                <h3><i class="fas fa-filter"></i> Lọc phòng học</h3>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <span class="filter-label">Tòa nhà</span>
+                        <select class="filter-select" id="buildingFilter">
+                            <option value="">Tất cả tòa nhà</option>
+                            <!-- Building options will be added dynamically -->
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Tầng</span>
+                        <select class="filter-select" id="floorFilter">
+                            <option value="">Tất cả các tầng</option>
+                            <!-- Floor options will be added dynamically -->
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Sức chứa</span>
+                        <select class="filter-select" id="capacityFilter">
+                            <option value="">Bất kỳ</option>
+                            <option value="30">&lt; 30</option>
+                            <option value="31-60">31-60</option>
+                            <option value="61-100">61-100</option>
+                            <option value="100">&gt; 100</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Thiết bị</span>
+                        <select class="filter-select" id="equipmentFilter">
+                            <option value="">Bất kỳ</option>
+                            <option value="projector">Máy chiếu</option>
+                            <option value="computer">Máy tính</option>
+                            <option value="air_conditioner">Điều hòa</option>
+                            <option value="whiteboard">Bảng</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rooms Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3><i class="fas fa-list"></i> Danh sách phòng</h3>
+                </div>
+                <table class="data-table" id="roomsTable">
+                    <thead>
+                        <tr>
+                            <th>Mã phòng</th>
+                            <th>Tên phòng</th>
+                            <th>Tòa nhà</th>
+                            <th>Tầng</th>
+                            <th>Sức chứa</th>
+                            <th>Thiết bị</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="roomsTableBody">
+                        <!-- Room data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Device Management Modal -->
+    <div class="modal-custom" id="deviceManagementModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Quản lý thiết bị cho phòng: <span id="deviceModalRoomName"></span></h3>
+                <button class="close-btn" id="closeDeviceModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <h4>Thông tin phòng</h4>
+                    <p id="deviceModalRoomInfo"></p>
+                </div>
+                <div class="mb-4">
+                    <h4>Thiết bị hiện có</h4>
+                    <div id="currentEquipmentList" class="device-list"></div>
+                </div>
+                <div class="mb-4">
+                    <h4>Thiết bị IoT</h4>
+                    <div id="iotDevicesList" class="device-list"></div>
+                    
+                    <div class="mt-4">
+                        <h4>Thêm thiết bị IoT mới</h4>
+                        <form id="addIoTDeviceForm">
+                            <input type="hidden" id="roomIdForDevice" value="">
+                            <div class="filter-row">
+                                <div class="filter-group">
+                                    <span class="filter-label">Loại thiết bị</span>
+                                    <select class="filter-select" id="deviceType" required>
+                                        <option value="">Chọn loại</option>
+                                        <option value="projector">Máy chiếu</option>
+                                        <option value="computer">Máy tính</option>
+                                        <option value="air_conditioner">Điều hòa</option>
+                                        <option value="light">Đèn</option>
+                                        <option value="fan">Quạt</option>
+                                        <option value="speaker">Loa</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <span class="filter-label">Tên thiết bị</span>
+                                    <input type="text" class="filter-select" id="deviceName" placeholder="Ví dụ: Máy chiếu 1">
+                                </div>
+                                <div class="filter-group">
+                                    <span class="filter-label">Trạng thái</span>
+                                    <select class="filter-select" id="deviceStatus">
+                                        <option value="active">Hoạt động</option>
+                                        <option value="inactive">Tạm dừng</option>
+                                        <option value="maintenance">Bảo trì</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <span class="filter-label">Mô tả</span>
+                                <textarea class="filter-select" id="deviceDescription" rows="2" style="width: 100%; resize: vertical;"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Thêm thiết bị</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup navigation
+            document.getElementById('dashboard-menu-item').addEventListener('click', function() {
+                window.location.href = 'it-staff-dashboard.html';
+            });
+            
+            document.getElementById('rooms-menu-item').addEventListener('click', function() {
+                // Already on room management page
+            });
+            
+            document.getElementById('devices-menu-item').addEventListener('click', function() {
+                window.location.href = 'it-staff-iot-devices.html';
+            });
+            
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = '/index.html';
+                    }
+                })
+                .catch(error => {
+                    console.error('Logout error:', error);
+                });
+            });
+
+            // Modal functionality
+            const modal = document.getElementById('deviceManagementModal');
+            const closeBtn = document.getElementById('closeDeviceModal');
+            
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // Verify user authentication and role
+            fetch('/api/auth/verify')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Authentication failed');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.user.role !== 'it_staff') {
+                        window.location.href = '/index.html';
+                    }
+                    
+                    // Load room data and filters
+                    loadBuildingsAndFloors();
+                    loadRooms();
+                })
+                .catch(error => {
+                    console.error('Auth error:', error);
+                    window.location.href = '/index.html';
+                });
+            
+            // Filter event listeners
+            document.getElementById('buildingFilter').addEventListener('change', loadRooms);
+            document.getElementById('floorFilter').addEventListener('change', loadRooms);
+            document.getElementById('capacityFilter').addEventListener('change', loadRooms);
+            document.getElementById('equipmentFilter').addEventListener('change', loadRooms);
+            
+            // Add IoT device form submission
+            document.getElementById('addIoTDeviceForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addIoTDevice();
+            });
+            
+            // Load buildings and floors for filters
+            function loadBuildingsAndFloors() {
+                // Load buildings
+                fetch('/api/buildings')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch buildings');
+                        }
+                        return response.json();
+                    })
+                    .then(buildings => {
+                        const buildingFilter = document.getElementById('buildingFilter');
+                        buildingFilter.innerHTML = '<option value="">Tất cả tòa nhà</option>';
+                        
+                        buildings.forEach(building => {
+                            const option = document.createElement('option');
+                            option.value = building;
+                            option.textContent = building;
+                            buildingFilter.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error loading buildings:', error);
+                        showToast('Error loading buildings', 'error');
+                    });
+                
+                // Load floors
+                fetch('/api/floors')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch floors');
+                        }
+                        return response.json();
+                    })
+                    .then(floors => {
+                        const floorFilter = document.getElementById('floorFilter');
+                        floorFilter.innerHTML = '<option value="">Tất cả các tầng</option>';
+                        
+                        floors.forEach(floor => {
+                            const option = document.createElement('option');
+                            option.value = floor;
+                            option.textContent = floor;
+                            floorFilter.appendChild(option);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error loading floors:', error);
+                        showToast('Error loading floors', 'error');
+                    });
+            }
+            
+            // Load rooms based on filters
+            function loadRooms() {
+                const buildingValue = document.getElementById('buildingFilter').value;
+                const floorValue = document.getElementById('floorFilter').value;
+                const capacityValue = document.getElementById('capacityFilter').value;
+                const equipmentValue = document.getElementById('equipmentFilter').value;
+                
+                // Build query string
+                let queryParams = [];
+                if (buildingValue) queryParams.push(`building=${encodeURIComponent(buildingValue)}`);
+                if (floorValue) queryParams.push(`floor=${encodeURIComponent(floorValue)}`);
+                if (capacityValue) queryParams.push(`capacity=${encodeURIComponent(capacityValue)}`);
+                if (equipmentValue) queryParams.push(`equipment=${encodeURIComponent(equipmentValue)}`);
+                
+                const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+                
+                fetch(`/api/rooms${queryString}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch rooms');
+                        }
+                        return response.json();
+                    })
+                    .then(rooms => {
+                        renderRoomsTable(rooms);
+                    })
+                    .catch(error => {
+                        console.error('Error loading rooms:', error);
+                        showToast('Error loading rooms', 'error');
+                    });
+            }
+            
+            // Render rooms table
+            function renderRoomsTable(rooms) {
+                const tableBody = document.getElementById('roomsTableBody');
+                tableBody.innerHTML = '';
+                
+                if (!rooms || rooms.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="7" class="text-center">Không tìm thấy phòng nào phù hợp</td>';
+                    tableBody.appendChild(row);
+                    return;
+                }
+                
+                rooms.forEach(room => {
+                    const row = document.createElement('tr');
+                    
+                    // Parse facilities if it's a string
+                    let facilities = room.facilities;
+                    if (typeof facilities === 'string') {
+                        try {
+                            facilities = JSON.parse(facilities);
+                        } catch (e) {
+                            facilities = [];
+                        }
+                    }
+                    
+                    // Format facilities for display
+                    const facilityItems = facilities ? Object.keys(facilities).map(key => {
+                        if (facilities[key]) {
+                            return key.replace('_', ' ');
+                        }
+                        return null;
+                    }).filter(Boolean) : [];
+                    
+                    row.innerHTML = `
+                        <td>${room.id}</td>
+                        <td>${room.room_name}</td>
+                        <td>${room.location || '-'}</td>
+                        <td>${room.floor || '-'}</td>
+                        <td>${room.capacity}</td>
+                        <td>${facilityItems.join(', ') || 'Không có'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-view" onclick="viewRoomDevices(${room.id}, '${room.room_name}')">
+                                    <i class="fas fa-cog"></i> Thiết bị
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+            }
+            
+            // Show toast notification
+            window.showToast = function(message, type = 'info') {
+                Toastify({
+                    text: message,
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: type === 'error' ? "#ff6b6b" : "#51cf66",
+                }).showToast();
+            };
+            
+            // View room devices
+            window.viewRoomDevices = function(roomId, roomName) {
+                document.getElementById('deviceModalRoomName').textContent = roomName;
+                document.getElementById('roomIdForDevice').value = roomId;
+                
+                // Fetch room details
+                fetch(`/api/rooms/${roomId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to fetch room details');
+                        }
+                        return response.json();
+                    })
+                    .then(room => {
+                        document.getElementById('deviceModalRoomInfo').innerHTML = `
+                            <strong>Mã phòng:</strong> ${room.id}<br>
+                            <strong>Tên phòng:</strong> ${room.room_name}<br>
+                            <strong>Vị trí:</strong> ${room.location || '-'}, Tầng ${room.floor || '-'}<br>
+                            <strong>Sức chứa:</strong> ${room.capacity} người<br>
+                            <strong>Trạng thái:</strong> ${getStatusText(room.status)}
+                        `;
+                        
+                        // Parse and display facilities
+                        let facilities = room.facilities;
+                        if (typeof facilities === 'string') {
+                            try {
+                                facilities = JSON.parse(facilities);
+                            } catch (e) {
+                                facilities = {};
+                            }
+                        }
+                        
+                        const equipmentList = document.getElementById('currentEquipmentList');
+                        equipmentList.innerHTML = '';
+                        
+                        if (!facilities || Object.keys(facilities).filter(k => facilities[k]).length === 0) {
+                            equipmentList.innerHTML = '<p>Không có thiết bị</p>';
+                        } else {
+                            for (const [key, value] of Object.entries(facilities)) {
+                                if (value) {
+                                    const equipmentItem = document.createElement('div');
+                                    equipmentItem.className = 'device-item';
+                                    equipmentItem.innerHTML = `
+                                        <div class="device-info">
+                                            <div class="device-icon">
+                                                <i class="fas ${getEquipmentIcon(key)}"></i>
+                                            </div>
+                                            <span>${formatEquipmentName(key)}</span>
+                                        </div>
+                                    `;
+                                    equipmentList.appendChild(equipmentItem);
+                                }
+                            }
+                        }
+                        
+                        // Fetch IoT devices for this room
+                        fetch(`/api/iot/room/${roomId}`)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Failed to fetch IoT devices');
+                                }
+                                return response.json();
+                            })
+                            .then(devices => {
+                                const iotDevicesList = document.getElementById('iotDevicesList');
+                                iotDevicesList.innerHTML = '';
+                                
+                                if (!devices || devices.length === 0) {
+                                    iotDevicesList.innerHTML = '<p>Không có thiết bị IoT nào</p>';
+                                } else {
+                                    devices.forEach(device => {
+                                        const deviceItem = document.createElement('div');
+                                        deviceItem.className = 'device-item';
+                                        deviceItem.innerHTML = `
+                                            <div class="device-info">
+                                                <div class="device-icon" style="background-color: ${device.status === 'on' ? '#d4edda' : '#f8d7da'}">
+                                                    <i class="fas ${getDeviceTypeIcon(device.device_type)}"></i>
+                                                </div>
+                                                <span>${device.device_name}</span>
+                                            </div>
+                                            <div class="device-actions">
+                                                <button class="btn-action" style="background-color: ${device.status === 'on' ? '#dc3545' : '#28a745'}" 
+                                                        onclick="toggleDeviceStatus(${device.id}, '${device.status === 'on' ? 'off' : 'on'}')">
+                                                    <i class="fas ${device.status === 'on' ? 'fa-power-off' : 'fa-play'}"></i>
+                                                </button>
+                                                <button class="btn-action" style="background-color: #6c757d" 
+                                                        onclick="toggleMaintenanceMode(${device.id}, ${!device.maintenance_mode})">
+                                                    <i class="fas fa-tools"></i>
+                                                </button>
+                                            </div>
+                                        `;
+                                        iotDevicesList.appendChild(deviceItem);
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error loading IoT devices:', error);
+                                document.getElementById('iotDevicesList').innerHTML = '<p class="text-danger">Error loading IoT devices</p>';
+                            });
+                        
+                        // Display the modal
+                        document.getElementById('deviceManagementModal').style.display = 'flex';
+                    })
+                    .catch(error => {
+                        console.error('Error loading room details:', error);
+                        showToast('Error loading room details', 'error');
+                    });
+            };
+            
+            // Add IoT device
+            function addIoTDevice() {
+                const roomId = document.getElementById('roomIdForDevice').value;
+                const deviceType = document.getElementById('deviceType').value;
+                const deviceName = document.getElementById('deviceName').value;
+                const deviceStatus = document.getElementById('deviceStatus').value === 'active' ? 'on' : 'off';
+                
+                if (!deviceType || !deviceName) {
+                    showToast('Please fill in all required fields', 'error');
+                    return;
+                }
+                
+                const deviceData = {
+                    device_name: deviceName,
+                    device_type: deviceType,
+                    room_id: roomId,
+                    status: deviceStatus,
+                    maintenance_mode: document.getElementById('deviceStatus').value === 'maintenance'
+                };
+                
+                fetch('/api/iot', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(deviceData)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to add IoT device');
+                    }
+                    return response.json();
+                })
+                .then(() => {
+                    showToast('IoT device added successfully', 'success');
+                    document.getElementById('addIoTDeviceForm').reset();
+                    
+                    // Refresh devices list
+                    viewRoomDevices(roomId, document.getElementById('deviceModalRoomName').textContent);
+                })
+                .catch(error => {
+                    console.error('Error adding IoT device:', error);
+                    showToast('Error adding IoT device', 'error');
+                });
+            }
+            
+            // Toggle device status (on/off)
+            window.toggleDeviceStatus = function(deviceId, newStatus) {
+                fetch(`/api/iot/${deviceId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to update device status');
+                    }
+                    return response.json();
+                })
+                .then(() => {
+                    showToast(`Device ${newStatus === 'on' ? 'turned on' : 'turned off'} successfully`, 'success');
+                    
+                    // Refresh the devices list
+                    const roomId = document.getElementById('roomIdForDevice').value;
+                    viewRoomDevices(roomId, document.getElementById('deviceModalRoomName').textContent);
+                })
+                .catch(error => {
+                    console.error('Error updating device status:', error);
+                    showToast('Error updating device status', 'error');
+                });
+            };
+            
+            // Toggle maintenance mode
+            window.toggleMaintenanceMode = function(deviceId, maintenanceMode) {
+                fetch(`/api/iot/${deviceId}/maintenance`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ maintenance_mode: maintenanceMode })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to update maintenance mode');
+                    }
+                    return response.json();
+                })
+                .then(() => {
+                    showToast(`Maintenance mode ${maintenanceMode ? 'enabled' : 'disabled'} successfully`, 'success');
+                    
+                    // Refresh the devices list
+                    const roomId = document.getElementById('roomIdForDevice').value;
+                    viewRoomDevices(roomId, document.getElementById('deviceModalRoomName').textContent);
+                })
+                .catch(error => {
+                    console.error('Error updating maintenance mode:', error);
+                    showToast('Error updating maintenance mode', 'error');
+                });
+            };
+            
+            // Helper functions
+            function getStatusText(status) {
+                switch (status) {
+                    case 'available': return 'Có sẵn';
+                    case 'unavailable': return 'Không khả dụng';
+                    case 'maintenance': return 'Đang bảo trì';
+                    default: return status;
+                }
+            }
+            
+            function getEquipmentIcon(type) {
+                switch (type) {
+                    case 'projector': return 'fa-projector';
+                    case 'computer': return 'fa-desktop';
+                    case 'air_conditioner': return 'fa-snowflake';
+                    case 'whiteboard': return 'fa-chalkboard';
+                    case 'light': return 'fa-lightbulb';
+                    case 'fan': return 'fa-fan';
+                    case 'speaker': return 'fa-volume-up';
+                    default: return 'fa-square';
+                }
+            }
+            
+            function getDeviceTypeIcon(type) {
+                switch (type) {
+                    case 'projector': return 'fa-projector';
+                    case 'computer': return 'fa-desktop';
+                    case 'air_conditioner': return 'fa-snowflake';
+                    case 'light': return 'fa-lightbulb';
+                    case 'fan': return 'fa-fan';
+                    case 'speaker': return 'fa-volume-up';
+                    default: return 'fa-microchip';
+                }
+            }
+            
+            function formatEquipmentName(key) {
+                return key.split('_').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+            }
+        });
+    </script>
+</body>
+</html> 

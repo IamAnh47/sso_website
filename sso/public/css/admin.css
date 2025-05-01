@@ -1,0 +1,103 @@
+/* Admin and IT Staff Dashboard CSS */
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f5f5;
+}
+
+#sidebar {
+  min-height: 100vh;
+  padding-top: 1rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar .nav-link {
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0.75rem 1rem;
+  transition: all 0.3s;
+}
+
+.sidebar .nav-link:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .nav-link.active {
+  color: #fff;
+  background-color: #28a745;
+}
+
+.sidebar .nav-link i {
+  margin-right: 0.5rem;
+}
+
+main {
+  margin-left: 16.67%; /* Same as col-md-2 */
+  padding-top: 1.5rem;
+}
+
+@media (max-width: 767.98px) {
+  #sidebar {
+    position: static;
+    height: auto;
+    min-height: auto;
+  }
+  
+  main {
+    margin-left: 0;
+  }
+}
+
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  transition: all 0.3s;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.card-title {
+  font-weight: 600;
+  color: #333;
+}
+
+.breadcrumb {
+  background-color: transparent;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  content: ">";
+}
+
+.table th {
+  font-weight: 600;
+  color: #495057;
+}
+
+.badge {
+  font-weight: 500;
+}
+
+/* Animation for stats */
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card h2, .card h4 {
+  animation: countUp 0.8s ease-out forwards;
+} 
