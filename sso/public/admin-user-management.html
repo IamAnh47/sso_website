@@ -422,10 +422,10 @@
         // Add any roles from API that aren't already in the filter
         userRoles.forEach(role => {
           if (!existingRoleCodes.includes(role.code) && role.code !== 'all') {
-            const option = document.createElement('option');
-            option.value = role.code;
-            option.textContent = role.name;
-            roleFilter.appendChild(option);
+          const option = document.createElement('option');
+          option.value = role.code;
+          option.textContent = role.name;
+          roleFilter.appendChild(option);
             console.log(`Added missing option to filter: ${role.name} (${role.code})`);
           }
         });
@@ -438,10 +438,10 @@
         // Add any roles from API that aren't already in the modal
         userRoles.forEach(role => {
           if (!existingModalRoleCodes.includes(role.code)) {
-            const option = document.createElement('option');
-            option.value = role.code;
-            option.textContent = role.name;
-            roleSelect.appendChild(option);
+          const option = document.createElement('option');
+          option.value = role.code;
+          option.textContent = role.name;
+          roleSelect.appendChild(option);
             console.log(`Added missing option to modal: ${role.name} (${role.code})`);
           }
         });

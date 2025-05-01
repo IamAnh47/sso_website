@@ -429,8 +429,13 @@
                         <div class="room-id" id="room-id-display">ID: ...</div>
                     </div>
                 </div>
-                <div class="room-status status-available" id="room-status-display">
-                    Đang tải...
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <button id="refresh-devices-btn" class="btn btn-outline" style="padding: 8px 15px; border-radius: 5px; display: flex; align-items: center; gap: 5px;">
+                        <i class="fas fa-sync-alt"></i> Cập nhật thiết bị
+                    </button>
+                    <div class="room-status status-available" id="room-status-display">
+                        Đang tải...
+                    </div>
                 </div>
             </div>
             
@@ -603,6 +608,9 @@
                 
                 // Setup filter event listeners
                 setupFilters();
+                
+                // Setup refresh button
+                setupRefreshButton(roomId);
             } catch (error) {
                 console.error('Error initializing page:', error);
                 showError(`Đã xảy ra lỗi: ${error.message}`);
@@ -1188,15 +1196,8 @@
                     maintenanceBtn.classList.remove('clicked');
                 }
                 
-                // Important: Update the click event handler to ensure it works with the new state
-                maintenanceBtn.onclick = function() {
-                    console.log('Maintenance button clicked with updated handler');
-                    const isCurrentlyInMaintenance = maintenanceBtn.textContent.trim().includes('Kết thúc');
-                    toggleMaintenanceMode(deviceId, !isCurrentlyInMaintenance);
-                };
+                console.log('UI update completed');
             }
-            
-            console.log('UI update completed');
         }
         
         // Get status text in Vietnamese
@@ -1887,6 +1888,93 @@
                 document.getElementById('device-maintenance-filter').value = '';
                 displayDevices(false);
             });
+        }
+        
+        // Function to setup refresh button
+        function setupRefreshButton(roomId) {
+            const refreshButton = document.getElementById('refresh-devices-btn');
+            refreshButton.addEventListener('click', async function() {
+                try {
+                    refreshButton.disabled = true;
+                    refreshButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang cập nhật...';
+                    
+                    // Fetch devices again
+                    await fetchIoTDevices(roomId);
+                    
+                    // Update display
+                    displayDevices();
+                    
+                    // Update room facilities based on current devices
+                    await updateRoomFacilitiesFromDevices(roomId);
+                    
+                    // Show success message
+                    alert('Đã cập nhật thành công danh sách thiết bị và cơ sở vật chất của phòng.');
+                    
+                    // Restore button state
+                    refreshButton.disabled = false;
+                    refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Cập nhật thiết bị';
+                } catch (error) {
+                    console.error('Error refreshing devices:', error);
+                    alert(`Lỗi khi cập nhật: ${error.message}`);
+                    
+                    // Restore button state
+                    refreshButton.disabled = false;
+                    refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Cập nhật thiết bị';
+                }
+            });
+        }
+        
+        // Function to update room facilities based on current devices
+        async function updateRoomFacilitiesFromDevices(roomId) {
+            try {
+                // Get current room data first
+                const roomResponse = await fetch(`${ENDPOINTS.ROOMS}/${roomId}`, {
+                    credentials: 'include'
+                });
+                
+                if (!roomResponse.ok) {
+                    throw new Error(`Failed to fetch room data: ${roomResponse.status}`);
+                }
+                
+                const room = await roomResponse.json();
+                
+                // Calculate device counts by type
+                const deviceCounts = {};
+                devicesList.forEach(device => {
+                    const type = device.device_type;
+                    deviceCounts[type] = (deviceCounts[type] || 0) + 1;
+                });
+                
+                // Update facilities with the actual device counts
+                const updatedFacilities = { ...deviceCounts };
+                
+                // Prepare update data
+                const updateData = {
+                    ...room,
+                    facilities: updatedFacilities
+                };
+                
+                // Update room with new facilities
+                const updateResponse = await fetch(`${ENDPOINTS.ROOMS}/${roomId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(updateData)
+                });
+                
+                if (!updateResponse.ok) {
+                    throw new Error(`Failed to update room facilities: ${updateResponse.status}`);
+                }
+                
+                console.log('Room facilities updated successfully:', updatedFacilities);
+                return true;
+                
+            } catch (error) {
+                console.error('Error updating room facilities from devices:', error);
+                throw error;
+            }
         }
     </script>
 </body>

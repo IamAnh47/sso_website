@@ -257,6 +257,23 @@ exports.toggleMaintenanceMode = async (req, res) => {
       return res.status(404).json({ error: 'Device not found' });
     }
     
+    // Nếu trạng thái bảo trì không thay đổi, trả về ngay
+    const currentMaintenanceMode = device.maintenance_mode === 1;
+    if (currentMaintenanceMode === maintenance_mode) {
+      return res.json({
+        message: maintenance_mode ? 
+          'Device already in maintenance mode' : 
+          'Device maintenance mode already disabled',
+        device: {
+          id: device.id,
+          device_name: device.device_name,
+          status: device.status,
+          maintenance_mode: maintenance_mode,
+          last_activity: new Date().toISOString()
+        }
+      });
+    }
+    
     // Cập nhật chế độ bảo trì
     const result = await IoTDevice.setMaintenanceMode(id, maintenance_mode);
     

@@ -247,24 +247,20 @@
                         </select>
                     </div>
                     <div class="filter-group">
-                        <span class="filter-label">Sức chứa</span>
-                        <select class="filter-select" id="capacityFilter">
-                            <option value="">Bất kỳ</option>
-                            <option value="30">&lt; 30</option>
-                            <option value="31-60">31-60</option>
-                            <option value="61-100">61-100</option>
-                            <option value="100">&gt; 100</option>
+                        <span class="filter-label">Loại phòng</span>
+                        <select class="filter-select" id="roomTypeFilter">
+                            <option value="">Tất cả loại phòng</option>
+                            <option value="classroom">Phòng học</option>
+                            <option value="meeting">Phòng họp</option>
+                            <option value="lab">Phòng thí nghiệm</option>
+                            <option value="computer">Phòng máy tính</option>
+                            <option value="lecture">Giảng đường</option>
+                            <option value="study">Không gian học tập</option>
                         </select>
                     </div>
                     <div class="filter-group">
-                        <span class="filter-label">Thiết bị</span>
-                        <select class="filter-select" id="equipmentFilter">
-                            <option value="">Bất kỳ</option>
-                            <option value="projector">Máy chiếu</option>
-                            <option value="computer">Máy tính</option>
-                            <option value="air_conditioner">Điều hòa</option>
-                            <option value="whiteboard">Bảng</option>
-                        </select>
+                        <span class="filter-label">Tìm kiếm theo tên phòng</span>
+                        <input type="text" class="filter-select" id="roomNameSearch" placeholder="Nhập tên phòng cần tìm...">
                     </div>
                 </div>
             </div>
@@ -281,7 +277,7 @@
                             <th>Tên phòng</th>
                             <th>Tòa nhà</th>
                             <th>Tầng</th>
-                            <th>Sức chứa</th>
+                            <th>Loại phòng</th>
                             <th>Thiết bị</th>
                             <th>Thao tác</th>
                         </tr>
@@ -431,8 +427,12 @@
             // Filter event listeners
             document.getElementById('buildingFilter').addEventListener('change', loadRooms);
             document.getElementById('floorFilter').addEventListener('change', loadRooms);
-            document.getElementById('capacityFilter').addEventListener('change', loadRooms);
-            document.getElementById('equipmentFilter').addEventListener('change', loadRooms);
+            document.getElementById('roomTypeFilter').addEventListener('change', loadRooms);
+            document.getElementById('roomNameSearch').addEventListener('input', function() {
+                // Add debounce to prevent too many requests while typing
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(loadRooms, 300);
+            });
             
             // Add IoT device form submission
             document.getElementById('addIoTDeviceForm').addEventListener('submit', function(e) {
@@ -442,70 +442,47 @@
             
             // Load buildings and floors for filters
             function loadBuildingsAndFloors() {
-                // Load buildings
-                fetch('/api/buildings')
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Failed to fetch buildings');
-                        }
-                        return response.json();
-                    })
-                    .then(buildings => {
-                        const buildingFilter = document.getElementById('buildingFilter');
-                        buildingFilter.innerHTML = '<option value="">Tất cả tòa nhà</option>';
-                        
-                        buildings.forEach(building => {
-                            const option = document.createElement('option');
-                            option.value = building;
-                            option.textContent = building;
-                            buildingFilter.appendChild(option);
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Error loading buildings:', error);
-                        showToast('Error loading buildings', 'error');
-                    });
+                // Use hardcoded buildings instead of API call
+                const buildings = ["H1", "H2", "H3", "H6"];
+                const buildingFilter = document.getElementById('buildingFilter');
+                buildingFilter.innerHTML = '<option value="">Tất cả tòa nhà</option>';
                 
-                // Load floors
-                fetch('/api/floors')
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Failed to fetch floors');
-                        }
-                        return response.json();
-                    })
-                    .then(floors => {
-                        const floorFilter = document.getElementById('floorFilter');
-                        floorFilter.innerHTML = '<option value="">Tất cả các tầng</option>';
-                        
-                        floors.forEach(floor => {
-                            const option = document.createElement('option');
-                            option.value = floor;
-                            option.textContent = floor;
-                            floorFilter.appendChild(option);
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Error loading floors:', error);
-                        showToast('Error loading floors', 'error');
-                    });
+                buildings.forEach(building => {
+                    const option = document.createElement('option');
+                    option.value = building;
+                    option.textContent = building;
+                    buildingFilter.appendChild(option);
+                });
+                
+                // Use simple floor numbers 1-9 based on first digit of room names
+                const floors = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+                const floorFilter = document.getElementById('floorFilter');
+                floorFilter.innerHTML = '<option value="">Tất cả các tầng</option>';
+                
+                floors.forEach(floor => {
+                    const option = document.createElement('option');
+                    option.value = floor;
+                    option.textContent = `Tầng ${floor}`;
+                    floorFilter.appendChild(option);
+                });
             }
             
             // Load rooms based on filters
             function loadRooms() {
                 const buildingValue = document.getElementById('buildingFilter').value;
                 const floorValue = document.getElementById('floorFilter').value;
-                const capacityValue = document.getElementById('capacityFilter').value;
-                const equipmentValue = document.getElementById('equipmentFilter').value;
+                const roomTypeValue = document.getElementById('roomTypeFilter').value;
+                const roomNameValue = document.getElementById('roomNameSearch').value.trim();
                 
-                // Build query string
+                // Build query string for server-side filtering
                 let queryParams = [];
-                if (buildingValue) queryParams.push(`building=${encodeURIComponent(buildingValue)}`);
-                if (floorValue) queryParams.push(`floor=${encodeURIComponent(floorValue)}`);
-                if (capacityValue) queryParams.push(`capacity=${encodeURIComponent(capacityValue)}`);
-                if (equipmentValue) queryParams.push(`equipment=${encodeURIComponent(equipmentValue)}`);
+                if (buildingValue) queryParams.push(`location=${encodeURIComponent(buildingValue)}`);
+                if (roomTypeValue) queryParams.push(`room_type=${encodeURIComponent(roomTypeValue)}`);
+                if (roomNameValue) queryParams.push(`room_name=${encodeURIComponent(roomNameValue)}`);
                 
                 const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+                
+                console.log("Sending request with query:", queryString);
                 
                 fetch(`/api/rooms${queryString}`)
                     .then(response => {
@@ -515,6 +492,50 @@
                         return response.json();
                     })
                     .then(rooms => {
+                        console.log("Received rooms:", rooms.length);
+                        
+                        // Client-side filtering for floor based on first digit of room name
+                        if (floorValue) {
+                            rooms = rooms.filter(room => {
+                                if (room.room_name) {
+                                    const firstDigit = room.room_name.match(/\d/);
+                                    if (firstDigit) {
+                                        return firstDigit[0] === floorValue;
+                                    }
+                                }
+                                // If floor is explicitly provided in room data, use that too
+                                return room.floor === floorValue;
+                            });
+                            console.log("After floor filtering:", rooms.length);
+                        }
+                        
+                        // Client-side filtering for building if server doesn't support it
+                        if (buildingValue && !queryParams.some(p => p.startsWith('building='))) {
+                            rooms = rooms.filter(room => {
+                                return room.location === buildingValue || 
+                                      (room.building === buildingValue) ||
+                                      (room.room_name && room.room_name.includes(buildingValue));
+                            });
+                            console.log("After building filtering:", rooms.length);
+                        }
+                        
+                        // Client-side filtering for room type if server doesn't support it
+                        if (roomTypeValue && !queryParams.some(p => p.startsWith('type='))) {
+                            rooms = rooms.filter(room => {
+                                return room.room_type === roomTypeValue || 
+                                       room.type === roomTypeValue;
+                            });
+                            console.log("After room type filtering:", rooms.length);
+                        }
+                        
+                        // Additional client-side filtering for name if server doesn't support it
+                        if (roomNameValue && !queryParams.some(p => p.startsWith('name='))) {
+                            rooms = rooms.filter(room => 
+                                room.room_name.toLowerCase().includes(roomNameValue.toLowerCase())
+                            );
+                            console.log("After name filtering:", rooms.length);
+                        }
+                        
                         renderRoomsTable(rooms);
                     })
                     .catch(error => {
@@ -556,16 +577,31 @@
                         return null;
                     }).filter(Boolean) : [];
                     
+                    // Extract first digit from room_name to use as floor if floor is not explicitly provided
+                    let floorDisplay = room.floor || '-';
+                    if (floorDisplay === '-' && room.room_name) {
+                        const firstDigit = room.room_name.match(/\d/);
+                        if (firstDigit) {
+                            floorDisplay = firstDigit[0];
+                        }
+                    }
+                    
+                    // Format room type for display
+                    let roomTypeDisplay = getRoomTypeText(room.room_type || 'other');
+                    
+                    // Format facilities for display with proper Vietnamese names
+                    const formattedFacilities = facilityItems.map(item => getEquipmentDisplayName(item)).join(', ');
+                    
                     row.innerHTML = `
                         <td>${room.id}</td>
                         <td>${room.room_name}</td>
                         <td>${room.location || '-'}</td>
-                        <td>${room.floor || '-'}</td>
-                        <td>${room.capacity}</td>
-                        <td>${facilityItems.join(', ') || 'Không có'}</td>
+                        <td>${floorDisplay}</td>
+                        <td>${roomTypeDisplay}</td>
+                        <td>${formattedFacilities || 'Không có'}</td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn-action btn-view" onclick="viewRoomDevices(${room.id}, '${room.room_name}')">
+                                <button class="btn-action btn-view view-devices" data-room-id="${room.id}" data-room-name="${room.room_name}">
                                     <i class="fas fa-cog"></i> Thiết bị
                                 </button>
                             </div>
@@ -573,6 +609,18 @@
                     `;
                     
                     tableBody.appendChild(row);
+                });
+                
+                // Add event listeners using event delegation
+                const tableBodyEl = document.getElementById('roomsTableBody');
+                tableBodyEl.addEventListener('click', function(e) {
+                    const viewDevicesBtn = e.target.closest('.view-devices');
+                    if (viewDevicesBtn) {
+                        const roomId = viewDevicesBtn.dataset.roomId;
+                        const roomName = viewDevicesBtn.dataset.roomName;
+                        // Instead of opening a modal, redirect to the IoT devices page with the room ID
+                        window.location.href = `it-staff-iot-devices.html?room_id=${roomId}`;
+                    }
                 });
             }
             
@@ -602,10 +650,19 @@
                         return response.json();
                     })
                     .then(room => {
+                        // Extract first digit from room_name to use as floor if floor is not explicitly provided
+                        let floorDisplay = room.floor || '-';
+                        if (floorDisplay === '-' && room.room_name) {
+                            const firstDigit = room.room_name.match(/\d/);
+                            if (firstDigit) {
+                                floorDisplay = firstDigit[0];
+                            }
+                        }
+                        
                         document.getElementById('deviceModalRoomInfo').innerHTML = `
                             <strong>Mã phòng:</strong> ${room.id}<br>
                             <strong>Tên phòng:</strong> ${room.room_name}<br>
-                            <strong>Vị trí:</strong> ${room.location || '-'}, Tầng ${room.floor || '-'}<br>
+                            <strong>Vị trí:</strong> ${room.location || '-'}, Tầng ${floorDisplay}<br>
                             <strong>Sức chứa:</strong> ${room.capacity} người<br>
                             <strong>Trạng thái:</strong> ${getStatusText(room.status)}
                         `;
@@ -669,18 +726,25 @@
                                                 <span>${device.device_name}</span>
                                             </div>
                                             <div class="device-actions">
-                                                <button class="btn-action" style="background-color: ${device.status === 'on' ? '#dc3545' : '#28a745'}" 
-                                                        onclick="toggleDeviceStatus(${device.id}, '${device.status === 'on' ? 'off' : 'on'}')">
+                                                <button class="btn-action toggle-status" 
+                                                       data-device-id="${device.id}" 
+                                                       data-new-status="${device.status === 'on' ? 'off' : 'on'}"
+                                                       style="background-color: ${device.status === 'on' ? '#dc3545' : '#28a745'}">
                                                     <i class="fas ${device.status === 'on' ? 'fa-power-off' : 'fa-play'}"></i>
                                                 </button>
-                                                <button class="btn-action" style="background-color: #6c757d" 
-                                                        onclick="toggleMaintenanceMode(${device.id}, ${!device.maintenance_mode})">
+                                                <button class="btn-action toggle-maintenance" 
+                                                       data-device-id="${device.id}" 
+                                                       data-maintenance="${!device.maintenance_mode}"
+                                                       style="background-color: #6c757d">
                                                     <i class="fas fa-tools"></i>
                                                 </button>
                                             </div>
                                         `;
                                         iotDevicesList.appendChild(deviceItem);
                                     });
+                                    
+                                    // Add event listeners for device actions
+                                    addIoTDeviceEventListeners();
                                 }
                             })
                             .catch(error => {
@@ -696,6 +760,38 @@
                         showToast('Error loading room details', 'error');
                     });
             };
+            
+            // Add event listeners for IoT device controls
+            function addIoTDeviceEventListeners() {
+                const iotDevicesList = document.getElementById('iotDevicesList');
+                
+                // Remove existing listeners if any (to prevent duplicates)
+                iotDevicesList.removeEventListener('click', handleIoTDeviceActions);
+                
+                // Add new event listener
+                iotDevicesList.addEventListener('click', handleIoTDeviceActions);
+            }
+            
+            // Handle IoT device button clicks
+            function handleIoTDeviceActions(e) {
+                // Handle toggle status button
+                const toggleStatusBtn = e.target.closest('.toggle-status');
+                if (toggleStatusBtn) {
+                    const deviceId = toggleStatusBtn.dataset.deviceId;
+                    const newStatus = toggleStatusBtn.dataset.newStatus;
+                    toggleDeviceStatus(deviceId, newStatus);
+                    return;
+                }
+                
+                // Handle toggle maintenance button
+                const toggleMaintenanceBtn = e.target.closest('.toggle-maintenance');
+                if (toggleMaintenanceBtn) {
+                    const deviceId = toggleMaintenanceBtn.dataset.deviceId;
+                    const maintenance = toggleMaintenanceBtn.dataset.maintenance === 'true'; // Convert to boolean
+                    toggleMaintenanceMode(deviceId, maintenance);
+                    return;
+                }
+            }
             
             // Add IoT device
             function addIoTDevice() {
@@ -809,6 +905,38 @@
                 }
             }
             
+            function getEquipmentDisplayName(equipmentType) {
+                switch(equipmentType.toLowerCase()) {
+                    case 'projector':
+                    case 'máy chiếu':
+                        return 'Máy chiếu';
+                    case 'computer':
+                    case 'máy tính':
+                        return 'Máy tính';
+                    case 'air_conditioner':
+                    case 'air conditioner':
+                    case 'điều hòa':
+                        return 'Điều hòa';
+                    case 'speaker':
+                    case 'loa':
+                        return 'Loa';
+                    case 'light':
+                    case 'đèn':
+                        return 'Đèn';
+                    case 'fan':
+                    case 'quạt':
+                        return 'Quạt';
+                    case 'whiteboard':
+                    case 'bảng':
+                        return 'Bảng';
+                    default:
+                        // Capitalize the first letter of each word
+                        return equipmentType.split(' ')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ');
+                }
+            }
+            
             function getEquipmentIcon(type) {
                 switch (type) {
                     case 'projector': return 'fa-projector';
@@ -838,6 +966,18 @@
                 return key.split('_').map(word => 
                     word.charAt(0).toUpperCase() + word.slice(1)
                 ).join(' ');
+            }
+            
+            function getRoomTypeText(type) {
+                switch (type) {
+                    case 'classroom': return 'Phòng học';
+                    case 'meeting': return 'Phòng họp';
+                    case 'lab': return 'Phòng thí nghiệm';
+                    case 'computer': return 'Phòng máy tính';
+                    case 'lecture': return 'Giảng đường';
+                    case 'study': return 'Không gian học tập';
+                    default: return type || 'Không xác định';
+                }
             }
         });
     </script>
