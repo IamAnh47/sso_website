@@ -371,7 +371,7 @@
       try {
         const response = await fetch(ENDPOINTS.USER_ROLES, {
           headers: createAuthHeaders(),
-          credentials: 'include'  // Include cookies with the request
+          credentials: 'include'
         });
         
         if (!response.ok) throw new Error('Failed to fetch user roles');
@@ -421,7 +421,7 @@
       try {
         const response = await fetch(ENDPOINTS.USERS, {
           headers: createAuthHeaders(),
-          credentials: 'include'  // Include cookies with the request
+          credentials: 'include'
         });
         
         if (!response.ok) throw new Error('Failed to fetch users');

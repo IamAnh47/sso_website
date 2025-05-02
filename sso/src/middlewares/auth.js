@@ -80,7 +80,6 @@ exports.authenticate = async (req, res, next) => {
 
 // Middleware to check if user is admin
 exports.isAdmin = (req, res, next) => {
-  // Skip in development if flag is set
   if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH === 'true') {
     console.log('DEVELOPMENT MODE: Admin check skipped');
     return next();
@@ -95,7 +94,6 @@ exports.isAdmin = (req, res, next) => {
 
 // Middleware to check if user is IT staff or admin
 exports.isITStaffOrAdmin = (req, res, next) => {
-  // Skip in development if flag is set
   if (process.env.NODE_ENV === 'development' && process.env.SKIP_AUTH === 'true') {
     console.log('DEVELOPMENT MODE: IT staff check skipped');
     return next();

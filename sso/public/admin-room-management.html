@@ -1677,7 +1677,7 @@
                 
                         if (Object.keys(facilitiesObj).length > 0) {
                             facilitiesDisplay = Object.entries(facilitiesObj)
-                                .filter(([key, value]) => value > 0)  // Only show equipment with count > 0
+                                .filter(([key, value]) => value > 0)
                                 .map(([key, value]) => {
                                     const label = facilityLabels[key] || key;
                                     return value > 1 ? `${label} (${value})` : label;
