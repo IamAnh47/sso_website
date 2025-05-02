@@ -1,4 +1,3 @@
-// API endpoints
 const API_BASE_URL = '/api';
 const roomId = new URLSearchParams(window.location.search).get('id') || '1';
 
@@ -8,42 +7,33 @@ const ENDPOINTS = {
     BOOKINGS: `${API_BASE_URL}/bookings`
 };
 
-// State management for room data
 let roomData = {
     details: {},
     stats: {},
     bookingHistory: []
 };
 
-// Charts
 let dayChart, timeChart;
 
-// Initialize page
 document.addEventListener('DOMContentLoaded', async function() {
-    // Setup navigation
     setupNavigation();
     
-    // Initialize Charts
     initializeCharts();
     
     try {
-        // Load room data
         await Promise.all([
             fetchRoomDetails(),
             fetchRoomStats()
         ]);
         
-        // Update UI with fetched data
         updateRoomDetails();
         updateRoomStats();
         renderBookingHistory();
     } catch (error) {
         console.error("Error loading data from APIs:", error);
-        // Display an error message instead of using demo data
         displayErrorMessage("Không thể tải dữ liệu phòng. Vui lòng thử lại sau.");
     }
     
-    // Event listeners for period selection
     document.getElementById('period-select').addEventListener('change', async function() {
         try {
             await fetchRoomStats();
@@ -64,10 +54,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
     
-    // Set up modal functionality
     setupModalFunctionality();
     
-    // Set up file upload
     setupFileUpload();
 });
 
@@ -89,7 +77,6 @@ function setupNavigation() {
     });
     
     document.getElementById('logout-btn').addEventListener('click', function() {
-        // Call logout API
         fetch(`${API_BASE_URL}/auth/logout`, {
             method: 'POST',
             credentials: 'include'
@@ -123,7 +110,6 @@ function setupModalFunctionality() {
         });
     });
     
-    // Close modal when clicking outside
     window.addEventListener('click', function(event) {
         if (event.target === editRoomModal) {
             editRoomModal.style.display = 'none';
@@ -133,33 +119,27 @@ function setupModalFunctionality() {
         }
     });
     
-    // Save room changes
     document.getElementById('save-room-btn').addEventListener('click', async function() {
         await saveRoomChanges();
     });
     
-    // Upload images
     document.getElementById('upload-btn').addEventListener('click', function() {
         uploadImages();
     });
     
-    // Delete room
     document.getElementById('delete-room-btn').addEventListener('click', async function() {
         await deleteRoom();
     });
     
-    // Change room status
     document.getElementById('change-status-btn').addEventListener('click', async function() {
         await changeRoomStatus();
     });
     
-    // Export booking history
     document.getElementById('export-history-btn').addEventListener('click', function() {
         exportBookingHistory();
     });
 }
 
-// Initialize charts with empty data
 function initializeCharts() {
     const dayCtx = document.getElementById('day-chart').getContext('2d');
     dayChart = new Chart(dayCtx, {
@@ -207,7 +187,6 @@ function initializeCharts() {
     });
 }
 
-// Fetch room details from API
 async function fetchRoomDetails() {
     const response = await fetch(ENDPOINTS.ROOM, {
         credentials: 'include'
@@ -221,7 +200,6 @@ async function fetchRoomDetails() {
     return roomData.details;
 }
 
-// Fetch room statistics from API
 async function fetchRoomStats() {
     const period = document.getElementById('period-select').value;
     const response = await fetch(`${ENDPOINTS.ROOM_STATS}?period=${period}`, {
@@ -234,7 +212,6 @@ async function fetchRoomStats() {
     
     roomData.stats = await response.json();
     
-    // Update booking history from the stats data
     if (roomData.stats.recentBookings) {
         roomData.bookingHistory = roomData.stats.recentBookings;
     }
@@ -242,16 +219,13 @@ async function fetchRoomStats() {
     return roomData.stats;
 }
 
-// Update room details in the UI
 function updateRoomDetails() {
     const room = roomData.details;
     if (!room || !room.id) return;
     
-    // Update room title and info
     document.getElementById('room-title').textContent = room.room_name;
     document.getElementById('room-id-display').textContent = `ID: ${room.id}`;
     
-    // Update room status
     const statusElement = document.getElementById('room-status');
     let statusClass = '';
     let statusText = '';
@@ -278,17 +252,14 @@ function updateRoomDetails() {
     statusElement.className = `room-status ${statusClass}`;
     statusElement.textContent = statusText;
     
-    // Update room details
     document.getElementById('room-capacity').textContent = `${room.capacity} người`;
     document.getElementById('room-location').textContent = room.location;
     document.getElementById('room-type').textContent = room.room_type;
     
-    // Update room image if available
     if (room.image_url) {
         document.getElementById('main-room-image').src = room.image_url;
     }
     
-    // Update equipment list
     if (room.facilities) {
         const facilitiesArray = typeof room.facilities === 'string' ? 
             JSON.parse(room.facilities) : room.facilities;
@@ -314,7 +285,6 @@ function updateRoomDetails() {
         }
     }
     
-    // Fill edit form with room data
     document.getElementById('room-name').value = room.room_name || '';
     document.getElementById('room-id').value = room.id || '';
     document.getElementById('room-type').value = room.room_type || '';
@@ -325,13 +295,11 @@ function updateRoomDetails() {
     document.getElementById('room-description').value = room.description || '';
 }
 
-// Update statistics in the UI
 function updateRoomStats() {
     if (!roomData.stats || !roomData.stats.bookingStats) return;
     
     const stats = roomData.stats.bookingStats;
     
-    // Update stat cards
     document.getElementById('total-bookings').textContent = stats.totalBookings || '0';
     document.getElementById('usage-rate').textContent = `${stats.usageRate || '0'}%`;
     document.getElementById('avg-time').textContent = `${Math.round((stats.avgUsageTime || 0) / 60)}h`;
@@ -340,7 +308,6 @@ function updateRoomStats() {
         Math.round((stats.statusCount.cancelled / stats.statusCount.total) * 100) : 0;
     document.getElementById('cancel-rate').textContent = `${cancelRate}%`;
     
-    // Update charts
     if (stats.bookingsByDayOfWeek) {
         const dayData = stats.bookingsByDayOfWeek.map(day => day.count);
         dayChart.data.datasets[0].data = dayData;
@@ -354,7 +321,6 @@ function updateRoomStats() {
     }
 }
 
-// Render booking history
 function renderBookingHistory() {
     const tableBody = document.getElementById('booking-history');
     if (!tableBody) return;
@@ -460,7 +426,6 @@ function renderBookingHistory() {
     });
 }
 
-// Save room changes
 async function saveRoomChanges() {
     const roomData = {
         room_name: document.getElementById('room-name').value,
@@ -472,7 +437,6 @@ async function saveRoomChanges() {
         description: document.getElementById('room-description').value
     };
     
-    // Validate form data
     if (!roomData.room_name || !roomData.location || !roomData.room_type) {
         alert('Vui lòng điền đầy đủ thông tin bắt buộc: Tên phòng, vị trí và loại phòng!');
         return;
@@ -492,11 +456,9 @@ async function saveRoomChanges() {
             throw new Error('Failed to update room');
         }
         
-        // Update local data
         await fetchRoomDetails();
         updateRoomDetails();
         
-        // Close modal
         document.getElementById('edit-room-modal').style.display = 'none';
         
         alert('Thông tin phòng đã được cập nhật thành công!');
@@ -521,7 +483,6 @@ async function deleteRoom() {
             
             alert('Phòng đã được xóa thành công!');
             
-            // Redirect to room management page
             window.location.href = 'admin-room-management.html';
         } catch (error) {
             console.error('Error deleting room:', error);
@@ -563,7 +524,6 @@ async function changeRoomStatus() {
             throw new Error('Failed to change room status');
         }
         
-        // Update local data
         await fetchRoomDetails();
         updateRoomDetails();
         
@@ -586,7 +546,6 @@ async function cancelBooking(bookingId) {
             throw new Error('Failed to cancel booking');
         }
         
-        // Refresh booking history
         await fetchRoomStats();
         renderBookingHistory();
         
@@ -597,7 +556,6 @@ async function cancelBooking(bookingId) {
     }
 }
 
-// Export booking history
 function exportBookingHistory() {
     const bookings = roomData.bookingHistory || [];
     if (bookings.length === 0) {
@@ -605,13 +563,10 @@ function exportBookingHistory() {
         return;
     }
     
-    // Generate CSV content
     let csvContent = "data:text/csv;charset=utf-8,";
     
-    // Headers
     csvContent += "ID,Người đặt,Ngày đặt,Giờ bắt đầu,Giờ kết thúc,Trạng thái,Mục đích\n";
     
-    // Data rows
     bookings.forEach(booking => {
         let statusText = '';
         
@@ -627,21 +582,18 @@ function exportBookingHistory() {
         csvContent += `${booking.id},"${booking.user}","${booking.date}","${booking.start_time}","${booking.end_time}","${statusText}","${booking.purpose || ''}"\n`;
     });
     
-    // Create download link
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", `lich-su-dat-phong-${roomId}-${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     
-    // Trigger download
     link.click();
     document.body.removeChild(link);
     
     alert('Đã xuất báo cáo lịch sử đặt phòng!');
 }
 
-// Setup file upload
 function setupFileUpload() {
     const dropArea = document.getElementById('drop-area');
     const fileInput = document.getElementById('file-input');
@@ -655,18 +607,15 @@ function setupFileUpload() {
         fileInput.click();
     });
     
-    // Add highlight on drag over
     dropArea.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropArea.style.borderColor = 'var(--primary-color)';
     });
     
-    // Remove highlight when drag leave
     dropArea.addEventListener('dragleave', () => {
         dropArea.style.borderColor = '#ccc';
     });
     
-    // Handle dropped files
     dropArea.addEventListener('drop', (e) => {
         e.preventDefault();
         dropArea.style.borderColor = '#ccc';
@@ -676,14 +625,12 @@ function setupFileUpload() {
         }
     });
     
-    // Handle selected files
     fileInput.addEventListener('change', () => {
         if (fileInput.files.length) {
             handleFiles(fileInput.files);
         }
     });
     
-    // Process files and generate previews
     function handleFiles(files) {
         previewContainer.innerHTML = '';
         
@@ -728,7 +675,6 @@ function setupFileUpload() {
         }
     }
     
-    // Upload images
     uploadBtn.addEventListener('click', async function() {
         if (previewContainer.children.length === 0) {
             alert('Vui lòng chọn ít nhất một ảnh để tải lên!');
@@ -737,7 +683,6 @@ function setupFileUpload() {
         
         const formData = new FormData();
         
-        // Get all files from file input
         for (const file of fileInput.files) {
             if (file.type.match('image.*')) {
                 formData.append('images', file);
@@ -755,14 +700,11 @@ function setupFileUpload() {
                 throw new Error('Failed to upload images');
             }
             
-            // Refresh room details
             await fetchRoomDetails();
             updateRoomDetails();
             
-            // Close modal
             document.getElementById('upload-image-modal').style.display = 'none';
             
-            // Clear preview container
             previewContainer.innerHTML = '';
             
             alert('Ảnh đã được tải lên thành công!');
@@ -773,18 +715,15 @@ function setupFileUpload() {
     });
 }
 
-// Change main room image
 function changeMainImage(src, thumbElement) {
     document.getElementById('main-room-image').src = src;
     
-    // Update active thumbnail
     document.querySelectorAll('.detail-thumbnail').forEach(thumb => {
         thumb.classList.remove('active');
     });
     thumbElement.classList.add('active');
 }
 
-// Helper function to display error messages
 function displayErrorMessage(message) {
     const mainContent = document.querySelector('.content-wrapper');
     if (mainContent) {

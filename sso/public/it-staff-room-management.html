@@ -361,13 +361,11 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Setup navigation
             document.getElementById('dashboard-menu-item').addEventListener('click', function() {
                 window.location.href = 'it-staff-dashboard.html';
             });
             
             document.getElementById('rooms-menu-item').addEventListener('click', function() {
-                // Already on room management page
             });
             
             document.getElementById('devices-menu-item').addEventListener('click', function() {
@@ -395,7 +393,6 @@
                 });
             });
 
-            // Modal functionality
             const modal = document.getElementById('deviceManagementModal');
             const closeBtn = document.getElementById('closeDeviceModal');
             
@@ -409,7 +406,6 @@
                 }
             });
             
-            // Verify user authentication and role
             fetch('/api/auth/verify')
                 .then(response => {
                     if (!response.ok) {
@@ -422,7 +418,6 @@
                         window.location.href = '/index.html';
                     }
                     
-                    // Load room data and filters
                     loadBuildingsAndFloors();
                     loadRooms();
                 })
@@ -431,25 +426,20 @@
                     window.location.href = '/index.html';
                 });
             
-            // Filter event listeners
             document.getElementById('buildingFilter').addEventListener('change', loadRooms);
             document.getElementById('floorFilter').addEventListener('change', loadRooms);
             document.getElementById('roomTypeFilter').addEventListener('change', loadRooms);
             document.getElementById('roomNameSearch').addEventListener('input', function() {
-                // Add debounce to prevent too many requests while typing
                 clearTimeout(this.searchTimeout);
                 this.searchTimeout = setTimeout(loadRooms, 300);
             });
             
-            // Add IoT device form submission
             document.getElementById('addIoTDeviceForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 addIoTDevice();
             });
             
-            // Load buildings and floors for filters
             function loadBuildingsAndFloors() {
-                // Use hardcoded buildings instead of API call
                 const buildings = ["H1", "H2", "H3", "H6"];
                 const buildingFilter = document.getElementById('buildingFilter');
                 buildingFilter.innerHTML = '<option value="">Tất cả tòa nhà</option>';
@@ -461,7 +451,6 @@
                     buildingFilter.appendChild(option);
                 });
                 
-                // Use simple floor numbers 1-9 based on first digit of room names
                 const floors = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
                 const floorFilter = document.getElementById('floorFilter');
                 floorFilter.innerHTML = '<option value="">Tất cả các tầng</option>';
@@ -474,14 +463,12 @@
                 });
             }
             
-            // Load rooms based on filters
             function loadRooms() {
                 const buildingValue = document.getElementById('buildingFilter').value;
                 const floorValue = document.getElementById('floorFilter').value;
                 const roomTypeValue = document.getElementById('roomTypeFilter').value;
                 const roomNameValue = document.getElementById('roomNameSearch').value.trim();
                 
-                // Build query string for server-side filtering
                 let queryParams = [];
                 if (buildingValue) queryParams.push(`location=${encodeURIComponent(buildingValue)}`);
                 if (roomTypeValue) queryParams.push(`room_type=${encodeURIComponent(roomTypeValue)}`);
@@ -501,7 +488,6 @@
                     .then(rooms => {
                         console.log("Received rooms:", rooms.length);
                         
-                        // Client-side filtering for floor based on first digit of room name
                         if (floorValue) {
                             rooms = rooms.filter(room => {
                                 if (room.room_name) {
@@ -510,13 +496,11 @@
                                         return firstDigit[0] === floorValue;
                                     }
                                 }
-                                // If floor is explicitly provided in room data, use that too
                                 return room.floor === floorValue;
                             });
                             console.log("After floor filtering:", rooms.length);
                         }
                         
-                        // Client-side filtering for building if server doesn't support it
                         if (buildingValue && !queryParams.some(p => p.startsWith('building='))) {
                             rooms = rooms.filter(room => {
                                 return room.location === buildingValue || 
@@ -526,7 +510,6 @@
                             console.log("After building filtering:", rooms.length);
                         }
                         
-                        // Client-side filtering for room type if server doesn't support it
                         if (roomTypeValue && !queryParams.some(p => p.startsWith('type='))) {
                             rooms = rooms.filter(room => {
                                 return room.room_type === roomTypeValue || 
@@ -535,7 +518,6 @@
                             console.log("After room type filtering:", rooms.length);
                         }
                         
-                        // Additional client-side filtering for name if server doesn't support it
                         if (roomNameValue && !queryParams.some(p => p.startsWith('name='))) {
                             rooms = rooms.filter(room => 
                                 room.room_name.toLowerCase().includes(roomNameValue.toLowerCase())
@@ -551,7 +533,6 @@
                     });
             }
             
-            // Render rooms table
             function renderRoomsTable(rooms) {
                 const tableBody = document.getElementById('roomsTableBody');
                 tableBody.innerHTML = '';
@@ -566,7 +547,6 @@
                 rooms.forEach(room => {
                     const row = document.createElement('tr');
                     
-                    // Parse facilities if it's a string
                     let facilities = room.facilities;
                     if (typeof facilities === 'string') {
                         try {
@@ -576,7 +556,6 @@
                         }
                     }
                     
-                    // Format facilities for display
                     const facilityItems = facilities ? Object.keys(facilities).map(key => {
                         if (facilities[key]) {
                             return key.replace('_', ' ');
@@ -584,7 +563,6 @@
                         return null;
                     }).filter(Boolean) : [];
                     
-                    // Extract first digit from room_name to use as floor if floor is not explicitly provided
                     let floorDisplay = room.floor || '-';
                     if (floorDisplay === '-' && room.room_name) {
                         const firstDigit = room.room_name.match(/\d/);
@@ -593,10 +571,8 @@
                         }
                     }
                     
-                    // Format room type for display
                     let roomTypeDisplay = getRoomTypeText(room.room_type || 'other');
                     
-                    // Format facilities for display with proper Vietnamese names
                     const formattedFacilities = facilityItems.map(item => getEquipmentDisplayName(item)).join(', ');
                     
                     row.innerHTML = `
@@ -618,20 +594,17 @@
                     tableBody.appendChild(row);
                 });
                 
-                // Add event listeners using event delegation
                 const tableBodyEl = document.getElementById('roomsTableBody');
                 tableBodyEl.addEventListener('click', function(e) {
                     const viewDevicesBtn = e.target.closest('.view-devices');
                     if (viewDevicesBtn) {
                         const roomId = viewDevicesBtn.dataset.roomId;
                         const roomName = viewDevicesBtn.dataset.roomName;
-                        // Instead of opening a modal, redirect to the IoT devices page with the room ID
                         window.location.href = `it-staff-iot-devices.html?room_id=${roomId}`;
                     }
                 });
             }
             
-            // Show toast notification
             window.showToast = function(message, type = 'info') {
                 Toastify({
                     text: message,
@@ -643,12 +616,10 @@
                 }).showToast();
             };
             
-            // View room devices
             window.viewRoomDevices = function(roomId, roomName) {
                 document.getElementById('deviceModalRoomName').textContent = roomName;
                 document.getElementById('roomIdForDevice').value = roomId;
                 
-                // Fetch room details
                 fetch(`/api/rooms/${roomId}`)
                     .then(response => {
                         if (!response.ok) {
@@ -657,7 +628,6 @@
                         return response.json();
                     })
                     .then(room => {
-                        // Extract first digit from room_name to use as floor if floor is not explicitly provided
                         let floorDisplay = room.floor || '-';
                         if (floorDisplay === '-' && room.room_name) {
                             const firstDigit = room.room_name.match(/\d/);
@@ -674,7 +644,6 @@
                             <strong>Trạng thái:</strong> ${getStatusText(room.status)}
                         `;
                         
-                        // Parse and display facilities
                         let facilities = room.facilities;
                         if (typeof facilities === 'string') {
                             try {
@@ -707,7 +676,6 @@
                             }
                         }
                         
-                        // Fetch IoT devices for this room
                         fetch(`/api/iot/room/${roomId}`)
                             .then(response => {
                                 if (!response.ok) {
@@ -750,7 +718,6 @@
                                         iotDevicesList.appendChild(deviceItem);
                                     });
                                     
-                                    // Add event listeners for device actions
                                     addIoTDeviceEventListeners();
                                 }
                             })
@@ -759,7 +726,6 @@
                                 document.getElementById('iotDevicesList').innerHTML = '<p class="text-danger">Error loading IoT devices</p>';
                             });
                         
-                        // Display the modal
                         document.getElementById('deviceManagementModal').style.display = 'flex';
                     })
                     .catch(error => {
@@ -768,20 +734,15 @@
                     });
             };
             
-            // Add event listeners for IoT device controls
             function addIoTDeviceEventListeners() {
                 const iotDevicesList = document.getElementById('iotDevicesList');
                 
-                // Remove existing listeners if any (to prevent duplicates)
                 iotDevicesList.removeEventListener('click', handleIoTDeviceActions);
                 
-                // Add new event listener
                 iotDevicesList.addEventListener('click', handleIoTDeviceActions);
             }
             
-            // Handle IoT device button clicks
             function handleIoTDeviceActions(e) {
-                // Handle toggle status button
                 const toggleStatusBtn = e.target.closest('.toggle-status');
                 if (toggleStatusBtn) {
                     const deviceId = toggleStatusBtn.dataset.deviceId;
@@ -790,7 +751,6 @@
                     return;
                 }
                 
-                // Handle toggle maintenance button
                 const toggleMaintenanceBtn = e.target.closest('.toggle-maintenance');
                 if (toggleMaintenanceBtn) {
                     const deviceId = toggleMaintenanceBtn.dataset.deviceId;
@@ -800,7 +760,6 @@
                 }
             }
             
-            // Add IoT device
             function addIoTDevice() {
                 const roomId = document.getElementById('roomIdForDevice').value;
                 const deviceType = document.getElementById('deviceType').value;
@@ -837,7 +796,6 @@
                     showToast('IoT device added successfully', 'success');
                     document.getElementById('addIoTDeviceForm').reset();
                     
-                    // Refresh devices list
                     viewRoomDevices(roomId, document.getElementById('deviceModalRoomName').textContent);
                 })
                 .catch(error => {
@@ -846,7 +804,6 @@
                 });
             }
             
-            // Toggle device status (on/off)
             window.toggleDeviceStatus = function(deviceId, newStatus) {
                 fetch(`/api/iot/${deviceId}/status`, {
                     method: 'PUT',
@@ -864,7 +821,6 @@
                 .then(() => {
                     showToast(`Device ${newStatus === 'on' ? 'turned on' : 'turned off'} successfully`, 'success');
                     
-                    // Refresh the devices list
                     const roomId = document.getElementById('roomIdForDevice').value;
                     viewRoomDevices(roomId, document.getElementById('deviceModalRoomName').textContent);
                 })
@@ -874,7 +830,6 @@
                 });
             };
             
-            // Toggle maintenance mode
             window.toggleMaintenanceMode = function(deviceId, maintenanceMode) {
                 fetch(`/api/iot/${deviceId}/maintenance`, {
                     method: 'PUT',
@@ -892,7 +847,6 @@
                 .then(() => {
                     showToast(`Maintenance mode ${maintenanceMode ? 'enabled' : 'disabled'} successfully`, 'success');
                     
-                    // Refresh the devices list
                     const roomId = document.getElementById('roomIdForDevice').value;
                     viewRoomDevices(roomId, document.getElementById('deviceModalRoomName').textContent);
                 })
@@ -902,7 +856,6 @@
                 });
             };
             
-            // Helper functions
             function getStatusText(status) {
                 switch (status) {
                     case 'available': return 'Có sẵn';
@@ -937,7 +890,6 @@
                     case 'bảng':
                         return 'Bảng';
                     default:
-                        // Capitalize the first letter of each word
                         return equipmentType.split(' ')
                             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                             .join(' ');

@@ -21,13 +21,11 @@ class Notification {
     console.log(`[Notification.create] Nội dung: ${message}`);
     
     return new Promise((resolve, reject) => {
-      // Kiểm tra dữ liệu đầu vào
       if (!user_id || !title || !message) {
         console.error('[Notification.create] Thiếu thông tin bắt buộc (user_id, title, message)');
         return reject(new Error('Missing required notification data'));
       }
       
-      // Kiểm tra kiểu dữ liệu
       const safeUserId = Number(user_id) || user_id;
       const safeTitle = String(title);
       const safeMessage = String(message);
@@ -121,7 +119,6 @@ class Notification {
     });
   }
 
-  // Send reminder notification for upcoming booking
   static async sendBookingReminder(booking, user) {
     try {
       const title = 'Upcoming Booking Reminder';
@@ -137,7 +134,6 @@ class Notification {
     }
   }
 
-  // Send notification when IoT device status changes (e.g., auto-shutdown)
   static async sendIoTStatusNotification(roomId, deviceType, status, userId) {
     try {
       let title, message;
@@ -163,7 +159,6 @@ class Notification {
     }
   }
 
-  // Lấy tất cả thông báo của một user
   static getByUserId(userId) {
     return new Promise((resolve, reject) => {
       db.all(
@@ -184,7 +179,6 @@ class Notification {
     });
   }
 
-  // Lấy chi tiết một thông báo
   static getById(id) {
     return new Promise((resolve, reject) => {
       console.log(`Looking up notification with ID: ${id}`);
@@ -218,7 +212,6 @@ class Notification {
     });
   }
 
-  // Tạo thông báo mới cho một user
   static createSingle(senderId, userId, title, message) {
     return new Promise((resolve, reject) => {
       db.run(
@@ -244,26 +237,22 @@ class Notification {
     });
   }
 
-  // Gửi thông báo đến nhiều người dùng
   static createMultiple(senderId, userIds, title, message) {
     return new Promise((resolve, reject) => {
       if (!Array.isArray(userIds) || userIds.length === 0) {
         return reject(new Error('User IDs must be a non-empty array'));
       }
 
-      // Tạo mảng các promise để thêm thông báo cho từng user
       const promises = userIds.map(userId => 
         this.createSingle(senderId, userId, title, message)
       );
 
-      // Thực hiện tất cả các promise
       Promise.all(promises)
         .then(results => resolve(results))
         .catch(err => reject(err));
     });
   }
 
-  // Đánh dấu tất cả thông báo của một user là đã đọc
   static markAllAsRead(userId) {
     return new Promise((resolve, reject) => {
       db.run(
@@ -282,7 +271,6 @@ class Notification {
     });
   }
 
-  // Đếm số thông báo chưa đọc
   static countUnread(userId) {
     return new Promise((resolve, reject) => {
       db.get(
@@ -300,7 +288,6 @@ class Notification {
     });
   }
 
-  // Tìm kiếm thông báo theo nhiều tiêu chí
   static findByCriteria(criteria = {}) {
     return new Promise((resolve, reject) => {
       let query = 'SELECT * FROM notifications WHERE 1=1';
@@ -333,21 +320,17 @@ class Notification {
       
       if (criteria.searchTerm) {
         if (criteria.searchInTitle) {
-          // Chỉ tìm trong tiêu đề
           query += ' AND title LIKE ?';
           params.push(criteria.searchTerm);
         } else if (criteria.excludeMatches) {
-          // Loại trừ thông báo chứa từ khóa
           query += ' AND (title NOT LIKE ? AND message NOT LIKE ?)';
           params.push(criteria.searchTerm, criteria.searchTerm);
         } else {
-          // Tìm thông báo chứa từ khóa (mặc định)
         query += ' AND (title LIKE ? OR message LIKE ?)';
           params.push(criteria.searchTerm, criteria.searchTerm);
         }
       }
       
-      // Sắp xếp và phân trang
       query += ' ORDER BY created_at DESC';
       
       if (criteria.limit) {
@@ -370,10 +353,8 @@ class Notification {
     });
   }
 
-  // Gửi thông báo đến nhiều người dùng dựa trên tiêu chí lọc
   static async createByUserCriteria(senderId, userCriteria, title, message) {
     try {
-      // Truy vấn người dùng dựa trên tiêu chí lọc
       let userQuery = 'SELECT id FROM users WHERE 1=1';
       const params = [];
       
@@ -402,7 +383,6 @@ class Notification {
         params.push(userCriteria.createdAfter);
       }
       
-      // Lấy danh sách người dùng phù hợp với tiêu chí
       const userIds = await new Promise((resolve, reject) => {
         db.all(userQuery, params, (err, rows) => {
           if (err) {
@@ -413,19 +393,16 @@ class Notification {
         });
       });
       
-      // Nếu không có người dùng nào, trả về mảng rỗng
       if (userIds.length === 0) {
         return [];
       }
       
-      // Gửi thông báo đến tất cả người dùng tìm thấy
       return await this.createMultiple(senderId, userIds, title, message);
     } catch (error) {
       throw error;
     }
   }
 
-  // Tạo thống kê thông báo
   static getStatistics(criteria = {}) {
     return new Promise((resolve, reject) => {
       const queries = {
@@ -457,7 +434,6 @@ class Notification {
       let completed = 0;
       const totalQueries = Object.keys(queries).length;
       
-      // Thực hiện tất cả các truy vấn để lấy thống kê
       for (const [key, query] of Object.entries(queries)) {
         db.all(query, [], (err, rows) => {
           if (err) {

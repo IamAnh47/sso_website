@@ -41,7 +41,6 @@ class IoTDevice {
     let query = `UPDATE iot_devices SET `;
     const params = [];
     
-    // Build the dynamic update query
     if (device_name !== undefined) {
       query += `device_name = ?, `;
       params.push(device_name);
@@ -67,7 +66,6 @@ class IoTDevice {
       params.push(maintenance_mode ? 1 : 0);
     }
     
-    // Add updated timestamp
     query += `updated_at = CURRENT_TIMESTAMP WHERE id = ?`;
     params.push(id);
     
@@ -200,21 +198,17 @@ class IoTDevice {
     });
   }
 
-  // Simulated IoT interaction
   static async controlDevice(deviceId, command) {
     try {
-      // Get current status
       const device = await this.findById(deviceId);
       if (!device) {
         throw new Error('Device not found');
       }
       
-      // Check if device is in maintenance mode
       if (device.maintenance_mode === 1) {
         throw new Error('Device is in maintenance mode and cannot be controlled');
       }
       
-      // Process command (on/off)
       let newStatus;
       if (command === 'turnOn') {
         newStatus = 'on';
@@ -224,10 +218,8 @@ class IoTDevice {
         throw new Error('Invalid command');
       }
       
-      // Update status in database
       const result = await this.updateStatus(deviceId, newStatus);
       
-      // In a real system, would trigger actual IoT device operation here
       
       return {
         id: deviceId,
@@ -239,16 +231,13 @@ class IoTDevice {
     }
   }
 
-  // Simulate turning all devices on or off for a room
   static async controlRoomDevices(roomId, command) {
     try {
-      // Get all devices for the room
       const devices = await this.getByRoom(roomId);
       if (devices.length === 0) {
         return { message: 'No devices found for this room' };
       }
       
-      // Process command (on/off)
       let newStatus;
       if (command === 'turnOn') {
         newStatus = 'on';
@@ -258,7 +247,6 @@ class IoTDevice {
         throw new Error('Invalid command');
       }
       
-      // Update only devices not in maintenance mode
       const promises = devices
         .filter(device => device.maintenance_mode !== 1)
         .map(device => this.updateStatus(device.id, newStatus));

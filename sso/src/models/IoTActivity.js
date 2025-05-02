@@ -1,7 +1,6 @@
 const { db } = require('../config/database');
 
 class IoTActivity {
-  // Lấy các hoạt động gần đây của thiết bị IoT
   static getRecent(limit = 10) {
     return new Promise((resolve, reject) => {
       const query = `
@@ -33,7 +32,6 @@ class IoTActivity {
     });
   }
   
-  // Tạo một bản ghi hoạt động mới
   static log(activityData) {
     return new Promise((resolve, reject) => {
       const { device_id, action, status, details, user_id } = activityData;
@@ -71,7 +69,6 @@ class IoTActivity {
     });
   }
   
-  // Lấy tất cả hoạt động của một thiết bị cụ thể
   static getByDevice(deviceId, limit = 50) {
     return new Promise((resolve, reject) => {
       const query = `
@@ -92,7 +89,6 @@ class IoTActivity {
     });
   }
   
-  // Xóa lịch sử hoạt động cũ (giữ lại activities trong X ngày)
   static cleanupOldActivities(daysToKeep = 30) {
     return new Promise((resolve, reject) => {
       const query = `

@@ -137,7 +137,6 @@
   </div>
   
   <script>
-    // API endpoints
     const API_BASE_URL = '/api';
     const ENDPOINTS = {
       USERS: `${API_BASE_URL}/users`,
@@ -149,13 +148,10 @@
       AUTH_LOGOUT: `${API_BASE_URL}/auth/logout`
     };
     
-    // Navigation setup
     document.addEventListener('DOMContentLoaded', function() {
-      // Check if user is authenticated
       verifyAuth()
         .then(userData => {
           if (userData && userData.role === 'student') {
-            // Initialize the page components
             setupNavigation();
             initializeDashboard(userData);
           } else {
@@ -171,7 +167,6 @@
         });
     });
     
-    // Setup navigation
     function setupNavigation() {
       document.getElementById('dashboard-menu-item').addEventListener('click', function() {
         window.location.href = 'student-dashboard.html';
@@ -213,7 +208,6 @@
         }
       });
       
-      // Card click handlers
       document.getElementById('find-room-card').addEventListener('click', function() {
         window.location.href = 'student-room-reservation.html';
       });
@@ -230,26 +224,20 @@
         window.location.href = 'student-profile.html';
       });
       
-      // Set up notification bell click
       document.getElementById('notification-bell').addEventListener('click', function() {
         window.location.href = 'student-notifications.html';
       });
     }
     
-    // Clear auth data
     function clearAuthData() {
-      // Clear any stored auth data (cookies are handled by the server)
       sessionStorage.removeItem('user');
       localStorage.removeItem('authToken');
     }
     
-    // Initialize dashboard
     async function initializeDashboard(userData) {
-      // Set user greeting
       document.getElementById('user-greeting').innerHTML = `Xin chào, <span id="user-full-name">${userData.full_name || userData.username}</span>`;
       document.getElementById('welcome-name').textContent = userData.full_name || userData.username;
       
-      // Load unread notifications count
       try {
         const response = await fetch(ENDPOINTS.UNREAD_NOTIFICATIONS, {
           credentials: 'include'
@@ -259,7 +247,6 @@
           const data = await response.json();
           document.getElementById('notification-count').textContent = data.count;
           
-          // Show notification count only if there are unread notifications
           if (data.count > 0) {
             document.getElementById('notification-count').style.display = 'inline-block';
           } else {
@@ -270,11 +257,9 @@
         console.error('Error loading notifications count:', error);
       }
       
-      // Load upcoming bookings
       loadUpcomingBookings();
     }
     
-    // Load upcoming bookings
     async function loadUpcomingBookings() {
       try {
         const response = await fetch(`${ENDPOINTS.USER_BOOKINGS}?status=pending,confirmed`, {
@@ -295,14 +280,12 @@
           return;
         }
         
-        // Sort bookings by date and time
         bookings.sort((a, b) => {
           const dateA = new Date(a.booking_date + 'T' + a.start_time);
           const dateB = new Date(b.booking_date + 'T' + b.start_time);
           return dateA - dateB;
         });
         
-        // Only show the next 5 bookings
         const upcomingBookings = bookings.slice(0, 5);
         
         upcomingBookings.forEach(booking => {
@@ -311,7 +294,6 @@
           const bookingItem = document.createElement('div');
           bookingItem.className = 'booking-item';
           
-          // Add status badge
           let statusClass = '';
           let statusText = '';
           

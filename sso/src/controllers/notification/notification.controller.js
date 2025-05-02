@@ -11,14 +11,11 @@ exports.createNotification = async (req, res) => {
             return res.status(400).json({ error: 'Thiếu thông tin: user_id, title, và message là bắt buộc' });
         }
 
-        // Kiểm tra người dùng tồn tại
         const userExists = await User.findById(user_id).exec();
         if (!userExists) {
             return res.status(404).json({ error: 'Không tìm thấy người dùng' });
         }
 
-        // TODO: Lưu thông báo vào database - tạm thời trả về thành công
-        // Trong phần hoàn chỉnh, bạn sẽ tạo một notification model và lưu vào đó
 
         return res.status(201).json({
             success: true,
@@ -50,19 +47,16 @@ exports.createBulkNotifications = async (req, res) => {
             return res.status(400).json({ error: 'Thiếu thông tin: title và message là bắt buộc' });
         }
 
-        // Kiểm tra nếu không có user_ids và không phải gửi cho tất cả
         if (!user_ids && !all_users) {
             return res.status(400).json({ error: 'Phải cung cấp user_ids hoặc all_users=true' });
         }
 
-        // TODO: Lưu thông báo vào database - tạm thời trả về thành công
         let recipientType = 'multiple';
         let recipientCount = 0;
 
         if (all_users) {
             recipientType = 'all';
-            // TODO: Trong phần hoàn chỉnh, đếm số người dùng trong hệ thống
-            recipientCount = 100; // Giả sử có 100 người dùng
+            recipientCount = 100;
         } else if (user_ids && Array.isArray(user_ids)) {
             recipientCount = user_ids.length;
         }
@@ -90,9 +84,7 @@ exports.createBulkNotifications = async (req, res) => {
  */
 exports.getNotificationHistory = async (req, res) => {
     try {
-        // TODO: Lấy lịch sử thông báo từ database
         
-        // Tạm thời trả về dữ liệu mẫu
         const mockNotifications = [
             { 
                 id: '1', 

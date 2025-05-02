@@ -41,7 +41,6 @@ class Session {
   }
 
   static create(userId, expiresInHours = 24, existingToken = null) {
-    // Nếu có token hiện tại, sử dụng nó thay vì tạo token mới
     const token = existingToken || jwt.sign({ id: userId }, config.jwtSecret, {
       expiresIn: `${expiresInHours}h`
     });
@@ -50,12 +49,10 @@ class Session {
     expiresAt.setHours(expiresAt.getHours() + expiresInHours);
     
     return new Promise((resolve, reject) => {
-      // Kiểm tra xem token đã tồn tại trong database chưa
       if (existingToken) {
         this.findByToken(existingToken)
           .then(session => {
             if (session) {
-              // Nếu token đã tồn tại, cập nhật thời gian hết hạn
               db.run(
                 'UPDATE sessions SET expires_at = ? WHERE token = ?',
                 [expiresAt.toISOString(), existingToken],
@@ -73,13 +70,11 @@ class Session {
                 }
               );
             } else {
-              // Nếu token chưa tồn tại, tạo mới
               insertNewSession();
             }
           })
           .catch(err => reject(err));
       } else {
-        // Không có token hiện tại, tạo mới
         insertNewSession();
       }
       
@@ -146,21 +141,16 @@ class Session {
   static isValid(token) {
     return new Promise(async (resolve, reject) => {
       try {
-        // Trước tiên kiểm tra xem token có phải là JWT hợp lệ
         try {
           jwt.verify(token, config.jwtSecret);
-          // Nếu token là JWT hợp lệ, tiếp tục kiểm tra session
         } catch (jwtError) {
           console.error('JWT verification failed:', jwtError);
           return resolve(false);
         }
         
-        // Kiểm tra trong database
         const session = await this.findByToken(token);
         
         if (!session) {
-          // Token không tồn tại trong database
-          // Nhưng JWT hợp lệ, nên vẫn có thể được chấp nhận
           console.log('Valid JWT token but not found in sessions database');
           return resolve(true);
         }
@@ -169,7 +159,6 @@ class Session {
         const now = new Date();
         
         if (now > expiresAt) {
-          // Session expired, delete it
           await this.delete(token);
           return resolve(false);
         }
@@ -193,7 +182,6 @@ class Session {
       const now = new Date();
       
       if (now > expiresAt) {
-        // Session expired, delete it
         await this.delete(token);
         return null;
       }

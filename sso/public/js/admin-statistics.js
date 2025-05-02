@@ -1,4 +1,3 @@
-// API endpoints
 const API_BASE_URL = '/api';
 const ENDPOINTS = {
     DASHBOARD_STATS: `${API_BASE_URL}/dashboard/stats`,
@@ -9,7 +8,6 @@ const ENDPOINTS = {
     TOP_USERS: `${API_BASE_URL}/dashboard/users/top`
 };
 
-// State management for statistics data
 let statsData = {
     bookingsTrend: [],
     roomUsage: [],
@@ -18,26 +16,20 @@ let statsData = {
     topUsers: []
 };
 
-// Initialize charts with loading state
 let bookingTrendChart, roomUsageChart, bookingPurposeChart, departmentChart;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Setup navigation
     setupNavigation();
     
-    // Initialize charts
     initializeCharts();
     
-    // Load statistics
     loadAllStatistics();
 
-    // Handle filter change
     document.getElementById('time-filter').addEventListener('change', function() {
         const timeFilter = this.value;
         loadAllStatistics(timeFilter);
     });
 
-    // Handle refresh button
     document.getElementById('refresh-btn').addEventListener('click', function() {
         loadAllStatistics(document.getElementById('time-filter').value);
     });
@@ -61,7 +53,6 @@ function setupNavigation() {
     });
     
     document.getElementById('logout-btn').addEventListener('click', function() {
-        // Call logout API
         fetch(`${API_BASE_URL}/auth/logout`, {
             method: 'POST',
             credentials: 'include'
@@ -77,7 +68,6 @@ function setupNavigation() {
 }
 
 function initializeCharts() {
-    // Initialize charts with empty data
     const bookingTrendCtx = document.getElementById('bookingTrendChart').getContext('2d');
     bookingTrendChart = new Chart(bookingTrendCtx, {
         type: 'line',
@@ -207,12 +197,10 @@ function initializeCharts() {
 
 async function loadAllStatistics(timeFilter = 'month') {
     try {
-        // Show loading state
         document.querySelectorAll('.stat-value').forEach(el => {
             el.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         });
         
-        // Load all statistics concurrently
         await Promise.all([
             fetchDashboardStats(timeFilter),
             fetchBookingTrends(timeFilter),
@@ -222,7 +210,6 @@ async function loadAllStatistics(timeFilter = 'month') {
             fetchTopUsers(timeFilter)
         ]);
 
-        // Update UI with fetched data
         updateStatCards();
         updateCharts();
         updateTopUsersTable();
@@ -314,7 +301,6 @@ function updateStatCards() {
     const stats = statsData.dashboardStats;
     if (!stats) return;
 
-    // Update total bookings card
     document.querySelector('.stat-card-primary .stat-value').textContent = stats.totalBookings || 0;
     const bookingTrend = document.querySelector('.stat-card-primary .stat-trend');
     if (stats.bookingTrendPercentage > 0) {
@@ -325,7 +311,6 @@ function updateStatCards() {
         bookingTrend.className = 'stat-trend trend-down';
     }
 
-    // Update room usage rate card
     document.querySelector('.stat-card-success .stat-value').textContent = `${stats.roomUsageRate || 0}%`;
     const usageTrend = document.querySelector('.stat-card-success .stat-trend');
     if (stats.usageRateTrendPercentage > 0) {
@@ -336,7 +321,6 @@ function updateStatCards() {
         usageTrend.className = 'stat-trend trend-down';
     }
 
-    // Update average usage time card
     document.querySelector('.stat-card-warning .stat-value').textContent = `${stats.avgUsageTime || 0}h`;
     const timeTrend = document.querySelector('.stat-card-warning .stat-trend');
     if (stats.avgTimeTrendHours > 0) {
@@ -347,44 +331,38 @@ function updateStatCards() {
         timeTrend.className = 'stat-trend trend-down';
     }
 
-    // Update cancellation rate card
     document.querySelector('.stat-card-danger .stat-value').textContent = `${stats.cancellationRate || 0}%`;
     const cancelTrend = document.querySelector('.stat-card-danger .stat-trend');
     if (stats.cancellationTrendPercentage > 0) {
         cancelTrend.innerHTML = `<i class="fas fa-arrow-up mr-1"></i> ${stats.cancellationTrendPercentage}% so với kỳ trước`;
-        cancelTrend.className = 'stat-trend trend-down'; // Up is bad for cancellations
+        cancelTrend.className = 'stat-trend trend-down'; 
     } else {
         cancelTrend.innerHTML = `<i class="fas fa-arrow-down mr-1"></i> ${Math.abs(stats.cancellationTrendPercentage)}% so với kỳ trước`;
-        cancelTrend.className = 'stat-trend trend-up'; // Down is good for cancellations
+        cancelTrend.className = 'stat-trend trend-up';
     }
 }
 
 function updateCharts() {
-    // Update booking trend chart
     if (statsData.bookingsTrend && statsData.bookingsTrend.data) {
         bookingTrendChart.data.labels = statsData.bookingsTrend.labels || [];
         bookingTrendChart.data.datasets[0].data = statsData.bookingsTrend.data || [];
         bookingTrendChart.update();
     }
 
-    // Update room usage chart
     if (statsData.roomUsage && statsData.roomUsage.data) {
         roomUsageChart.data.labels = statsData.roomUsage.rooms || [];
         roomUsageChart.data.datasets[0].data = statsData.roomUsage.data || [];
-        // Generate colors if needed
         const colors = generateColors(statsData.roomUsage.data.length);
         roomUsageChart.data.datasets[0].backgroundColor = colors;
         roomUsageChart.update();
     }
 
-    // Update booking purpose chart
     if (statsData.bookingPurpose && statsData.bookingPurpose.data) {
         bookingPurposeChart.data.labels = statsData.bookingPurpose.purposes || [];
         bookingPurposeChart.data.datasets[0].data = statsData.bookingPurpose.data || [];
         bookingPurposeChart.update();
     }
 
-    // Update department chart
     if (statsData.departmentStats && statsData.departmentStats.data) {
         departmentChart.data.labels = statsData.departmentStats.departments || [];
         departmentChart.data.datasets[0].data = statsData.departmentStats.data || [];
@@ -429,7 +407,6 @@ function generateColors(count) {
         return defaultColors.slice(0, count);
     }
 
-    // If we need more colors, cycle through the default ones
     const colors = [];
     for (let i = 0; i < count; i++) {
         colors.push(defaultColors[i % defaultColors.length]);

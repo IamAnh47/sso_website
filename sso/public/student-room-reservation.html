@@ -460,7 +460,6 @@
   </div>
   
   <script>
-    // API endpoints
     const API_BASE_URL = '/api';
     const ENDPOINTS = {
       USERS: `${API_BASE_URL}/users`,
@@ -473,14 +472,12 @@
       AUTH_LOGOUT: `${API_BASE_URL}/auth/logout`
     };
     
-    // State variables
     let currentUser = null;
     let allRooms = [];
     let filteredRooms = [];
     let currentPage = 1;
     const roomsPerPage = 9;
     
-    // Room types map
     const roomTypeMap = {
       'classroom': 'Phòng học',
       'meeting': 'Phòng họp',
@@ -488,7 +485,6 @@
       'study': 'Không gian học tập'
     };
     
-    // Room features map
     const roomFeatureMap = {
       'projector': 'Máy chiếu',
       'whiteboard': 'Bảng trắng',
@@ -497,13 +493,10 @@
       'video_conference': 'Hội nghị truyền hình'
     };
     
-    // Initialize page
     document.addEventListener('DOMContentLoaded', function() {
-      // Set default date to today
       const today = new Date();
       document.getElementById('date-filter').valueAsDate = today;
       
-      // Check if user is authenticated
       verifyAuth()
         .then(userData => {
           if (userData && userData.role === 'student') {
@@ -523,7 +516,6 @@
         });
     });
     
-    // Setup navigation
     function setupNavigation() {
       document.getElementById('dashboard-menu-item').addEventListener('click', function() {
         window.location.href = 'student-dashboard.html';
@@ -565,39 +557,30 @@
         }
       });
       
-      // Set up notification bell click
       document.getElementById('notification-bell').addEventListener('click', function() {
         window.location.href = 'student-notifications.html';
       });
     }
     
-    // Clear auth data
     function clearAuthData() {
       sessionStorage.removeItem('user');
       localStorage.removeItem('authToken');
     }
     
-    // Initialize page
     async function initializePage() {
-      // Set user greeting
       document.getElementById('user-greeting').innerHTML = `Xin chào, <span id="user-full-name">${currentUser.full_name || currentUser.username}</span>`;
       
-      // Load unread notifications count
       loadNotificationsCount();
       
-      // Set up event listeners
       document.getElementById('search-btn').addEventListener('click', searchRooms);
       
-      // Modal event listeners
       document.getElementById('close-modal').addEventListener('click', closeBookingModal);
       document.getElementById('cancel-booking').addEventListener('click', closeBookingModal);
       document.getElementById('booking-form').addEventListener('submit', handleBookingSubmit);
       
-      // Perform initial search
       searchRooms();
     }
     
-    // Load notifications count
     async function loadNotificationsCount() {
       try {
         const response = await fetch(ENDPOINTS.UNREAD_NOTIFICATIONS, {
@@ -608,7 +591,6 @@
           const data = await response.json();
           document.getElementById('notification-count').textContent = data.count;
           
-          // Show notification count only if there are unread notifications
           if (data.count > 0) {
             document.getElementById('notification-count').style.display = 'inline-block';
           } else {
@@ -620,14 +602,11 @@
       }
     }
     
-    // Search rooms
     async function searchRooms() {
-      // Show loading spinner
       document.getElementById('rooms-loading').style.display = 'flex';
       document.getElementById('room-list').innerHTML = '';
       document.getElementById('no-rooms-message').style.display = 'none';
       
-      // Get search parameters
       const date = document.getElementById('date-filter').value;
       const startTime = document.getElementById('start-time-filter').value;
       const endTime = document.getElementById('end-time-filter').value;
@@ -635,19 +614,16 @@
       const roomType = document.getElementById('roomType').value;
       const location = document.getElementById('location-filter').value;
       
-      // Debug output
       console.log('Search parameters:', {
         date, startTime, endTime, capacity, roomType, location
       });
       
-      // Validate time inputs
       if (startTime >= endTime) {
         alert('Thời gian bắt đầu phải sớm hơn thời gian kết thúc');
         document.getElementById('rooms-loading').style.display = 'none';
         return;
       }
       
-      // Build query parameters
       let queryParams = new URLSearchParams({
         date: date,
         start_time: startTime,
@@ -685,7 +661,6 @@
           throw new Error(errorData.error || `Failed to fetch available rooms: ${response.status}`);
         }
         
-        // Hide loading spinner
         document.getElementById('rooms-loading').style.display = 'none';
         
         const availableRooms = await response.json();
@@ -702,13 +677,10 @@
           return;
         }
         
-        // Reset to first page
         currentPage = 1;
         
-        // Display rooms
         displayRooms();
         
-        // Set up pagination
         setupPagination();
       } catch (error) {
         console.error('Error searching rooms:', error);
@@ -724,27 +696,22 @@
       }
     }
     
-    // Display rooms for current page
     function displayRooms() {
       const roomListContainer = document.getElementById('room-list');
       roomListContainer.innerHTML = '';
       
-      // Calculate rooms for the current page
       const startIndex = (currentPage - 1) * roomsPerPage;
       const endIndex = Math.min(startIndex + roomsPerPage, filteredRooms.length);
       const roomsToDisplay = filteredRooms.slice(startIndex, endIndex);
       
-      // Create room cards
       roomsToDisplay.forEach(room => {
         const roomCard = document.createElement('div');
         roomCard.className = 'room-card';
         
-        // Convert features to array if it's a string
         const roomFeatures = typeof room.features === 'string' ? 
                             room.features.split(',').map(f => f.trim()) : 
                             (room.features || []);
         
-        // Create HTML for room card
         roomCard.innerHTML = `
           <div class="room-image" style="background-image: url(${room.image || 'images/room.png'})">
             <div class="room-type">${roomTypeMap[room.room_type] || room.room_type}</div>
@@ -770,7 +737,6 @@
         roomListContainer.appendChild(roomCard);
       });
       
-      // Add click listener to booking buttons
       const bookButtons = document.querySelectorAll('.room-book-btn');
       bookButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -780,7 +746,6 @@
       });
     }
     
-    // Setup pagination
     function setupPagination() {
       const totalPages = Math.ceil(filteredRooms.length / roomsPerPage);
       const paginationContainer = document.getElementById('pagination');
@@ -790,7 +755,6 @@
         return;
       }
       
-      // Previous button
       if (currentPage > 1) {
         const prevButton = document.createElement('button');
         prevButton.className = 'pagination-btn';
@@ -803,7 +767,6 @@
         paginationContainer.appendChild(prevButton);
       }
       
-      // Page buttons
       for (let i = 1; i <= totalPages; i++) {
         const pageButton = document.createElement('button');
         pageButton.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
@@ -816,7 +779,6 @@
         paginationContainer.appendChild(pageButton);
       }
       
-      // Next button
       if (currentPage < totalPages) {
         const nextButton = document.createElement('button');
         nextButton.className = 'pagination-btn';
@@ -830,42 +792,33 @@
       }
     }
     
-    // Open booking modal
     function openBookingModal(roomId) {
       const room = allRooms.find(r => r.id == roomId);
       if (!room) return;
       
-      // Set room info in modal
       document.getElementById('room-id').value = roomId;
       document.getElementById('modal-room-name').textContent = room.room_name;
       document.getElementById('modal-room-location').textContent = room.location;
       
-      // Set date and time from filters
       document.getElementById('booking-date').value = document.getElementById('date-filter').value;
       document.getElementById('start-time').value = document.getElementById('start-time-filter').value;
       document.getElementById('end-time').value = document.getElementById('end-time-filter').value;
       document.getElementById('participants').value = document.getElementById('capacity-filter').value;
       
-      // Reset any error messages
       document.querySelectorAll('.form-error').forEach(el => el.style.display = 'none');
       
-      // Show modal
       document.getElementById('booking-modal').style.display = 'block';
     }
     
-    // Close booking modal
     function closeBookingModal() {
       document.getElementById('booking-modal').style.display = 'none';
     }
     
-    // Handle booking form submission
     async function handleBookingSubmit(event) {
       event.preventDefault();
       
-      // Reset error messages
       document.querySelectorAll('.form-error').forEach(el => el.style.display = 'none');
       
-      // Get form data
       const roomId = document.getElementById('room-id').value;
       const bookingDate = document.getElementById('booking-date').value;
       const startTime = document.getElementById('start-time').value;
@@ -873,7 +826,6 @@
       const participants = document.getElementById('participants').value;
       const purpose = document.getElementById('purpose').value;
       
-      // Validate form
       let hasError = false;
       
       if (!bookingDate) {
@@ -911,7 +863,6 @@
         return;
       }
       
-      // Submit booking
       try {
         const response = await fetch(ENDPOINTS.BOOKINGS, {
           method: 'POST',
@@ -936,13 +887,10 @@
         
         const bookingData = await response.json();
         
-        // Close modal
         closeBookingModal();
         
-        // Show success message
         alert('Đăng ký phòng thành công! Vui lòng kiểm tra lịch sử đặt phòng để xem trạng thái.');
         
-        // Refresh room search
         searchRooms();
       } catch (error) {
         console.error('Error creating booking:', error);

@@ -224,9 +224,7 @@
   
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Setup navigation
             document.getElementById('dashboard-menu-item').addEventListener('click', function() {
-                // Already on dashboard page
             });
             
             document.getElementById('rooms-menu-item').addEventListener('click', function() {
@@ -258,7 +256,6 @@
                 });
             });
             
-            // Verify user authentication and role
             fetch('/api/auth/verify')
                 .then(response => {
                     if (!response.ok) {
@@ -271,7 +268,6 @@
                         window.location.href = '/index.html';
                     }
                     
-                    // Load dashboard data
                     loadDashboardData();
                 })
                 .catch(error => {
@@ -280,7 +276,6 @@
                 });
             
             function loadDashboardData() {
-                // Load room count
                 fetch('/api/rooms/count')
                     .then(response => {
                         if (!response.ok) {
@@ -295,7 +290,6 @@
                         document.getElementById('totalRooms').textContent = 'Error';
                     });
                 
-                // Load device count
                 fetch('/api/iot/devices/count')
                     .then(response => {
                         if (!response.ok) {
@@ -312,7 +306,6 @@
                         document.getElementById('totalDevices').textContent = 'Error';
                     });
                 
-                // Load recent activities
                 fetch('/api/iot/devices/activities')
                     .then(response => {
                         if (!response.ok) {
@@ -356,21 +349,12 @@
                     });
             }
             
-            // Function to translate action names to Vietnamese
             function translateAction(action) {
                 const actionMap = {
                     'turned on': 'Đã bật',
                     'turned off': 'Đã tắt',
-                    'maintenance': 'Bảo trì',
-                    'reset': 'Khởi động lại',
-                    'updated': 'Cập nhật',
-                    'configured': 'Cấu hình',
-                    'connected': 'Đã kết nối',
-                    'disconnected': 'Mất kết nối',
-                    'error': 'Lỗi',
-                    'warning': 'Cảnh báo',
-                    'entered maintenance mode': 'Đã vào chế độ bảo trì',
-                    'exited maintenance mode': 'Đã thoát chế độ bảo trì'
+                    'entered maintenance mode': 'Đã bảo trì',
+                    'exited maintenance mode': 'Đã kết thúc bảo trì'
                 };
                 
                 return actionMap[action] || action;

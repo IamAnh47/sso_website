@@ -1,11 +1,9 @@
-// API endpoints
 const API_BASE_URL = '/api';
 const ENDPOINTS = {
     ROOMS: `${API_BASE_URL}/rooms`,
     ROOM_TYPES: `${API_BASE_URL}/room-types`
 };
 
-// State management for rooms data
 let roomsData = [];
 let roomTypes = [];
 let currentFilters = {
@@ -14,21 +12,15 @@ let currentFilters = {
     search: ''
 };
 
-// Initialize page
 document.addEventListener('DOMContentLoaded', function() {
-    // Setup navigation
     setupNavigation();
     
-    // Initialize rooms page
     initializeRoomsPage();
     
-    // Add event listeners for modals
     setupModalListeners();
     
-    // Add event listeners for filters
     setupFilterListeners();
     
-    // Add event listener for export button
     document.getElementById('export-btn').addEventListener('click', exportRoomsToCSV);
 });
 
@@ -50,7 +42,6 @@ function setupNavigation() {
     });
     
     document.getElementById('logout-btn').addEventListener('click', function() {
-        // Call logout API
         fetch(`${API_BASE_URL}/auth/logout`, {
             method: 'POST',
             credentials: 'include'
@@ -67,16 +58,13 @@ function setupNavigation() {
 
 async function initializeRoomsPage() {
     try {
-        // Load room types and rooms data
         await Promise.all([
             loadRoomTypes(),
             loadRoomsData()
         ]);
         
-        // Populate room type filter
         populateRoomTypeFilter();
         
-        // Generate room cards
         generateRoomCards(roomsData);
     } catch (error) {
         console.error('Error initializing rooms page:', error);
@@ -88,19 +76,14 @@ function setupModalListeners() {
     const addRoomModal = document.getElementById('add-room-modal');
     const editRoomModal = document.getElementById('edit-room-modal');
     
-    // Add room button
     document.getElementById('add-room-btn').addEventListener('click', function() {
-        // Reset form
         document.getElementById('add-room-form').reset();
         
-        // Populate room type select
         populateRoomTypeSelect('add-room-type');
         
-        // Show modal
         addRoomModal.style.display = 'flex';
     });
     
-    // Close modals
     document.querySelectorAll('.modal-close, #cancel-add-btn, #cancel-edit-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             addRoomModal.style.display = 'none';
@@ -108,7 +91,6 @@ function setupModalListeners() {
         });
     });
     
-    // Close modal when clicking outside
     window.addEventListener('click', function(event) {
         if (event.target === addRoomModal) {
             addRoomModal.style.display = 'none';
@@ -118,13 +100,11 @@ function setupModalListeners() {
         }
     });
     
-    // Submit add room form
     document.getElementById('add-room-form').addEventListener('submit', async function(event) {
         event.preventDefault();
         await addRoom();
     });
     
-    // Submit edit room form
     document.getElementById('edit-room-form').addEventListener('submit', async function(event) {
         event.preventDefault();
         await updateRoom();
@@ -132,19 +112,16 @@ function setupModalListeners() {
 }
 
 function setupFilterListeners() {
-    // Status filter
     document.getElementById('status-filter').addEventListener('change', function() {
         currentFilters.status = this.value;
         applyFilters();
     });
     
-    // Type filter
     document.getElementById('type-filter').addEventListener('change', function() {
         currentFilters.type = this.value;
         applyFilters();
     });
     
-    // Search input
     let searchTimeout;
     document.getElementById('search-input').addEventListener('input', function() {
         clearTimeout(searchTimeout);
@@ -154,7 +131,6 @@ function setupFilterListeners() {
         }, 300);
     });
     
-    // Clear filters
     document.getElementById('clear-filters').addEventListener('click', function() {
         document.getElementById('status-filter').value = 'all';
         document.getElementById('type-filter').value = 'all';
@@ -169,7 +145,6 @@ function setupFilterListeners() {
         applyFilters();
     });
     
-    // Refresh button
     document.getElementById('refresh-btn').addEventListener('click', async function() {
         try {
             await loadRoomsData();
@@ -196,7 +171,6 @@ async function loadRoomTypes() {
         return roomTypes;
     } catch (error) {
         console.error('Error loading room types:', error);
-        // Fallback data if API fails
         roomTypes = [
             { id: 1, name: 'Phòng học', code: 'classroom' },
             { id: 2, name: 'Phòng họp', code: 'meeting' },
@@ -221,7 +195,6 @@ async function loadRoomsData() {
         return roomsData;
     } catch (error) {
         console.error('Error loading rooms data:', error);
-        // Fallback data if API fails
         roomsData = [
             {
                 id: 1,
@@ -264,12 +237,10 @@ async function loadRoomsData() {
 function populateRoomTypeFilter() {
     const typeFilter = document.getElementById('type-filter');
     
-    // Clear existing options except first one
     while (typeFilter.options.length > 1) {
         typeFilter.remove(1);
     }
     
-    // Add room types from data
     roomTypes.forEach(type => {
         const option = document.createElement('option');
         option.value = type.code;
@@ -281,10 +252,8 @@ function populateRoomTypeFilter() {
 function populateRoomTypeSelect(elementId) {
     const typeSelect = document.getElementById(elementId);
     
-    // Clear existing options
     typeSelect.innerHTML = '';
     
-    // Add room types from data
     roomTypes.forEach(type => {
         const option = document.createElement('option');
         option.value = type.code;
@@ -296,17 +265,14 @@ function populateRoomTypeSelect(elementId) {
 function applyFilters() {
     let filteredRooms = [...roomsData];
     
-    // Apply status filter
     if (currentFilters.status !== 'all') {
         filteredRooms = filteredRooms.filter(room => room.status === currentFilters.status);
     }
     
-    // Apply type filter
     if (currentFilters.type !== 'all') {
         filteredRooms = filteredRooms.filter(room => room.room_type === currentFilters.type);
     }
     
-    // Apply search filter
     if (currentFilters.search) {
         filteredRooms = filteredRooms.filter(room => 
             room.room_name.toLowerCase().includes(currentFilters.search) ||
@@ -314,11 +280,9 @@ function applyFilters() {
         );
     }
     
-    // Update filtered count
     const countElement = document.getElementById('filtered-count');
     countElement.textContent = `${filteredRooms.length} / ${roomsData.length}`;
     
-    // Generate room cards with filtered data
     generateRoomCards(filteredRooms);
 }
 
@@ -338,7 +302,6 @@ function generateRoomCards(rooms) {
         const roomCard = document.createElement('div');
         roomCard.className = 'room-card';
         
-        // Status class
         let statusClass = '';
         let statusText = '';
         
@@ -361,7 +324,6 @@ function generateRoomCards(rooms) {
                 statusText = room.status;
         }
         
-        // Get room type name
         const roomTypeName = roomTypes.find(type => type.code === room.room_type)?.name || room.room_type;
         
         roomCard.innerHTML = `
@@ -388,7 +350,6 @@ function generateRoomCards(rooms) {
             </div>
         `;
         
-        // Add event listeners
         const viewBtn = roomCard.querySelector('.view-btn');
         const editBtn = roomCard.querySelector('.edit-btn');
         const deleteBtn = roomCard.querySelector('.delete-btn');
@@ -410,11 +371,9 @@ function generateRoomCards(rooms) {
 }
 
 function openEditRoomModal(room) {
-    // Populate form with room data
     document.getElementById('edit-room-id').value = room.id;
     document.getElementById('edit-room-name').value = room.room_name;
     
-    // Populate room type select
     populateRoomTypeSelect('edit-room-type');
     document.getElementById('edit-room-type').value = room.room_type;
     
@@ -422,7 +381,6 @@ function openEditRoomModal(room) {
     document.getElementById('edit-room-location').value = room.location;
     document.getElementById('edit-room-status').value = room.status;
     
-    // Handle facilities
     let facilitiesStr = '';
     if (room.facilities) {
         if (typeof room.facilities === 'string') {
@@ -433,11 +391,9 @@ function openEditRoomModal(room) {
     }
     document.getElementById('edit-room-facilities').value = facilitiesStr;
     
-    // Set description if available - ensure it works with null, undefined, or empty string
     const description = room.description;
     document.getElementById('edit-room-description').value = description !== null && description !== undefined ? description : '';
     
-    // Show modal
     document.getElementById('edit-room-modal').style.display = 'flex';
 }
 
@@ -452,7 +408,6 @@ async function addRoom() {
         description: document.getElementById('add-room-description').value
     };
     
-    // Validate form data
     if (!roomData.room_name || !roomData.room_type || !roomData.location) {
         alert('Vui lòng điền đầy đủ thông tin bắt buộc: Tên phòng, loại phòng và vị trí!');
         return;
@@ -472,11 +427,9 @@ async function addRoom() {
             throw new Error('Failed to add room');
         }
         
-        // Refresh rooms data
         await loadRoomsData();
         applyFilters();
         
-        // Close modal
         document.getElementById('add-room-modal').style.display = 'none';
         
         alert('Phòng đã được thêm thành công!');
@@ -499,7 +452,6 @@ async function updateRoom() {
         description: document.getElementById('edit-room-description').value
     };
     
-    // Validate form data
     if (!roomData.room_name || !roomData.room_type || !roomData.location) {
         alert('Vui lòng điền đầy đủ thông tin bắt buộc: Tên phòng, loại phòng và vị trí!');
         return;
@@ -519,11 +471,9 @@ async function updateRoom() {
             throw new Error('Failed to update room');
         }
         
-        // Refresh rooms data
         await loadRoomsData();
         applyFilters();
         
-        // Close modal
         document.getElementById('edit-room-modal').style.display = 'none';
         
         alert('Phòng đã được cập nhật thành công!');
@@ -544,7 +494,6 @@ async function deleteRoom(roomId) {
             throw new Error('Failed to delete room');
         }
         
-        // Refresh rooms data
         await loadRoomsData();
         applyFilters();
         
@@ -556,10 +505,8 @@ async function deleteRoom(roomId) {
 }
 
 function exportRoomsToCSV() {
-    // Get filtered rooms
     let filteredRooms = [...roomsData];
     
-    // Apply current filters
     if (currentFilters.status !== 'all') {
         filteredRooms = filteredRooms.filter(room => room.status === currentFilters.status);
     }
@@ -580,13 +527,10 @@ function exportRoomsToCSV() {
         return;
     }
     
-    // Generate CSV content
     let csvContent = "data:text/csv;charset=utf-8,";
     
-    // Headers
     csvContent += "ID,Tên phòng,Loại phòng,Sức chứa,Vị trí,Trạng thái,Cơ sở vật chất\n";
     
-    // Data rows
     filteredRooms.forEach(room => {
         let statusText = '';
         
@@ -612,14 +556,12 @@ function exportRoomsToCSV() {
         csvContent += `${room.id},"${room.room_name}","${roomTypeName}",${room.capacity},"${room.location}","${statusText}","${facilitiesStr}"\n`;
     });
     
-    // Create download link
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", `danh-sach-phong-${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     
-    // Trigger download
     link.click();
     document.body.removeChild(link);
     

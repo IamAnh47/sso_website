@@ -375,7 +375,6 @@
     </div>
 
     <script>
-        // API endpoints
         const API_BASE_URL = '/api';
         const ENDPOINTS = {
             USERS: `${API_BASE_URL}/users`,
@@ -383,26 +382,21 @@
             USER_ACTIVITIES: `${API_BASE_URL}/users/:userId/activities`
         };
         
-        // Get user ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const userId = urlParams.get('id');
         
-        // Store loaded user data
         let userData = null;
         let userRoles = [];
         
-        // Document ready
         document.addEventListener('DOMContentLoaded', function() {
             setupNavigation();
             initializeUserDetailsPage();
         });
         
-        // Get auth token from localStorage
         function getAuthToken() {
             return localStorage.getItem('authToken');
         }
 
-        // Create headers with auth token
         function createAuthHeaders() {
             const token = getAuthToken();
             return {
@@ -434,7 +428,6 @@
             });
             
             document.getElementById('logout-btn').addEventListener('click', function() {
-                // Clear token and redirect to login
                 localStorage.removeItem('authToken');
                 window.location.href = 'index.html';
             });
@@ -446,22 +439,16 @@
         
         async function initializeUserDetailsPage() {
             try {
-                // Set up modals
                 setupModals();
                 
-                // Set up avatar upload
                 setupAvatarUpload();
                 
-                // Load user roles
                 await loadUserRoles();
                 
-                // Load user data
                 await loadUserData();
                 
-                // Load user activity history
                 await loadUserActivities();
                 
-                // Populate user details
                 populateUserDetails();
             } catch (error) {
                 console.error('Error initializing user details page:', error);
@@ -470,7 +457,6 @@
         }
         
         function setupModals() {
-            // Edit User Modal
             const editModal = document.getElementById('edit-user-modal');
             const editBtn = document.getElementById('edit-user-btn');
             const closeEditBtn = document.querySelector('#edit-user-modal .modal-close');
@@ -493,7 +479,6 @@
                 saveUserEdit();
             });
             
-            // Change Password Modal
             const pwdModal = document.getElementById('change-password-modal');
             const pwdBtn = document.getElementById('change-password-btn');
             const closePwdBtn = document.querySelector('#change-password-modal .modal-close');
@@ -516,19 +501,16 @@
                 changePassword();
             });
             
-            // Toggle status button
             const toggleStatusBtn = document.getElementById('toggle-status-btn');
             toggleStatusBtn.addEventListener('click', function() {
                 toggleUserStatus();
             });
             
-            // Delete user
             const deleteBtn = document.getElementById('delete-user-btn');
             deleteBtn.addEventListener('click', function() {
                 deleteUser();
             });
             
-            // Close modals when clicking outside
             window.addEventListener('click', function(event) {
                 if (event.target === editModal) {
                     editModal.style.display = 'none';
@@ -553,7 +535,6 @@
                     
                     reader.onload = function(e) {
                         document.getElementById('user-avatar').src = e.target.result;
-                        // In a real application, you would upload the file to the server here
                         alert('Ảnh đại diện đã được cập nhật (lưu ý: tính năng này chưa được kết nối với backend).');
                     };
                     
@@ -572,7 +553,6 @@
                 
                 userRoles = await response.json();
                 
-                // Populate role select in the modal
                 const roleSelect = document.getElementById('edit-role');
                 roleSelect.innerHTML = '';
                 
@@ -619,11 +599,9 @@
                 
                 const activities = await response.json();
                 
-                // Render activities
                 renderActivityHistory(activities);
             } catch (error) {
                 console.error('Error loading user activities:', error);
-                // Don't throw error here to avoid blocking other parts of the page
                 document.getElementById('activity-history').innerHTML = 
                     '<tr><td colspan="4">Không thể tải lịch sử hoạt động</td></tr>';
             }
@@ -666,12 +644,10 @@
         function populateUserDetails() {
             if (!userData) return;
             
-            // Set user avatar if available
             if (userData.avatar) {
                 document.getElementById('user-avatar').src = userData.avatar;
             }
             
-            // Set basic user info
             document.getElementById('display-name').textContent = userData.full_name;
             document.getElementById('user-id').textContent = userData.id;
             document.getElementById('username').textContent = userData.username;
@@ -680,7 +656,6 @@
             document.getElementById('student-id').textContent = userData.student_id || 'Không có';
             document.getElementById('phone').textContent = userData.phone || 'Chưa cập nhật';
             
-            // Map department_id to department name
             const departmentMap = {
                 'cse': 'Khoa Khoa học và Kỹ thuật Máy tính',
                 'eee': 'Khoa Điện – Điện tử',
@@ -692,11 +667,9 @@
             document.getElementById('department').textContent = userData.department_id ? 
                 departmentMap[userData.department_id] || userData.department_id : 'Chưa cập nhật';
             
-            // Set role
             const roleText = userRoles.find(r => r.code === userData.role)?.name || userData.role;
             document.getElementById('role').textContent = roleText;
             
-            // Set role badge class
             const roleBadge = document.getElementById('user-role-badge');
             roleBadge.textContent = roleText;
             roleBadge.className = 'user-role';
@@ -707,7 +680,6 @@
                 roleBadge.classList.add('staff');
             }
             
-            // Format and set created date
             const createdDate = userData.created_at ? new Date(userData.created_at) : null;
             document.getElementById('created-at').textContent = createdDate ? 
                 createdDate.toLocaleDateString('vi-VN', { 
@@ -718,7 +690,6 @@
                     minute: '2-digit'
                 }) : 'Không có thông tin';
                 
-            // Set user status
             const statusBadge = document.getElementById('user-status');
             statusBadge.className = 'status';
             
@@ -736,7 +707,6 @@
         function openEditModal() {
             if (!userData) return;
             
-            // Populate form with current user data
             document.getElementById('edit-fullname').value = userData.full_name;
             document.getElementById('edit-email').value = userData.email || '';
             document.getElementById('edit-student-id').value = userData.student_id || '';
@@ -744,7 +714,6 @@
             document.getElementById('edit-department').value = userData.department_id || '';
             document.getElementById('edit-role').value = userData.role;
             
-            // Show modal
             document.getElementById('edit-user-modal').style.display = 'flex';
         }
         
@@ -759,7 +728,6 @@
                     role: document.getElementById('edit-role').value
                 };
                 
-                // Validate form data
                 if (!updatedData.full_name) {
                     alert('Họ và tên không được để trống!');
                     return;
@@ -773,11 +741,9 @@
                 
                 if (!response.ok) throw new Error('Failed to update user');
                 
-                // Update local data
                 const result = await response.json();
                 userData = result.user;
                 
-                // Close modal and update UI
                 document.getElementById('edit-user-modal').style.display = 'none';
                 populateUserDetails();
                 
@@ -813,7 +779,6 @@
                 
                 if (!response.ok) throw new Error('Failed to change password');
                 
-                // Reset form and close modal
                 document.getElementById('change-password-form').reset();
                 document.getElementById('change-password-modal').style.display = 'none';
                 
@@ -859,11 +824,9 @@
                     
                     if (!response.ok) throw new Error('Failed to update user status');
                     
-                    // Update local data
                     const result = await response.json();
                     userData = result.user;
                     
-                    // Update UI
                     populateUserDetails();
                     
                     alert(`Tài khoản đã được ${newStatus === 'locked' ? 'khóa' : 'mở khóa'} thành công!`);

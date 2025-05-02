@@ -99,7 +99,6 @@ class Booking {
       const params = [userId];
       
       if (status) {
-        // Handle both single status string and array of statuses
         if (Array.isArray(status)) {
           const placeholders = status.map(() => '?').join(',');
           query += ` AND b.status IN (${placeholders})`;

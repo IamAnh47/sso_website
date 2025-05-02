@@ -11,7 +11,6 @@ exports.getIoTStatus = async (req, res) => {
   try {
     const { room_id, device_id, device_type } = req.query;
     
-    // Nếu có device_id, trả về thông tin của thiết bị cụ thể
     if (device_id) {
       const device = await IoTDevice.findById(device_id);
       if (!device) {
@@ -20,19 +19,16 @@ exports.getIoTStatus = async (req, res) => {
       return res.json(device);
     }
     
-    // Nếu có room_id, trả về tất cả thiết bị trong phòng
     if (room_id) {
       const devices = await IoTDevice.getByRoom(room_id);
       return res.json(devices);
     }
     
-    // Nếu có device_type, trả về tất cả thiết bị theo loại
     if (device_type) {
       const devices = await IoTDevice.getByType(device_type);
       return res.json(devices);
     }
     
-    // Mặc định trả về tất cả thiết bị
     const devices = await IoTDevice.getAll();
     res.json(devices);
   } catch (error) {
@@ -45,18 +41,15 @@ exports.controlIoTDevice = async (req, res) => {
   try {
     const { device_id, room_id, command } = req.body;
     
-    // Kiểm tra lệnh hợp lệ
     if (!['turnOn', 'turnOff'].includes(command)) {
       return res.status(400).json({ error: 'Invalid command. Use turnOn or turnOff' });
     }
     
     let result;
     
-    // Điều khiển một thiết bị cụ thể
     if (device_id) {
       result = await IoTDevice.controlDevice(device_id, command);
       
-      // Log activity
       if (result) {
         await IoTActivity.log({
           device_id,
@@ -67,11 +60,9 @@ exports.controlIoTDevice = async (req, res) => {
         });
       }
     } 
-    // Điều khiển tất cả thiết bị trong phòng
     else if (room_id) {
       result = await IoTDevice.controlRoomDevices(room_id, command);
       
-      // Log activities for all devices in the room
       if (result && result.deviceCount > 0) {
         const devices = await IoTDevice.getByRoom(room_id);
         for (const device of devices) {
@@ -90,9 +81,7 @@ exports.controlIoTDevice = async (req, res) => {
       return res.status(400).json({ error: 'Either device_id or room_id is required' });
     }
     
-    // Gửi thông báo nếu cần
     if (result && result.status === 'off' && req.user) {
-      // Giả lập việc gửi thông báo khi thiết bị tự động tắt
       await Notification.sendIoTStatusNotification(
         result.roomId || room_id,
         device_id ? (await IoTDevice.findById(device_id)).device_type : 'all',
@@ -107,17 +96,15 @@ exports.controlIoTDevice = async (req, res) => {
   }
 };
 
-// [CHỈ ADMIN/STAFF] Tạo thiết bị IoT mới
+// [ADMIN/STAFF] Tạo thiết bị IoT mới
 exports.createIoTDevice = async (req, res) => {
   try {
     const { device_name, device_type, room_id, status } = req.body;
     
-    // Kiểm tra dữ liệu đầu vào
     if (!device_name || !device_type || !room_id) {
       return res.status(400).json({ error: 'Device name, type and room ID are required' });
     }
     
-    // Tạo thiết bị mới
     const newDevice = await IoTDevice.create({
       device_name,
       device_type,
@@ -134,19 +121,17 @@ exports.createIoTDevice = async (req, res) => {
   }
 };
 
-// [CHỈ ADMIN/STAFF] Cập nhật thông tin thiết bị IoT
+// [ADMIN/STAFF] Cập nhật thông tin thiết bị IoT
 exports.updateIoTDevice = async (req, res) => {
   try {
     const { id } = req.params;
     const { device_name, device_type, status } = req.body;
     
-    // Kiểm tra xem thiết bị có tồn tại không
     const device = await IoTDevice.findById(id);
     if (!device) {
       return res.status(404).json({ error: 'Device not found' });
     }
     
-    // Cập nhật thông tin thiết bị
     const updatedDevice = await IoTDevice.update(id, {
       device_name: device_name || device.device_name,
       device_type: device_type || device.device_type,
@@ -163,18 +148,16 @@ exports.updateIoTDevice = async (req, res) => {
   }
 };
 
-// [CHỈ ADMIN/STAFF] Xoá thiết bị IoT
+// [ADMIN/STAFF] Xoá thiết bị IoT
 exports.deleteIoTDevice = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Kiểm tra xem thiết bị có tồn tại không
     const device = await IoTDevice.findById(id);
     if (!device) {
       return res.status(404).json({ error: 'Device not found' });
     }
     
-    // Xoá thiết bị
     await IoTDevice.delete(id);
     
     res.json({ message: 'IoT device deleted successfully' });
@@ -184,34 +167,29 @@ exports.deleteIoTDevice = async (req, res) => {
   }
 };
 
-// [CHỈ ADMIN/STAFF] Cập nhật trạng thái bật/tắt thiết bị
+// [ADMIN/STAFF] Cập nhật trạng thái bật/tắt thiết bị
 exports.toggleDeviceStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
     
-    // Validate status
     if (!status || !['on', 'off'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status. Must be "on" or "off"' });
     }
     
-    // Kiểm tra thiết bị
     const device = await IoTDevice.findById(id);
     if (!device) {
       return res.status(404).json({ error: 'Device not found' });
     }
     
-    // Kiểm tra nếu thiết bị đang trong chế độ bảo trì
     if (device.maintenance_mode === 1) {
       return res.status(400).json({ 
         error: 'Cannot change status when device is in maintenance mode' 
       });
     }
     
-    // Cập nhật trạng thái
     const result = await IoTDevice.updateStatus(id, status);
     
-    // Log activity
     await IoTActivity.log({
       device_id: id,
       action: status === 'on' ? 'turned on' : 'turned off',
@@ -235,26 +213,23 @@ exports.toggleDeviceStatus = async (req, res) => {
   }
 };
 
-// [CHỈ ADMIN/STAFF] Bật/tắt chế độ bảo trì của thiết bị
+// [ADMIN/STAFF] Bật/tắt chế độ bảo trì của thiết bị
 exports.toggleMaintenanceMode = async (req, res) => {
   try {
     const { id } = req.params;
     const { maintenance_mode } = req.body;
     
-    // Validate input
     if (maintenance_mode === undefined || typeof maintenance_mode !== 'boolean') {
       return res.status(400).json({ 
         error: 'maintenance_mode parameter is required and must be a boolean' 
       });
     }
     
-    // Kiểm tra thiết bị
     const device = await IoTDevice.findById(id);
     if (!device) {
       return res.status(404).json({ error: 'Device not found' });
     }
     
-    // Nếu trạng thái bảo trì không thay đổi, trả về ngay
     const currentMaintenanceMode = device.maintenance_mode === 1;
     if (currentMaintenanceMode === maintenance_mode) {
       return res.json({
@@ -271,10 +246,8 @@ exports.toggleMaintenanceMode = async (req, res) => {
       });
     }
     
-    // Cập nhật chế độ bảo trì
     const result = await IoTDevice.setMaintenanceMode(id, maintenance_mode);
     
-    // Log activity
     await IoTActivity.log({
       device_id: id,
       action: maintenance_mode ? 'entered maintenance mode' : 'exited maintenance mode',
@@ -301,24 +274,21 @@ exports.toggleMaintenanceMode = async (req, res) => {
   }
 };
 
-// [CHỈ ADMIN/STAFF] Đổi tên thiết bị
+// [ADMIN/STAFF] Đổi tên thiết bị
 exports.renameDevice = async (req, res) => {
   try {
     const { id } = req.params;
     const { device_name } = req.body;
     
-    // Validate input
     if (!device_name || device_name.trim() === '') {
       return res.status(400).json({ error: 'Device name is required' });
     }
     
-    // Kiểm tra thiết bị
     const device = await IoTDevice.findById(id);
     if (!device) {
       return res.status(404).json({ error: 'Device not found' });
     }
     
-    // Cập nhật tên thiết bị
     const result = await IoTDevice.update(id, { device_name });
     
     res.json({
@@ -336,40 +306,33 @@ exports.renameDevice = async (req, res) => {
   }
 };
 
-// [CHỈ ADMIN/STAFF] Upload hình ảnh cho thiết bị
+// [ADMIN/STAFF] Upload hình ảnh cho thiết bị
 exports.uploadDeviceImage = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Kiểm tra thiết bị
     const device = await IoTDevice.findById(id);
     if (!device) {
       return res.status(404).json({ error: 'Device not found' });
     }
     
-    // Kiểm tra file đã được upload chưa
     if (!req.file) {
       return res.status(400).json({ error: 'No image file uploaded' });
     }
     
-    // Tạo thư mục nếu chưa tồn tại
     const uploadsDir = path.join(__dirname, '../../public/uploads/devices');
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
     
-    // Tạo tên file mới với UUID để tránh trùng lặp
     const fileExtension = path.extname(req.file.originalname);
     const newFileName = `${device.device_type}_${uuidv4()}${fileExtension}`;
     const filePath = path.join(uploadsDir, newFileName);
     
-    // Ghi file vào thư mục uploads
     fs.writeFileSync(filePath, req.file.buffer);
     
-    // URL để lưu vào database
     const imageUrl = `/uploads/devices/${newFileName}`;
     
-    // Xóa ảnh cũ nếu có
     if (device.image_url) {
       const oldImagePath = path.join(__dirname, '../../public', device.image_url);
       if (fs.existsSync(oldImagePath)) {
@@ -377,7 +340,6 @@ exports.uploadDeviceImage = async (req, res) => {
       }
     }
     
-    // Cập nhật URL ảnh trong database
     await IoTDevice.updateImage(id, imageUrl);
     
     res.json({
@@ -394,7 +356,7 @@ exports.uploadDeviceImage = async (req, res) => {
   }
 };
 
-// [CHỈ ADMIN/STAFF] Lấy danh sách thiết bị IoT trong phòng
+// [ADMIN/STAFF] Lấy danh sách thiết bị IoT trong phòng
 exports.getDevicesByRoom = async (req, res) => {
   try {
     const { room_id } = req.params;
@@ -409,10 +371,8 @@ exports.getDevicesByRoom = async (req, res) => {
 // Lấy số liệu tổng quan về thiết bị IoT (số lượng, trạng thái)
 exports.getDevicesCount = async (req, res) => {
   try {
-    // Lấy tất cả thiết bị
     const devices = await IoTDevice.getAll();
     
-    // Đếm số lượng thiết bị theo trạng thái
     const count = devices.length;
     const online = devices.filter(device => device.status === 'on').length;
     const offline = devices.filter(device => device.status === 'off').length;
@@ -431,23 +391,18 @@ exports.getDevicesCount = async (req, res) => {
 // Lấy các hoạt động gần đây của thiết bị IoT
 exports.getRecentActivities = async (req, res) => {
   try {
-    // Try to get actual activities if available
     let activities = [];
     
     try {
-      // Use the IoTActivity model to get recent activities
       activities = await IoTActivity.getRecent(10);
     } catch (error) {
       console.log('Error fetching IoT activities:', error);
     }
     
-    // If no real activities, generate mock data
     if (activities.length === 0) {
-      // Get actual devices if available
       const devices = await IoTDevice.getAll();
       
       if (devices && devices.length > 0) {
-        // Use real device data to create mock activities
         activities = devices.slice(0, 5).map((device, index) => {
           const actions = ['turned on', 'turned off', 'status changed', 'setting adjusted'];
           const timestamps = [
@@ -470,7 +425,6 @@ exports.getRecentActivities = async (req, res) => {
           };
         });
       } else {
-        // Fallback to completely mock data
         activities = [
           {
             id: 1,

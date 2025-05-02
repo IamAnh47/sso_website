@@ -936,7 +936,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-        // API endpoints
         const BASE_URL = '/api';
         const ENDPOINTS = {
             USERS: `${BASE_URL}/users`,
@@ -946,60 +945,47 @@
             NOTIFICATIONS_HISTORY: `${BASE_URL}/notifications/history`
         };
         
-        // Store users data
         let usersData = [];
         let departmentsData = [];
         let selectedUsers = new Set();
         
-        // Biến cho phân trang và lọc thông báo
         let currentPage = 1;
         let itemsPerPage = 5;
         let filteredNotifications = [];
         let allNotifications = [];
         
-        // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            // Fix auth.js errors by checking if elements exist before adding event listeners
             fixAuthJsErrors();
             
-            // Set up navigation
             setupNavigation();
             
-            // Set up custom select for single user
             setupCustomSelect();
             
-            // Set up form submission
             document.getElementById('singleNotificationForm').addEventListener('submit', handleSingleNotificationSubmit);
             document.getElementById('multipleNotificationForm').addEventListener('submit', handleMultipleNotificationSubmit);
             document.getElementById('allNotificationForm').addEventListener('submit', handleAllNotificationSubmit);
             
-            // Set up tab functionality
             setupTabs();
             
-            // Load data
             Promise.all([
                 loadUsers(),
                 loadDepartments(),
                 loadNotificationHistory()
             ]).then(() => {
-                // Initialize UI
                 populateUserOptions();
                 populateDepartmentFilter();
                 renderUsersTable();
                 
-                // Set up filters and search cho cả người dùng và thông báo
                 setupFiltersAndSearch();
                 setupNotificationFilters();
                 setupNotificationPagination();
             }).catch(error => {
                 console.error("Error initializing data:", error);
-                // Continue with UI setup even if data loading fails
                 setupFiltersAndSearch();
                 setupNotificationFilters();
                 setupNotificationPagination();
             });
             
-            // Set up select all checkbox
             document.getElementById('selectAllUsers').addEventListener('change', function() {
                 const checkboxes = document.querySelectorAll('#userTableBody input[type="checkbox"]');
                 const isChecked = this.checked;
@@ -1018,14 +1004,10 @@
                 updateSelectedCount();
             });
             
-            // Set up refresh button for notification history
             document.getElementById('refreshNotificationHistory').addEventListener('click', loadNotificationHistory);
         });
 
-        // Fix auth.js errors by adding dummy elements or checks
         function fixAuthJsErrors() {
-            // This function creates any missing elements that auth.js might be looking for
-            // and adds no-op event listeners to prevent errors
             const elementsToCheck = ['login-form', 'register-form', 'logout-link', 'profile-link'];
             
             elementsToCheck.forEach(id => {
@@ -1035,7 +1017,6 @@
                     dummyElement.style.display = 'none';
                     document.body.appendChild(dummyElement);
                     
-                    // Add empty event listener
                     dummyElement.addEventListener('submit', e => {
                         e.preventDefault();
                     });
@@ -1046,7 +1027,6 @@
             });
         }
 
-        // Set up custom tabs functionality
         function setupTabs() {
             const tabLinks = document.querySelectorAll('.nav-tabs .nav-link');
             
@@ -1054,14 +1034,12 @@
                 tab.addEventListener('click', function(event) {
                     event.preventDefault();
                     
-                    // Remove active class from all tabs
                     tabLinks.forEach(t => {
                         t.classList.remove('active');
                         const targetId = t.getAttribute('href').substring(1);
                         document.getElementById(targetId).classList.remove('show', 'active');
                     });
                     
-                    // Add active class to current tab
                     this.classList.add('active');
                     const targetId = this.getAttribute('href').substring(1);
                     const targetPane = document.getElementById(targetId);
@@ -1070,14 +1048,12 @@
             });
         }
         
-        // Set up custom select for single user
         function setupCustomSelect() {
             const selectWrapper = document.getElementById('singleUserSelectWrapper');
             const selectInput = document.getElementById('singleUserDisplay');
             const dropdown = selectWrapper.querySelector('.custom-select-dropdown');
             const searchInput = document.getElementById('singleUserSearch');
             
-            // Toggle dropdown
             selectInput.addEventListener('click', function() {
                 selectWrapper.classList.toggle('active');
                 if (selectWrapper.classList.contains('active')) {
@@ -1085,14 +1061,12 @@
                 }
             });
             
-            // Hide dropdown when clicking outside
             document.addEventListener('click', function(event) {
                 if (!selectWrapper.contains(event.target)) {
                     selectWrapper.classList.remove('active');
                 }
             });
             
-            // Filter options based on search
             searchInput.addEventListener('input', function() {
                 const searchValue = this.value.toLowerCase();
                 const options = document.querySelectorAll('#singleUserOptions .custom-select-option');
@@ -1108,7 +1082,6 @@
             });
         }
 
-        // Sidebar navigation
         function setupNavigation() {
             document.getElementById('overview-menu-item').addEventListener('click', function() {
                 window.location.href = 'admin-overview.html';
@@ -1136,7 +1109,6 @@
                 if (typeof logout === 'function') {
                     logout();
                 } else {
-                    // Fallback if the logout function is not available
                     fetch(`${BASE_URL}/auth/logout`, {
                         method: 'POST',
                         credentials: 'include'
@@ -1152,7 +1124,6 @@
             });
         }
         
-        // Load users data (exclude admin users)
         async function loadUsers() {
             try {
                 console.log('Fetching users from:', ENDPOINTS.USERS);
@@ -1165,7 +1136,6 @@
                     throw new Error(`Failed to fetch users. Status: ${response.status}`);
                 }
                 
-                // Check if response is JSON
                 const contentType = response.headers.get('content-type');
                 console.log('Users response content type:', contentType);
                 
@@ -1183,34 +1153,28 @@
                     throw new Error('Error parsing JSON response');
                 }
                 
-                // Make sure data is an array or has a users property
                 if (Array.isArray(data)) {
-                    // Filter out admin users
                     usersData = data.filter(user => user.role !== 'admin');
                 } else if (data.users && Array.isArray(data.users)) {
                     usersData = data.users.filter(user => user.role !== 'admin');
                 } else {
                     console.warn('Unexpected users data format. Using mock data.');
-                    // Use mock data if API response is incorrect
                     usersData = getMockUsers();
                 }
                 
                 return usersData;
             } catch (error) {
                 console.error('Error loading users:', error);
-                // Log more details about the error
                 if (error.response) {
                     console.error('Error response:', error.response);
                 }
                 
-                // Use mock data for development
                 console.log('Using mock users data due to API error');
                 usersData = getMockUsers();
                 return usersData;
             }
         }
         
-        // Load departments
         async function loadDepartments() {
             try {
                 console.log('Fetching departments from:', ENDPOINTS.DEPARTMENTS);
@@ -1223,7 +1187,6 @@
                     throw new Error(`Failed to fetch departments. Status: ${response.status}`);
                 }
                 
-                // Check if response is JSON
                 const contentType = response.headers.get('content-type');
                 console.log('Department response content type:', contentType);
                 
@@ -1241,33 +1204,28 @@
                     throw new Error('Error parsing JSON response');
                 }
                 
-                // Make sure data is an array or has a departments property
                 if (Array.isArray(data)) {
                     departmentsData = data;
                 } else if (data.departments && Array.isArray(data.departments)) {
                     departmentsData = data.departments;
                 } else {
                     console.warn('Unexpected departments data format. Using mock data.');
-                    // Use mock data if API response is incorrect
                     departmentsData = getMockDepartments();
                 }
                 
                 return departmentsData;
             } catch (error) {
                 console.error('Error loading departments:', error);
-                // Log more details about the error
                 if (error.response) {
                     console.error('Error response:', error.response);
                 }
                 
-                // Fallback data if API fails
                 console.log('Using mock departments data due to API error');
                 departmentsData = getMockDepartments();
                 return departmentsData;
             }
         }
         
-        // Get mock departments for development/testing
         function getMockDepartments() {
             return [
                 { id: 1, name: 'Khoa Khoa học và Kỹ thuật Máy tính', code: 'CSE' },
@@ -1278,7 +1236,6 @@
             ];
         }
         
-        // Get mock users for development/testing
         function getMockUsers() {
             return [
                 { id: '1', full_name: 'Nguyễn Văn A', student_id: '1912001', email: 'nva@hcmut.edu.vn', role: 'student', department: 'CSE', status: 'active' },
@@ -1289,7 +1246,6 @@
             ];
         }
         
-        // Load notification history
         async function loadNotificationHistory() {
             try {
                 const historyList = document.getElementById('notificationHistoryList');
@@ -1305,7 +1261,6 @@
                     throw new Error(`Failed to fetch notification history. Status: ${response.status}`);
                 }
                 
-                // Check if response is JSON
                 const contentType = response.headers.get('content-type');
                 console.log('Notification history response content type:', contentType);
                 
@@ -1323,7 +1278,6 @@
                     throw new Error('Error parsing JSON response');
                 }
                 
-                // Make sure we have an array of notifications
                 let notifications = [];
                 if (Array.isArray(data)) {
                     notifications = data;
@@ -1331,42 +1285,33 @@
                     notifications = data.notifications;
                 } else {
                     console.warn('Unexpected notification history data format. Using mock data.');
-                    // Use mock data if API response is incorrect
                     notifications = getMockNotifications();
                 }
                 
-                // Lưu tất cả thông báo
                 allNotifications = notifications;
                 filteredNotifications = [...allNotifications];
                 
-                // Cập nhật tổng số thông báo
                 updatePaginationInfo();
                 
-                // Render trang đầu tiên
                 currentPage = 1;
                 renderNotificationPage();
             } catch (error) {
                 console.error('Error loading notification history:', error);
-                // Log more details about the error
                 if (error.response) {
                     console.error('Error response:', error.response);
                 }
                 
-                // Use mock data for development
                 console.log('Using mock notification history data due to API error');
                 allNotifications = getMockNotifications();
                 filteredNotifications = [...allNotifications];
                 
-                // Cập nhật tổng số thông báo
                 updatePaginationInfo();
                 
-                // Render trang đầu tiên
                 currentPage = 1;
                 renderNotificationPage();
             }
         }
         
-        // Get mock notifications for development/testing
         function getMockNotifications() {
             return [
                 { 
@@ -1419,7 +1364,6 @@
             ];
         }
         
-        // Populate user options for single user select
         function populateUserOptions() {
             const optionsContainer = document.getElementById('singleUserOptions');
             optionsContainer.innerHTML = '';
@@ -1434,16 +1378,13 @@
                     const userId = this.dataset.userId;
                     const userName = this.textContent;
                     
-                    // Update hidden input and display
                     document.getElementById('singleUserSelect').value = userId;
                     document.getElementById('singleUserDisplay').textContent = userName;
                     
-                    // Update selected class
                     const options = document.querySelectorAll('#singleUserOptions .custom-select-option');
                     options.forEach(opt => opt.classList.remove('custom-select-selected'));
                     this.classList.add('custom-select-selected');
                     
-                    // Close dropdown
                     document.getElementById('singleUserSelectWrapper').classList.remove('active');
                 });
                 
@@ -1451,11 +1392,9 @@
             });
         }
         
-        // Populate department filter
         function populateDepartmentFilter() {
             const select = document.getElementById('departmentFilter');
             
-            // Clear existing options except the "all" option
             const allOption = select.options[0];
             select.innerHTML = '';
             select.appendChild(allOption);
@@ -1468,7 +1407,6 @@
             });
         }
         
-        // Render users table
         function renderUsersTable(filteredUsers = usersData) {
             const tableBody = document.getElementById('userTableBody');
             tableBody.innerHTML = '';
@@ -1481,7 +1419,6 @@
             filteredUsers.forEach(user => {
                 const row = document.createElement('tr');
                 
-                // Checkbox cell
                 const checkboxCell = document.createElement('td');
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
@@ -1497,29 +1434,23 @@
                 });
                 checkboxCell.appendChild(checkbox);
                 
-                // Full name cell
                 const nameCell = document.createElement('td');
                 nameCell.textContent = user.full_name || 'N/A';
                 
-                // Student ID cell
                 const studentIdCell = document.createElement('td');
                 studentIdCell.textContent = user.student_id || 'N/A';
                 
-                // Email cell
                 const emailCell = document.createElement('td');
                 emailCell.textContent = user.email || 'N/A';
                 
-                // Role cell
                 const roleCell = document.createElement('td');
                 const roleName = user.role === 'student' ? 'Sinh viên' : (user.role === 'staff' ? 'Nhân viên' : user.role);
                 roleCell.textContent = roleName;
                 
-                // Department cell
                 const deptCell = document.createElement('td');
                 const dept = departmentsData.find(d => d.code === user.department);
                 deptCell.textContent = dept ? dept.name : (user.department || 'N/A');
                 
-                // Append cells to row
                 row.appendChild(checkboxCell);
                 row.appendChild(nameCell);
                 row.appendChild(studentIdCell);
@@ -1533,31 +1464,26 @@
             updateSelectedCount();
         }
         
-        // Set up lọc và tìm kiếm thông báo
         function setupNotificationFilters() {
             const searchInput = document.getElementById('notificationSearch');
             const typeFilter = document.getElementById('notificationTypeFilter');
             const recipientFilter = document.getElementById('notificationRecipientFilter');
             const dateFilter = document.getElementById('notificationDateFilter');
             
-            // Function to apply filters
             function applyFilters() {
                 const searchTerm = searchInput.value.toLowerCase();
                 const typeValue = typeFilter.value;
                 const recipientValue = recipientFilter.value;
                 const dateValue = dateFilter.value;
                 
-                // Bắt đầu với tất cả thông báo
                 filteredNotifications = [...allNotifications];
                 
-                // Lọc theo loại thông báo
                 if (typeValue !== 'all') {
                     filteredNotifications = filteredNotifications.filter(notification => 
                         notification.type === typeValue
                     );
                 }
                 
-                // Lọc theo người nhận
                 if (recipientValue !== 'all') {
                     if (recipientValue === 'all_users') {
                         filteredNotifications = filteredNotifications.filter(notification => 
@@ -1570,7 +1496,6 @@
                     }
                 }
                 
-                // Lọc theo thời gian
                 if (dateValue !== 'all') {
                     const now = new Date();
                     let cutoffDate;
@@ -1591,7 +1516,6 @@
                     });
                 }
                 
-                // Lọc theo từ khóa tìm kiếm
                 if (searchTerm) {
                     filteredNotifications = filteredNotifications.filter(notification => 
                         (notification.title && notification.title.toLowerCase().includes(searchTerm)) ||
@@ -1599,19 +1523,16 @@
                     );
                 }
                 
-                // Reset về trang đầu tiên và render lại
                 currentPage = 1;
                 renderNotificationPage();
             }
             
-            // Đăng ký các sự kiện
             searchInput.addEventListener('input', debounce(applyFilters, 300));
             typeFilter.addEventListener('change', applyFilters);
             recipientFilter.addEventListener('change', applyFilters);
             dateFilter.addEventListener('change', applyFilters);
         }
 
-        // Setup pagination for notifications
         function setupNotificationPagination() {
             const prevPageBtn = document.getElementById('prevPageBtn');
             const nextPageBtn = document.getElementById('nextPageBtn');
@@ -1621,7 +1542,6 @@
                     currentPage--;
                     renderNotificationPage();
                     
-                    // Cuộn lên đầu danh sách thông báo
                     document.querySelector('.notification-history .card-body').scrollTop = 0;
                 }
             });
@@ -1632,13 +1552,11 @@
                     currentPage++;
                     renderNotificationPage();
                     
-                    // Cuộn lên đầu danh sách thông báo
                     document.querySelector('.notification-history .card-body').scrollTop = 0;
                 }
             });
         }
 
-        // Update selected count - khôi phục lại hàm đã bị xóa
         function updateSelectedCount() {
             const countElement = document.getElementById('selectedUsersCount');
             if (countElement) {
@@ -1646,12 +1564,10 @@
             }
         }
 
-        // Update pagination information
         function updatePaginationInfo() {
             document.getElementById('totalNotifications').textContent = filteredNotifications.length;
         }
 
-        // Helper function: Debounce
         function debounce(func, wait) {
             let timeout;
             return function() {
@@ -1664,7 +1580,6 @@
             };
         }
 
-        // Render notification history with pagination
         function renderNotificationPage() {
             const historyList = document.getElementById('notificationHistoryList');
             historyList.innerHTML = '';
@@ -1682,12 +1597,10 @@
                 const notificationItem = document.createElement('div');
                 notificationItem.className = 'notification-item';
                 
-                // Add type class
                 if (notification.type) {
                     notificationItem.classList.add(notification.type);
                 }
                 
-                // Determine recipient display text
                 let recipientText = '';
                 if (notification.recipient_type === 'all') {
                     recipientText = 'tất cả người dùng';
@@ -1697,7 +1610,6 @@
                     recipientText = notification.recipient_name || 'một người dùng';
                 }
                 
-                // Format date
                 const createdAt = new Date(notification.created_at);
                 const formattedDate = createdAt.toLocaleString('vi-VN');
                 
@@ -1714,7 +1626,6 @@
                 historyList.appendChild(notificationItem);
             });
             
-            // Update pagination info
             const startItem = filteredNotifications.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
             const endItem = Math.min(currentPage * itemsPerPage, filteredNotifications.length);
             
@@ -1722,11 +1633,9 @@
             document.getElementById('currentPageEnd').textContent = endItem;
             document.getElementById('totalNotifications').textContent = filteredNotifications.length;
             
-            // Update pagination buttons state
             updatePaginationButtons();
         }
 
-        // Handle single notification form submit
         async function handleSingleNotificationSubmit(event) {
             event.preventDefault();
             
@@ -1747,16 +1656,13 @@
             try {
                 console.log(`Sending notification to user ${userId} using endpoint: ${ENDPOINTS.NOTIFICATIONS_SEND}`);
                 
-                // Check if the endpoint exists (mock check for development)
                 const checkEndpoint = await fetch(`${ENDPOINTS.NOTIFICATIONS_SEND}`, {
                     method: 'OPTIONS',
                     credentials: 'include'
                 }).catch(err => {
                     console.warn('Endpoint may not exist:', err);
-                    // Continue anyway since we're using mock data
                 });
                 
-                // Use proper endpoint or fallback
                 let response;
                 try {
                     response = await fetch(ENDPOINTS.NOTIFICATIONS_SEND, {
@@ -1773,7 +1679,6 @@
                     });
                 } catch (fetchError) {
                     console.warn('Fetch error, using mock success response:', fetchError);
-                    // Simulate a successful response for development
                     throw new Error('mock_success');
                 }
                 
@@ -1788,14 +1693,12 @@
                         const errorData = await response.json();
                         errorMessage = `${errorMessage}: ${JSON.stringify(errorData)}`;
                     } catch (e) {
-                        // If can't parse json, use text
                         const errorText = await response.text();
                         errorMessage = `${errorMessage}: ${errorText}`;
                     }
                     throw new Error(errorMessage);
                 }
                 
-                // Handle successful response
                 let responseData;
                 try {
                     responseData = await response.json();
@@ -1806,7 +1709,6 @@
                 
                 alert('Thông báo đã được gửi thành công!');
                 
-                // Add mock notification for development
                 if (!responseData) {
                     const mockNotification = {
                         id: String(Date.now()),
@@ -1821,23 +1723,19 @@
                     renderNotificationHistory([mockNotification, ...getMockNotifications()]);
                 }
                 
-                // Reset form
                 document.getElementById('singleNotificationForm').reset();
                 document.getElementById('singleUserSelect').value = '';
                 document.getElementById('singleUserDisplay').textContent = 'Chọn người dùng...';
                 
-                // Reload notification history only if the API exists
                 if (response && response.ok) {
                     loadNotificationHistory();
                 }
             } catch (error) {
                 console.error('Error sending notification:', error);
                 
-                // For development: if it's our mock success, treat as success
                 if (error.message === 'mock_success') {
                     console.log('Using mock success for development');
                     
-                    // Create a mock notification and add it to history
                     const mockNotification = {
                         id: String(Date.now()),
                         title: title,
@@ -1849,13 +1747,11 @@
                         created_at: new Date().toISOString()
                     };
                     
-                    // Add the new mock notification to the existing mock notifications
                     const currentNotifications = getMockNotifications();
                     renderNotificationHistory([mockNotification, ...currentNotifications]);
                     
                     alert('Thông báo đã được gửi thành công! (Development Mode)');
                     
-                    // Reset form
                     document.getElementById('singleNotificationForm').reset();
                     document.getElementById('singleUserSelect').value = '';
                     document.getElementById('singleUserDisplay').textContent = 'Chọn người dùng...';
@@ -1867,7 +1763,6 @@
             }
         }
         
-        // Handle multiple notification form submit
         async function handleMultipleNotificationSubmit(event) {
             event.preventDefault();
             
@@ -1887,7 +1782,6 @@
             try {
                 console.log(`Sending notification to ${selectedUsers.size} users using endpoint: ${ENDPOINTS.NOTIFICATIONS_SEND_BULK}`);
                 
-                // Use proper endpoint or fallback
                 let response;
                 try {
                     response = await fetch(ENDPOINTS.NOTIFICATIONS_SEND_BULK, {
@@ -1904,7 +1798,6 @@
                     });
                 } catch (fetchError) {
                     console.warn('Fetch error, using mock success response:', fetchError);
-                    // Simulate a successful response for development
                     throw new Error('mock_success');
                 }
                 
@@ -1919,40 +1812,33 @@
                         const errorData = await response.json();
                         errorMessage = `${errorMessage}: ${JSON.stringify(errorData)}`;
                     } catch (e) {
-                        // If can't parse json, use text
                         const errorText = await response.text();
                         errorMessage = `${errorMessage}: ${errorText}`;
                     }
                     throw new Error(errorMessage);
                 }
                 
-                // Success
                 alert(`Thông báo đã được gửi thành công đến ${selectedUsers.size} người dùng!`);
                 
-                // Reset form
                 document.getElementById('multipleNotificationForm').reset();
                 selectedUsers.clear();
                 updateSelectedCount();
                 
-                // Reset all checkboxes
                 document.querySelectorAll('#userTableBody input[type="checkbox"]').forEach(checkbox => {
                     checkbox.checked = false;
                 });
                 
                 document.getElementById('selectAllUsers').checked = false;
                 
-                // Reload notification history only if the API exists
                 if (response && response.ok) {
                     loadNotificationHistory();
                 }
             } catch (error) {
                 console.error('Error sending notifications:', error);
                 
-                // For development: if it's our mock success, treat as success
                 if (error.message === 'mock_success') {
                     console.log('Using mock success for development');
                     
-                    // Create a mock notification
                     const mockNotification = {
                         id: String(Date.now()),
                         title: title,
@@ -1964,18 +1850,15 @@
                         created_at: new Date().toISOString()
                     };
                     
-                    // Add the new mock notification to the existing mock notifications
                     const currentNotifications = getMockNotifications();
                     renderNotificationHistory([mockNotification, ...currentNotifications]);
                     
                     alert(`Thông báo đã được gửi thành công đến ${selectedUsers.size} người dùng! (Development Mode)`);
                     
-                    // Reset form
                     document.getElementById('multipleNotificationForm').reset();
                     selectedUsers.clear();
                     updateSelectedCount();
                     
-                    // Reset all checkboxes
                     document.querySelectorAll('#userTableBody input[type="checkbox"]').forEach(checkbox => {
                         checkbox.checked = false;
                     });
@@ -1989,7 +1872,6 @@
             }
         }
         
-        // Handle all notification form submit
         async function handleAllNotificationSubmit(event) {
             event.preventDefault();
             
@@ -2008,7 +1890,6 @@
             try {
                 console.log(`Sending notification to ALL users using endpoint: ${ENDPOINTS.NOTIFICATIONS_SEND_BULK}`);
                 
-                // Use proper endpoint or fallback
                 let response;
                 try {
                     response = await fetch(ENDPOINTS.NOTIFICATIONS_SEND_BULK, {
@@ -2026,7 +1907,6 @@
                     });
                 } catch (fetchError) {
                     console.warn('Fetch error, using mock success response:', fetchError);
-                    // Simulate a successful response for development
                     throw new Error('mock_success');
                 }
                 
@@ -2041,7 +1921,6 @@
                         const errorData = await response.json();
                         errorMessage = `${errorMessage}: ${JSON.stringify(errorData)}`;
                     } catch (e) {
-                        // If can't parse json, use text
                         const errorText = await response.text();
                         errorMessage = `${errorMessage}: ${errorText}`;
                     }
@@ -2050,21 +1929,17 @@
                 
                 alert('Thông báo đã được gửi thành công đến tất cả người dùng!');
                 
-                // Reset form
                 document.getElementById('allNotificationForm').reset();
                 
-                // Reload notification history only if the API exists
                 if (response && response.ok) {
                     loadNotificationHistory();
                 }
             } catch (error) {
                 console.error('Error sending notifications:', error);
                 
-                // For development: if it's our mock success, treat as success
                 if (error.message === 'mock_success') {
                     console.log('Using mock success for development');
                     
-                    // Create a mock notification
                     const mockNotification = {
                         id: String(Date.now()),
                         title: title,
@@ -2075,13 +1950,11 @@
                         created_at: new Date().toISOString()
                     };
                     
-                    // Add the new mock notification to the existing mock notifications
                     const currentNotifications = getMockNotifications();
                     renderNotificationHistory([mockNotification, ...currentNotifications]);
                     
                     alert('Thông báo đã được gửi thành công đến tất cả người dùng! (Development Mode)');
                     
-                    // Reset form
                     document.getElementById('allNotificationForm').reset();
                     
                     return;
@@ -2091,14 +1964,12 @@
             }
         }
 
-        // Set up filters and search for users
         function setupFiltersAndSearch() {
             const roleFilter = document.getElementById('roleFilter');
             const deptFilter = document.getElementById('departmentFilter');
             const statusFilter = document.getElementById('statusFilter');
             const searchInput = document.getElementById('userSearchInput');
             
-            // Function to apply filters
             function applyFilters() {
                 const roleValue = roleFilter.value;
                 const deptValue = deptFilter.value;
@@ -2107,22 +1978,18 @@
                 
                 let filteredUsers = [...usersData];
                 
-                // Apply role filter
                 if (roleValue !== 'all') {
                     filteredUsers = filteredUsers.filter(user => user.role === roleValue);
                 }
                 
-                // Apply department filter
                 if (deptValue !== 'all') {
                     filteredUsers = filteredUsers.filter(user => user.department === deptValue);
                 }
                 
-                // Apply status filter
                 if (statusValue !== 'all') {
                     filteredUsers = filteredUsers.filter(user => user.status === statusValue);
                 }
                 
-                // Apply search
                 if (searchValue) {
                     filteredUsers = filteredUsers.filter(user => 
                         (user.full_name && user.full_name.toLowerCase().includes(searchValue)) ||
@@ -2133,16 +2000,13 @@
                 
                 renderUsersTable(filteredUsers);
                 
-                // Reset "select all" checkbox
                 document.getElementById('selectAllUsers').checked = false;
             }
             
-            // Set up event listeners
             roleFilter.addEventListener('change', applyFilters);
             deptFilter.addEventListener('change', applyFilters);
             statusFilter.addEventListener('change', applyFilters);
             
-            // Add debounce for search
             let searchTimeout;
             searchInput.addEventListener('input', function() {
                 clearTimeout(searchTimeout);
@@ -2150,21 +2014,16 @@
             });
         }
 
-        // Hàm renderNotificationHistory cho tương thích với code cũ
         function renderNotificationHistory(notifications) {
-            // Cập nhật dữ liệu toàn cục
             allNotifications = notifications;
             filteredNotifications = [...notifications];
             
-            // Cập nhật tổng số thông báo
             updatePaginationInfo();
             
-            // Render trang đầu tiên
             currentPage = 1;
             renderNotificationPage();
         }
 
-        // Thêm hàm updatePaginationButtons để hỗ trợ phân trang
         function updatePaginationButtons() {
             const prevButton = document.getElementById('prevPageBtn');
             const nextButton = document.getElementById('nextPageBtn');
@@ -2180,7 +2039,6 @@
             }
         }
 
-        // Hàm xử lý khi chuyển trang
         function changePage(direction) {
             if (direction === 'prev' && currentPage > 1) {
                 currentPage--;
@@ -2191,17 +2049,12 @@
             }
         }
 
-        // Hàm khởi tạo lịch sử thông báo
         function initializeNotificationHistory() {
-            // Tải dữ liệu thông báo
             loadNotificationHistory()
                 .then(data => {
-                    // Cập nhật dữ liệu toàn cục
                     filteredNotifications = data;
-                    // Render trang đầu tiên
                     renderNotificationPage();
                     
-                    // Khởi tạo các sự kiện cho nút phân trang
                     const prevButton = document.getElementById('prevPageBtn');
                     const nextButton = document.getElementById('nextPageBtn');
                     

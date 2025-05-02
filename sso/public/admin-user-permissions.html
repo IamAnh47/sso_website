@@ -199,7 +199,6 @@
     </div>
     
     <script>
-        // API endpoints
         const API_BASE_URL = '/api';
         const ENDPOINTS = {
             ROLES: `${API_BASE_URL}/roles`,
@@ -207,23 +206,19 @@
             ROLE_PERMISSIONS: `${API_BASE_URL}/roles/:roleId/permissions`
         };
         
-        // Store roles and permissions data
         let rolesData = [];
         let permissionsData = [];
         let currentRole = 'admin';
         
-        // Document ready
         document.addEventListener('DOMContentLoaded', function() {
             setupNavigation();
             initializePermissionsPage();
         });
         
-        // Get auth token from localStorage
         function getAuthToken() {
             return localStorage.getItem('authToken');
         }
 
-        // Create headers with auth token
         function createAuthHeaders() {
             const token = getAuthToken();
             return {
@@ -259,7 +254,6 @@
                 logout();
             });
             
-            // Set up role tabs
             document.querySelectorAll('.role-tab').forEach(tab => {
                 tab.addEventListener('click', function() {
                     const role = this.getAttribute('data-role');
@@ -267,20 +261,17 @@
                 });
             });
             
-            // Set up action buttons
             document.getElementById('save-permissions-btn').addEventListener('click', savePermissions);
             document.getElementById('reset-btn').addEventListener('click', resetToDefault);
         }
         
         async function initializePermissionsPage() {
             try {
-                // Load roles and permissions data
                 await Promise.all([
                     loadRoles(),
                     loadPermissions()
                 ]);
                 
-                // Render permissions for the default role
                 await renderPermissionsForRole(currentRole);
             } catch (error) {
                 console.error('Error initializing permissions page:', error);
@@ -334,7 +325,6 @@
         }
         
         function switchRole(role) {
-            // Update UI active state
             document.querySelectorAll('.role-tab').forEach(tab => {
                 if (tab.getAttribute('data-role') === role) {
                     tab.classList.add('active');
@@ -343,24 +333,19 @@
                 }
             });
             
-            // Update current role and render permissions
             currentRole = role;
             renderPermissionsForRole(role);
         }
         
         async function renderPermissionsForRole(role) {
             try {
-                // Find the role ID
                 const roleObj = rolesData.find(r => r.code === role);
                 if (!roleObj) throw new Error(`Role "${role}" not found`);
                 
-                // Load role permissions
                 const rolePermissions = await loadRolePermissions(roleObj.id);
                 
-                // Get permission IDs granted to this role
                 const grantedPermissionIds = new Set(rolePermissions.map(p => p.id));
                 
-                // Group permissions by category
                 const permissionsByCategory = {};
                 
                 permissionsData.forEach(permission => {
@@ -376,7 +361,6 @@
                     });
                 });
                 
-                // Render permission groups
                 const permissionsList = document.getElementById('permissions-list');
                 permissionsList.innerHTML = '';
                 
@@ -460,17 +444,14 @@
         
         async function savePermissions() {
             try {
-                // Find the role ID
                 const roleObj = rolesData.find(r => r.code === currentRole);
                 if (!roleObj) throw new Error(`Role "${currentRole}" not found`);
                 
-                // Collect all checked permissions
                 const checkboxes = document.querySelectorAll('.permission-checkbox');
                 const grantedPermissionIds = Array.from(checkboxes)
                     .filter(cb => cb.checked)
                     .map(cb => cb.dataset.permissionId);
                 
-                // Send the update to the server
                 const response = await fetch(ENDPOINTS.ROLE_PERMISSIONS.replace(':roleId', roleObj.id), {
                     method: 'PUT',
                     headers: createAuthHeaders(),
@@ -489,7 +470,6 @@
         async function resetToDefault() {
             if (confirm(`Bạn có chắc chắn muốn đặt lại quyền mặc định cho vai trò "${currentRole}"?`)) {
                 try {
-                    // Find the role ID
                     const roleObj = rolesData.find(r => r.code === currentRole);
                     if (!roleObj) throw new Error(`Role "${currentRole}" not found`);
                     
@@ -500,7 +480,6 @@
                     
                     if (!response.ok) throw new Error('Failed to reset permissions');
                     
-                    // Re-render permissions
                     await renderPermissionsForRole(currentRole);
                     
                     alert('Đã đặt lại quyền mặc định!');

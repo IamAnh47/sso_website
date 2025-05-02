@@ -285,17 +285,14 @@
     </div>
 
     <script>
-        // Global variables
         let roomsData = [];
         let roomTypes = [];
         
-        // Endpoints for API calls
         const ENDPOINTS = {
             ROOMS: '/api/rooms',
             ROOM_TYPES: '/api/rooms/types'
         };
         
-        // Room type labels mapping
         const roomTypeLabels = {
             'classroom': 'Phòng học',
             'meeting': 'Phòng họp',
@@ -305,19 +302,14 @@
             'study': 'Không gian học tập'
         };
         
-        // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            // Check authentication
             checkAdminAuth();
             
-            // Initialize page content
             initializeOverviewPage();
             
-            // Add event listeners
             setupEventListeners();
         });
         
-        // Navigation functionality
         function setupNavigation() {
             document.getElementById('overview-menu-item').addEventListener('click', function() {
                 window.location.href = 'admin-overview.html';
@@ -348,25 +340,18 @@
             });
         }
         
-        // Check if user is authenticated as admin
         function checkAdminAuth() {
-            // This function is supposed to check if the user is authenticated as admin
-            // For now, we'll just set up the navigation as the auth check is likely handled elsewhere
             setupNavigation();
         }
         
         async function initializeOverviewPage() {
             try {
-                // Setup filters
                 setupFilters();
                 
-                // Load room types
                 await loadRoomTypes();
                 
-                // Load room data
                 await loadRooms();
                 
-                // Render rooms
                 renderRooms(roomsData);
             } catch (error) {
                 console.error('Error initializing overview page:', error);
@@ -382,7 +367,6 @@
         }
         
         function setupEventListeners() {
-            // Set up navigation event listeners
             setupNavigation();
         }
         
@@ -393,7 +377,6 @@
             const roomTypeFilter = document.getElementById('room-type-filter');
             const locationFilter = document.getElementById('location-filter');
             
-            // Set up event listeners for filters
             searchInput.addEventListener('input', applyFilters);
             capacityFilter.addEventListener('input', applyFilters);
             statusFilter.addEventListener('change', applyFilters);
@@ -411,7 +394,6 @@
                 
                 roomTypes = await response.json();
                 
-                // Populate room type filter
                 const roomTypeFilter = document.getElementById('room-type-filter');
                 
                 roomTypes.forEach(type => {
@@ -450,7 +432,6 @@
             
             let filteredRooms = [...roomsData];
             
-            // Apply search filter
             if (searchValue) {
                 filteredRooms = filteredRooms.filter(room => 
                     room.room_name.toLowerCase().includes(searchValue) || 
@@ -458,28 +439,24 @@
                 );
             }
             
-            // Apply capacity filter
             if (capacityValue) {
                 filteredRooms = filteredRooms.filter(room => 
                     room.capacity >= parseInt(capacityValue)
                 );
             }
             
-            // Apply status filter
             if (statusValue) {
                 filteredRooms = filteredRooms.filter(room => 
                     room.status === statusValue
                 );
             }
             
-            // Apply room type filter
             if (roomTypeValue) {
                 filteredRooms = filteredRooms.filter(room => 
                     room.room_type === roomTypeValue
                 );
             }
             
-            // Apply location filter
             if (locationValue) {
                 filteredRooms = filteredRooms.filter(room => 
                     room.location === locationValue
@@ -503,19 +480,16 @@
             }
             
             rooms.forEach(room => {
-                // Get room type name using the label mapping or fallback to API data
                 const roomTypeName = roomTypeLabels[room.room_type] || 
                                    roomTypes.find(t => t.code === room.room_type)?.name || 
                                    room.room_type;
                 
-                // Format facilities
                 let facilities = 'Không có';
                 if (room.facilities) {
                     try {
                         const facilitiesObj = typeof room.facilities === 'string' ? JSON.parse(room.facilities) : room.facilities;
                         const facilitiesArray = [];
                         
-                        // Equipment name mapping
                         const equipmentMap = {
                             'projector': 'Máy chiếu',
                             'computer': 'Máy tính',
@@ -533,7 +507,6 @@
                         
                         for (const [key, value] of Object.entries(facilitiesObj)) {
                             if (value && value > 0) {
-                                // Translate equipment name if available
                                 const translatedName = equipmentMap[key] || key;
                                 facilitiesArray.push(`${translatedName}: ${value}`);
                             }
@@ -544,7 +517,6 @@
                     }
                 }
                 
-                // Format status
                 let statusText = 'Không rõ';
                 switch(room.status) {
                     case 'available':
@@ -558,7 +530,6 @@
                         break;
                 }
                 
-                // Create room card
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
@@ -578,7 +549,6 @@
                 roomsContainer.appendChild(card);
             });
             
-            // Add event listeners to status toggle buttons
             document.querySelectorAll('.toggle-status-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const roomId = this.getAttribute('data-room-id');
@@ -605,18 +575,15 @@
                 
                 const updatedRoom = await response.json();
                 
-                // Update room in local data
                 const roomIndex = roomsData.findIndex(r => r.id === roomId);
                 if (roomIndex !== -1) {
                     roomsData[roomIndex] = updatedRoom.room;
                 }
                 
-                // Re-render rooms
                 applyFilters();
                 
                 alert(`Trạng thái phòng đã được cập nhật thành ${newStatus === 'available' ? 'Còn trống' : 'Bảo trì'}`);
                 
-                // Reload page to show updated status
                 location.reload();
             } catch (error) {
                 console.error('Error updating room status:', error);

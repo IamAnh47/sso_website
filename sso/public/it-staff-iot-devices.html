@@ -477,21 +477,17 @@
     </div>
     
     <script>
-        // API endpoints
         const API_BASE_URL = '/api';
         const ENDPOINTS = {
             ROOMS: `${API_BASE_URL}/rooms`,
             IOT: `${API_BASE_URL}/iot`
         };
         
-        // Room and devices data
         let roomData = null;
         let devicesList = [];
         
-        // Flag to check if we're using mock data
         let usingMockData = false;
         
-        // Mock data for demo purposes when API is not available
         const MOCK_ROOM = {
             id: 1,
             room_name: "P.101",
@@ -533,7 +529,6 @@
             }
         ];
         
-        // Device type icons and images
         const deviceIcons = {
             'projector': 'fas fa-video',
             'computer': 'fas fa-desktop',
@@ -552,7 +547,6 @@
             'fan': 'images/devices/fan.png'
         };
         
-        // Device type names in Vietnamese
         const deviceTypeNames = {
             'projector': 'Máy chiếu',
             'computer': 'Máy tính',
@@ -562,9 +556,7 @@
             'fan': 'Quạt'
         };
         
-        // Initialize page
         document.addEventListener('DOMContentLoaded', async function() {
-            // Verify user authentication and role
             try {
                 const authResponse = await fetch('/api/auth/verify', {
                     credentials: 'include'
@@ -583,14 +575,12 @@
                 
                 setupNavigation();
                 
-                // Get room ID from URL
                 const roomId = getRoomIdFromUrl();
                 if (!roomId) {
                     showError('Không thể xác định ID phòng. Vui lòng truy cập từ trang quản lý phòng.');
                     return;
                 }
                 
-                // Continue with initialization
                 await fetchRoomData(roomId);
                 await fetchIoTDevices(roomId);
                 displayDevices();
@@ -603,7 +593,6 @@
             }
         });
         
-        // Setup navigation
         function setupNavigation() {
             document.getElementById('dashboard-menu-item').addEventListener('click', function() {
                 window.location.href = 'it-staff-dashboard.html';
@@ -614,7 +603,6 @@
             });
             
             document.getElementById('devices-menu-item').addEventListener('click', function() {
-                // If we're already on the devices page with a room ID, just stay
                 const roomId = getRoomIdFromUrl();
                 if (!roomId) {
                     window.location.href = 'it-staff-iot-devices.html';
@@ -644,13 +632,11 @@
             });
         }
         
-        // Get room ID from URL query parameters
         function getRoomIdFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('room_id');
         }
         
-        // Fetch room data
         async function fetchRoomData(roomId) {
             try {
                 const response = await fetch(`${ENDPOINTS.ROOMS}/${roomId}`, {
@@ -661,7 +647,6 @@
                     throw new Error(`Failed to fetch room data: ${response.status}`);
                 }
                 
-                // Check if the response is JSON
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
                     throw new Error('Received non-JSON response from server');
@@ -669,11 +654,9 @@
                 
                 roomData = await response.json();
                 
-                // Update room info in UI
                 document.getElementById('room-name-display').textContent = roomData.room_name || 'Không có tên';
                 document.getElementById('room-id-display').textContent = `ID: ${roomData.id}`;
                 
-                // Update status display
                 const statusDisplay = document.getElementById('room-status-display');
                 statusDisplay.textContent = getStatusText(roomData.status);
                 statusDisplay.className = `room-status status-${roomData.status}`;
@@ -681,12 +664,10 @@
             } catch (error) {
                 console.error('Error fetching room data:', error);
                 
-                // Use mock data if API fails
                 console.log('Using mock room data instead');
                 roomData = MOCK_ROOM;
                 usingMockData = true;
                 
-                // Update UI with mock data
                 document.getElementById('room-name-display').textContent = roomData.room_name;
                 document.getElementById('room-id-display').textContent = `ID: ${roomData.id}`;
                 
@@ -696,7 +677,6 @@
             }
         }
         
-        // Fetch IoT devices
         async function fetchIoTDevices(roomId) {
             try {
                 const response = await fetch(`${ENDPOINTS.IOT}/room/${roomId}`, {
@@ -707,7 +687,6 @@
                     throw new Error(`Failed to fetch IoT devices: ${response.status}`);
                 }
                 
-                // Check if the response is JSON
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
                     throw new Error('Received non-JSON response from server');
@@ -718,21 +697,17 @@
             } catch (error) {
                 console.error('Error fetching IoT devices:', error);
                 
-                // Use mock data if API fails
                 console.log('Using mock device data instead');
                 devicesList = MOCK_DEVICES;
                 usingMockData = true;
             }
         }
         
-        // Display devices in UI
         function displayDevices(filtered = false) {
             const container = document.getElementById('devices-container');
             
-            // Clear container
             container.innerHTML = '';
             
-            // Show mock data notification if needed
             if (usingMockData) {
                 const mockNotice = document.createElement('div');
                 mockNotice.className = 'mock-data-notice';
@@ -751,7 +726,6 @@
                 container.appendChild(mockNotice);
             }
             
-            // Get filtered devices based on current filter settings
             let devicesToDisplay = filtered ? getFilteredDevices() : devicesList;
             
             if (!devicesToDisplay || devicesToDisplay.length === 0) {
@@ -759,14 +733,12 @@
                 return;
             }
             
-            // Create device cards
             devicesToDisplay.forEach(device => {
                 const card = createDeviceCard(device);
                 container.appendChild(card);
             });
         }
         
-        // Filter devices based on current filter settings
         function getFilteredDevices() {
             const nameSearch = document.getElementById('device-name-search').value.toLowerCase();
             const typeFilter = document.getElementById('device-type-filter').value;
@@ -774,22 +746,18 @@
             const maintenanceFilter = document.getElementById('device-maintenance-filter').value;
             
             return devicesList.filter(device => {
-                // Filter by name
                 if (nameSearch && !device.device_name.toLowerCase().includes(nameSearch)) {
                     return false;
                 }
                 
-                // Filter by type
                 if (typeFilter && device.device_type !== typeFilter) {
                     return false;
                 }
                 
-                // Filter by status (not maintenance)
                 if (statusFilter && statusFilter !== 'maintenance' && device.status !== statusFilter) {
                     return false;
                 }
                 
-                // Filter by maintenance
                 if (maintenanceFilter === 'maintenance' && device.status !== 'maintenance') {
                     return false;
                 }
@@ -802,7 +770,6 @@
             });
         }
         
-        // Create a device card
         function createDeviceCard(device) {
             const deviceType = device.device_type;
             const deviceStatus = device.status || 'off';
@@ -812,7 +779,6 @@
             card.className = 'device-card';
             card.dataset.deviceId = device.id;
             
-            // Add maintenance badge if needed
             if (isMaintenanceMode) {
                 const maintenanceBadge = document.createElement('div');
                 maintenanceBadge.className = 'maintenance-badge';
@@ -820,7 +786,6 @@
                 card.appendChild(maintenanceBadge);
             }
             
-            // Create card content
             card.innerHTML = `
                 <div class="device-header">
                     <div class="device-type">
@@ -876,7 +841,6 @@
                 </div>
             `;
             
-            // Add event listeners
             const toggleSwitch = card.querySelector('.device-toggle');
             toggleSwitch.addEventListener('change', function() {
                 toggleDeviceStatus(device.id, this.checked);
@@ -884,21 +848,17 @@
             
             const maintenanceBtn = card.querySelector('.toggle-maintenance');
             maintenanceBtn.addEventListener('click', function() {
-                // Check if button text includes "Kết thúc" to determine current state
                 const isCurrentlyInMaintenance = this.textContent.trim().includes('Kết thúc');
                 
-                // Debug log
                 console.log('Maintenance button clicked:');
                 console.log('- Device ID:', device.id);
                 console.log('- Current button text:', this.textContent.trim());
                 console.log('- Is in maintenance mode?', isCurrentlyInMaintenance);
                 console.log('- Will set maintenance to:', !isCurrentlyInMaintenance);
                 
-                // If in maintenance, we want to disable maintenance mode
                 toggleMaintenanceMode(device.id, !isCurrentlyInMaintenance);
             });
             
-            // Add event listener for rename button
             const renameBtn = card.querySelector('.rename-device');
             renameBtn.addEventListener('click', function() {
                 const newName = prompt('Nhập tên mới cho thiết bị:', device.device_name);
@@ -907,30 +867,24 @@
                 }
             });
             
-            // Add event listener for upload image button
             const uploadBtn = card.querySelector('.upload-image');
             uploadBtn.addEventListener('click', function() {
-                // Create a hidden file input
                 const fileInput = document.createElement('input');
                 fileInput.type = 'file';
                 fileInput.accept = 'image/*';
                 fileInput.style.display = 'none';
                 document.body.appendChild(fileInput);
                 
-                // Trigger click on the input
                 fileInput.click();
                 
-                // Handle file selection
                 fileInput.addEventListener('change', function() {
                     if (this.files && this.files[0]) {
                         uploadDeviceImage(device.id, this.files[0]);
                     }
-                    // Remove the input
                     document.body.removeChild(fileInput);
                 });
             });
             
-            // Add event listener for delete button
             const deleteBtn = card.querySelector('.delete-device');
             deleteBtn.addEventListener('click', function() {
                 deleteDevice(device.id);
@@ -939,20 +893,16 @@
             return card;
         }
         
-        // Toggle device on/off
         async function toggleDeviceStatus(deviceId, isOn) {
             try {
                 const newStatus = isOn ? 'on' : 'off';
                 
-                // If we're using mock data, just update locally
                 if (usingMockData) {
-                    // Update device in the list
                     const device = devicesList.find(d => d.id === deviceId);
                     if (device) {
                         device.status = newStatus;
                         device.last_activity = new Date().toISOString();
                         
-                        // Update UI immediately
                         updateDeviceCardUI(deviceId, newStatus);
                         return;
                     }
@@ -972,7 +922,6 @@
                 if (!response.ok) {
                     const errorText = await response.text();
                     try {
-                        // Try to parse error as JSON
                         const errorJson = JSON.parse(errorText);
                         throw new Error(errorJson.error || `Failed to update device status: ${response.status}`);
                     } catch (e) {
@@ -980,28 +929,24 @@
                     }
                 }
                 
-                // Check if JSON response (only if we need to parse it)
                 const contentType = response.headers.get('content-type');
                 let result;
                 if (contentType && contentType.includes('application/json')) {
                     result = await response.json();
                 }
                 
-                // Update device in the list
                 const device = devicesList.find(d => d.id === deviceId);
                 if (device) {
                     device.status = newStatus;
                     device.last_activity = new Date().toISOString();
                 }
                 
-                // Update UI
                 updateDeviceCardUI(deviceId, newStatus);
                 
             } catch (error) {
                 console.error('Error toggling device status:', error);
                 alert(`Lỗi khi thay đổi trạng thái thiết bị: ${error.message}`);
                 
-                // Revert toggle switch
                 const deviceCard = document.querySelector(`.device-card[data-device-id="${deviceId}"]`);
                 if (deviceCard) {
                     const toggleSwitch = deviceCard.querySelector('.device-toggle');
@@ -1010,17 +955,14 @@
             }
         }
         
-        // Toggle maintenance mode
         async function toggleMaintenanceMode(deviceId, setMaintenance) {
             console.log(`toggleMaintenanceMode called - Device ID: ${deviceId}, Set to maintenance: ${setMaintenance}`);
             
             try {
                 const newStatus = setMaintenance ? 'maintenance' : 'off';
                 
-                // If we're using mock data, just update locally
                 if (usingMockData) {
                     console.log('Using mock data, updating locally');
-                    // Update device in the list
                     const device = devicesList.find(d => d.id === deviceId);
                     if (device) {
                         device.status = newStatus;
@@ -1029,7 +971,6 @@
                         
                         console.log('Device updated in mock data:', device);
                         
-                        // Update UI immediately
                         updateDeviceCardMaintenanceUI(deviceId, setMaintenance);
                         return;
                     }
@@ -1053,7 +994,6 @@
                     const errorText = await response.text();
                     console.error('Error response:', errorText);
                     try {
-                        // Try to parse error as JSON
                         const errorJson = JSON.parse(errorText);
                         throw new Error(errorJson.error || `Failed to update maintenance mode: ${response.status}`);
                     } catch (e) {
@@ -1061,7 +1001,6 @@
                     }
                 }
                 
-                // Check if JSON response
                 const contentType = response.headers.get('content-type');
                 let result;
                 if (contentType && contentType.includes('application/json')) {
@@ -1069,7 +1008,6 @@
                     console.log('API response:', result);
                 }
                 
-                // Update device in the list
                 const device = devicesList.find(d => d.id === deviceId);
                 if (device) {
                     device.status = newStatus;
@@ -1078,7 +1016,6 @@
                     console.log('Device updated in list:', device);
                 }
                 
-                // Update UI
                 updateDeviceCardMaintenanceUI(deviceId, setMaintenance);
                 
             } catch (error) {
@@ -1087,7 +1024,6 @@
             }
         }
         
-        // Helper function to update device card UI for status changes
         function updateDeviceCardUI(deviceId, newStatus) {
             const deviceCard = document.querySelector(`.device-card[data-device-id="${deviceId}"]`);
             if (deviceCard) {
@@ -1095,17 +1031,14 @@
                 statusDisplay.className = `device-status status-${newStatus}`;
                 statusDisplay.textContent = getDeviceStatusText(newStatus);
                 
-                // Update info section
                 const statusInfoValue = deviceCard.querySelector('.device-info-item:nth-child(2) .info-value');
                 statusInfoValue.textContent = getDeviceStatusText(newStatus);
                 
-                // Update last activity
                 const lastActivityValue = deviceCard.querySelector('.device-info-item:nth-child(3) .info-value');
                 lastActivityValue.textContent = formatDate(new Date());
             }
         }
         
-        // Helper function to update device card UI for maintenance changes
         function updateDeviceCardMaintenanceUI(deviceId, setMaintenance) {
             console.log(`Updating UI for device ${deviceId}, setting maintenance mode: ${setMaintenance}`);
             
@@ -1118,7 +1051,6 @@
             console.log(`Found device card:`, deviceCard);
             const newStatus = setMaintenance ? 'maintenance' : 'off';
             
-            // If entering maintenance mode, add maintenance badge
             if (setMaintenance) {
                 if (!deviceCard.querySelector('.maintenance-badge')) {
                     console.log('Adding maintenance badge');
@@ -1128,7 +1060,6 @@
                     deviceCard.appendChild(maintenanceBadge);
                 }
                 
-                // Disable toggle switch
                 const toggleSwitch = deviceCard.querySelector('.device-toggle');
                 if (toggleSwitch) {
                     console.log('Disabling toggle switch');
@@ -1136,14 +1067,12 @@
                     toggleSwitch.disabled = true;
                 }
             } else {
-                // Remove maintenance badge
                 const maintenanceBadge = deviceCard.querySelector('.maintenance-badge');
                 if (maintenanceBadge) {
                     console.log('Removing maintenance badge');
                     maintenanceBadge.remove();
                 }
                 
-                // Enable toggle switch
                 const toggleSwitch = deviceCard.querySelector('.device-toggle');
                 if (toggleSwitch) {
                     console.log('Enabling toggle switch');
@@ -1151,7 +1080,6 @@
                 }
             }
             
-            // Update status display
             const statusDisplay = deviceCard.querySelector('.device-status');
             if (statusDisplay) {
                 console.log(`Updating status display to: ${newStatus}`);
@@ -1159,31 +1087,26 @@
                 statusDisplay.textContent = getDeviceStatusText(newStatus);
             }
             
-            // Update info section
             const statusInfoValue = deviceCard.querySelector('.device-info-item:nth-child(2) .info-value');
             if (statusInfoValue) {
                 console.log(`Updating status info value to: ${getDeviceStatusText(newStatus)}`);
                 statusInfoValue.textContent = getDeviceStatusText(newStatus);
             }
             
-            // Update last activity
             const lastActivityValue = deviceCard.querySelector('.device-info-item:nth-child(3) .info-value');
             if (lastActivityValue) {
                 console.log('Updating last activity timestamp');
                 lastActivityValue.textContent = formatDate(new Date());
             }
             
-            // Update maintenance button
             const maintenanceBtn = deviceCard.querySelector('.toggle-maintenance');
             if (maintenanceBtn) {
                 console.log(`Updating maintenance button to: ${setMaintenance ? 'end maintenance' : 'start maintenance'} mode`);
                 
-                // Completely replace the button's HTML to ensure it updates properly
                 maintenanceBtn.innerHTML = setMaintenance ? 
                     '<i class="fas fa-check"></i> Kết thúc bảo trì' : 
                     '<i class="fas fa-tools"></i> Chế độ bảo trì';
                 
-                // Update button style
                 if (setMaintenance) {
                     maintenanceBtn.style.backgroundColor = '#6c757d';
                 } else {
@@ -1195,7 +1118,6 @@
             }
         }
         
-        // Get status text in Vietnamese
         function getStatusText(status) {
             switch (status) {
                 case 'available':
@@ -1209,7 +1131,6 @@
             }
         }
         
-        // Get device status text in Vietnamese
         function getDeviceStatusText(status) {
             switch (status) {
                 case 'on':
@@ -1223,19 +1144,16 @@
             }
         }
         
-        // Format date
         function formatDate(dateString) {
             if (!dateString) return null;
             
             try {
                 const date = new Date(dateString);
                 
-                // Check if date is valid
                 if (isNaN(date.getTime())) {
                     return null;
                 }
                 
-                // Format date
                 const day = String(date.getDate()).padStart(2, '0');
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const year = date.getFullYear();
@@ -1249,7 +1167,6 @@
             }
         }
         
-        // Show error message
         function showError(message) {
             const container = document.querySelector('.content-container');
             const errorElement = document.createElement('div');
@@ -1272,21 +1189,17 @@
             container.appendChild(errorElement);
         }
         
-        // Rename device
         async function renameDevice(deviceId, newName) {
             try {
                 if (!newName || newName.trim() === '') {
                     throw new Error('Tên thiết bị không được để trống');
                 }
                 
-                // If we're using mock data, just update locally
                 if (usingMockData) {
-                    // Update device in the list
                     const device = devicesList.find(d => d.id === deviceId);
                     if (device) {
                         device.device_name = newName;
                         
-                        // Update UI immediately
                         const deviceCard = document.querySelector(`.device-card[data-device-id="${deviceId}"]`);
                         if (deviceCard) {
                             const nameElement = deviceCard.querySelector('.device-name');
@@ -1310,7 +1223,6 @@
                 if (!response.ok) {
                     const errorText = await response.text();
                     try {
-                        // Try to parse error as JSON
                         const errorJson = JSON.parse(errorText);
                         throw new Error(errorJson.error || `Failed to rename device: ${response.status}`);
                     } catch (e) {
@@ -1318,13 +1230,11 @@
                     }
                 }
                 
-                // Update device in the list
                 const device = devicesList.find(d => d.id === deviceId);
                 if (device) {
                     device.device_name = newName;
                 }
                 
-                // Update UI
                 const deviceCard = document.querySelector(`.device-card[data-device-id="${deviceId}"]`);
                 if (deviceCard) {
                     const nameElement = deviceCard.querySelector('.device-name');
@@ -1339,35 +1249,28 @@
             }
         }
         
-        // Upload device image
         async function uploadDeviceImage(deviceId, imageFile) {
             try {
                 if (!imageFile) {
                     throw new Error('Vui lòng chọn một hình ảnh');
                 }
                 
-                // Validate file type
                 const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
                 if (!validTypes.includes(imageFile.type)) {
                     throw new Error('Chỉ chấp nhận file hình ảnh (JPEG, PNG, GIF, WEBP)');
                 }
                 
-                // Check file size (max 5MB)
                 if (imageFile.size > 5 * 1024 * 1024) {
                     throw new Error('Kích thước file không được vượt quá 5MB');
                 }
                 
-                // If we're using mock data, just show success message
                 if (usingMockData) {
-                    // Create a fake image URL
                     const fakeImageUrl = URL.createObjectURL(imageFile);
                     
-                    // Update device in the list
                     const device = devicesList.find(d => d.id === deviceId);
                     if (device) {
                         device.image_url = fakeImageUrl;
                         
-                        // Update UI immediately
                         const deviceCard = document.querySelector(`.device-card[data-device-id="${deviceId}"]`);
                         if (deviceCard) {
                             const imageElement = deviceCard.querySelector('.device-image img');
@@ -1379,7 +1282,6 @@
                     return;
                 }
                 
-                // Create form data
                 const formData = new FormData();
                 formData.append('image', imageFile);
                 
@@ -1392,7 +1294,6 @@
                 if (!response.ok) {
                     const errorText = await response.text();
                     try {
-                        // Try to parse error as JSON
                         const errorJson = JSON.parse(errorText);
                         throw new Error(errorJson.error || `Failed to upload image: ${response.status}`);
                     } catch (e) {
@@ -1400,7 +1301,6 @@
                     }
                 }
                 
-                // Get the response with the new image URL
                 const contentType = response.headers.get('content-type');
                 let result;
                 if (contentType && contentType.includes('application/json')) {
@@ -1409,16 +1309,13 @@
                     throw new Error('Unexpected non-JSON response from server');
                 }
                 
-                // Update device in the list
                 const device = devicesList.find(d => d.id === deviceId);
                 if (device && result.device && result.device.image_url) {
                     device.image_url = result.device.image_url;
                     
-                    // Update UI
                     const deviceCard = document.querySelector(`.device-card[data-device-id="${deviceId}"]`);
                     if (deviceCard) {
                         const imageElement = deviceCard.querySelector('.device-image img');
-                        // Add a timestamp query param to force reload of the image
                         imageElement.src = `${result.device.image_url}?t=${new Date().getTime()}`;
                     }
                 }
@@ -1431,15 +1328,12 @@
             }
         }
         
-        // Add a new device to room
         async function addDeviceToRoom(roomId, deviceData) {
             try {
-                // Validate data
                 if (!deviceData.device_name || !deviceData.device_type) {
                     throw new Error('Tên thiết bị và loại thiết bị không được để trống');
                 }
                 
-                // If we're using mock data, just add to list
                 if (usingMockData) {
                     const newId = Math.max(...devicesList.map(d => d.id), 0) + 1;
                     const newDevice = {
@@ -1452,10 +1346,8 @@
                         last_activity: new Date().toISOString()
                     };
                     
-                    // Add to device list
                     devicesList.push(newDevice);
                     
-                    // Update mock room's facilities
                     if (!roomData.facilities) {
                         roomData.facilities = {};
                     }
@@ -1468,7 +1360,6 @@
                     }
                     roomData.facilities[deviceData.device_type] = (roomData.facilities[deviceData.device_type] || 0) + 1;
                     
-                    // Display the new device
                     const container = document.getElementById('devices-container');
                     const card = createDeviceCard(newDevice);
                     container.appendChild(card);
@@ -1476,7 +1367,6 @@
                     return newDevice;
                 }
                 
-                // Add room_id to the data
                 deviceData.room_id = roomId;
                 
                 const response = await fetch(ENDPOINTS.IOT, {
@@ -1491,7 +1381,6 @@
                 if (!response.ok) {
                     const errorText = await response.text();
                     try {
-                        // Try to parse error as JSON
                         const errorJson = JSON.parse(errorText);
                         throw new Error(errorJson.error || `Failed to add device: ${response.status}`);
                     } catch (e) {
@@ -1499,7 +1388,6 @@
                     }
                 }
                 
-                // Check content type and get the response
                 const contentType = response.headers.get('content-type');
                 let result;
                 if (contentType && contentType.includes('application/json')) {
@@ -1508,11 +1396,9 @@
                     throw new Error('Unexpected non-JSON response from server');
                 }
                 
-                // Add the new device to our list
                 if (result.device) {
                     devicesList.push(result.device);
 
-                    // Display the new device
                     const container = document.getElementById('devices-container');
                     const card = createDeviceCard(result.device);
                     container.appendChild(card);
@@ -1527,14 +1413,12 @@
             }
         }
         
-        // Delete a device
         async function deleteDevice(deviceId) {
             try {
                 if (!confirm('Bạn có chắc chắn muốn xóa thiết bị này không?')) {
                     return false;
                 }
                 
-                // Find device before deleting
                 const deviceToDelete = devicesList.find(d => d.id === deviceId);
                 if (!deviceToDelete) {
                     throw new Error('Không tìm thấy thiết bị để xóa');
@@ -1543,12 +1427,9 @@
                 const deviceType = deviceToDelete.device_type;
                 const roomId = deviceToDelete.room_id;
                 
-                // If we're using mock data, just remove from list
                 if (usingMockData) {
-                    // Remove from device list
                     devicesList = devicesList.filter(d => d.id !== deviceId);
                     
-                    // Update mock room's facilities
                     if (roomData.facilities && roomData.facilities[deviceType]) {
                         roomData.facilities[deviceType] = Math.max(0, roomData.facilities[deviceType] - 1);
                         if (roomData.facilities[deviceType] === 0) {
@@ -1556,13 +1437,11 @@
                         }
                     }
                     
-                    // Remove from UI
                     const deviceCard = document.querySelector(`.device-card[data-device-id="${deviceId}"]`);
                     if (deviceCard) {
                         deviceCard.remove();
                     }
                     
-                    // Show empty message if needed
                     if (devicesList.length === 0) {
                         const container = document.getElementById('devices-container');
                         container.innerHTML = '<div class="empty-message">Không có thiết bị IoT nào trong phòng này.</div>';
@@ -1579,7 +1458,6 @@
                 if (!response.ok) {
                     const errorText = await response.text();
                     try {
-                        // Try to parse error as JSON
                         const errorJson = JSON.parse(errorText);
                         throw new Error(errorJson.error || `Failed to delete device: ${response.status}`);
                     } catch (e) {
@@ -1588,16 +1466,13 @@
                 }
                 
                 
-                // Remove from device list
                 devicesList = devicesList.filter(d => d.id !== deviceId);
                 
-                // Remove from UI
                 const deviceCard = document.querySelector(`.device-card[data-device-id="${deviceId}"]`);
                 if (deviceCard) {
                     deviceCard.remove();
                 }
                 
-                // Show empty message if needed
                 if (devicesList.length === 0) {
                     const container = document.getElementById('devices-container');
                     container.innerHTML = '<div class="empty-message">Không có thiết bị IoT nào trong phòng này.</div>';
@@ -1612,7 +1487,6 @@
                 return false;
             }
         }
-        // Add styles for the new admin actions
         const style = document.createElement('style');
         style.textContent = `
             .device-admin-actions {
@@ -1669,7 +1543,6 @@
         `;
         document.head.appendChild(style);
         
-        // Add a function to create an "Add Device" button
         function createAddDeviceButton(roomId) {
             const button = document.createElement('div');
             button.className = 'add-device-btn';
@@ -1684,9 +1557,7 @@
             return button;
         }
         
-        // Function to show the add device form
         function showAddDeviceForm(roomId) {
-            // Create form container
             const formContainer = document.createElement('div');
             formContainer.className = 'modal-overlay';
             formContainer.style.position = 'fixed';
@@ -1700,7 +1571,6 @@
             formContainer.style.justifyContent = 'center';
             formContainer.style.zIndex = '1000';
             
-            // Create form content
             const formContent = document.createElement('div');
             formContent.className = 'modal-content';
             formContent.style.backgroundColor = 'white';
@@ -1739,7 +1609,6 @@
             formContainer.appendChild(formContent);
             document.body.appendChild(formContainer);
             
-            // Handle form submission
             document.getElementById('add-device-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
@@ -1762,12 +1631,10 @@
                 }
             });
             
-            // Handle cancel button
             document.getElementById('cancel-add-device').addEventListener('click', function() {
                 formContainer.remove();
             });
             
-            // Close on overlay click
             formContainer.addEventListener('click', function(e) {
                 if (e.target === formContainer) {
                     formContainer.remove();
@@ -1775,9 +1642,7 @@
             });
         }
         
-        // Setup filter event listeners
         function setupFilters() {
-            // Input events for search box (with debounce)
             let debounceTimeout;
             document.getElementById('device-name-search').addEventListener('input', function() {
                 clearTimeout(debounceTimeout);
@@ -1786,7 +1651,6 @@
                 }, 300);
             });
             
-            // Change events for dropdowns
             document.getElementById('device-type-filter').addEventListener('change', function() {
                 displayDevices(true);
             });
@@ -1799,7 +1663,6 @@
                 displayDevices(true);
             });
             
-            // Reset filters button
             document.getElementById('reset-filters').addEventListener('click', function() {
                 document.getElementById('device-name-search').value = '';
                 document.getElementById('device-type-filter').value = '';

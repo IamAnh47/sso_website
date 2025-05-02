@@ -3,13 +3,11 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 
-console.log('Loading FixedUserController.js');
 
 // Get user roles
 exports.getUserRoles = async (req, res) => {
   try {
     console.log('Inside getUserRoles function');
-    // Define available user roles
     const roles = [
       { id: 1, name: 'Sinh viên', code: 'student' },
       { id: 2, name: 'Nhân viên', code: 'staff' },
@@ -27,10 +25,8 @@ exports.getUserRoles = async (req, res) => {
 // Get current user profile
 exports.getProfile = async (req, res) => {
   try {
-    // User đã được đưa vào req bởi middleware authenticate
     const { user } = req;
     
-    // Trả về thông tin người dùng (không bao gồm mật khẩu)
     res.json({
       id: user.id,
       username: user.username,
@@ -54,16 +50,14 @@ exports.updateProfile = async (req, res) => {
     const { email, full_name, phone, department_id } = req.body;
     const { id } = req.user;
     
-    // Cập nhật thông tin người dùng
     const updatedUser = await User.update(id, {
       email,
       full_name,
       phone,
       department_id,
-      role: req.user.role // Giữ nguyên role
+      role: req.user.role
     });
     
-    // Trả về thông tin người dùng đã cập nhật
     res.json({
       message: 'Profile updated successfully',
       user: updatedUser
@@ -80,13 +74,11 @@ exports.changePassword = async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     const { id, username } = req.user;
     
-    // Xác thực mật khẩu hiện tại
     const user = await User.authenticate(username, currentPassword);
     if (!user) {
       return res.status(401).json({ error: 'Current password is incorrect' });
     }
     
-    // Cập nhật mật khẩu mới
     await User.updatePassword(id, newPassword);
     
     res.json({ message: 'Password changed successfully' });
@@ -113,18 +105,15 @@ exports.changeUserRole = async (req, res) => {
     const { userId } = req.params;
     const { role } = req.body;
     
-    // Kiểm tra role hợp lệ
     if (!['student', 'staff', 'admin'].includes(role)) {
       return res.status(400).json({ error: 'Invalid role' });
     }
     
-    // Lấy thông tin người dùng hiện tại
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    // Cập nhật vai trò
     const updatedUser = await User.update(userId, {
       email: user.email,
       full_name: user.full_name,
@@ -153,7 +142,6 @@ exports.getUserById = async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    // Remove sensitive information
     delete user.password;
     
     res.json(user);
@@ -168,13 +156,11 @@ exports.createUser = async (req, res) => {
   try {
     const { username, password, email, full_name, student_id, phone, department_id, role } = req.body;
     
-    // Check if username already exists
     const existingUser = await User.findByUsername(username);
     if (existingUser) {
       return res.status(400).json({ error: 'Username already exists' });
     }
     
-    // Check if email already exists
     if (email) {
       const userWithEmail = await User.findByEmail(email);
       if (userWithEmail) {
@@ -182,7 +168,6 @@ exports.createUser = async (req, res) => {
       }
     }
     
-    // Check if student_id already exists
     if (student_id) {
       const userWithStudentId = await User.findByStudentId(student_id);
       if (userWithStudentId) {
@@ -202,7 +187,6 @@ exports.createUser = async (req, res) => {
       role: role || 'student'
     });
     
-    // Remove password from response
     delete newUser.password;
     
     res.status(201).json({
@@ -221,13 +205,11 @@ exports.updateUser = async (req, res) => {
     const { id } = req.params;
     const { email, full_name, student_id, phone, department_id, role } = req.body;
     
-    // Check if user exists
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    // Check if email already exists
     if (email && email !== user.email) {
       const userWithEmail = await User.findByEmail(email);
       if (userWithEmail && userWithEmail.id !== user.id) {
@@ -235,7 +217,6 @@ exports.updateUser = async (req, res) => {
       }
     }
     
-    // Check if student_id already exists
     if (student_id && student_id !== user.student_id) {
       const userWithStudentId = await User.findByStudentId(student_id);
       if (userWithStudentId && userWithStudentId.id !== user.id) {
@@ -253,7 +234,6 @@ exports.updateUser = async (req, res) => {
       role: role || user.role
     });
     
-    // Remove password from response
     delete updatedUser.password;
     
     res.json({
@@ -271,18 +251,15 @@ exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Check if user exists
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    // Cannot delete self
     if (req.user && req.user.id === user.id) {
       return res.status(400).json({ error: 'Cannot delete yourself' });
     }
     
-    // Delete user directly using db from the database module
     const { db } = require('../config/database');
     
     await new Promise((resolve, reject) => {
@@ -306,20 +283,17 @@ exports.deleteUser = async (req, res) => {
 exports.updateUserPassword = async (req, res) => {
   try {
     const { id } = req.params;
-    // Handle both new_password (snake_case) and newPassword (camelCase) formats
     const newPassword = req.body.new_password || req.body.newPassword;
     
     if (!newPassword) {
       return res.status(400).json({ error: 'New password is required' });
     }
     
-    // Check if user exists
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    // For admin users, we don't need to verify the current password
     
     // Update password
     await User.updatePassword(id, newPassword);

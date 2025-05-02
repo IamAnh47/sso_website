@@ -11,22 +11,22 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB size limit
 });
 
-// Lấy danh sách thiết bị IoT
+// Get danh sách thiết bị IoT
 router.get('/', authenticate, iotController.getIoTStatus);
 
-// Lấy trạng thái của thiết bị IoT
+// Get trạng thái của thiết bị IoT
 router.get('/status', authenticate, iotController.getIoTStatus);
 
-// Lấy thiết bị theo phòng
+// Get thiết bị theo phòng
 router.get('/room/:room_id', authenticate, iotController.getDevicesByRoom);
 
-// Điều khiển thiết bị IoT (lệnh turnOn/turnOff)
+// Điều khiển thiết bị IoT
 router.post('/control', authenticate, iotController.controlIoTDevice);
 
-// Lấy số liệu tổng quan về thiết bị IoT (số lượng, trạng thái)
+// Get số liệu về thiết bị IoT
 router.get('/devices/count', authenticate, isITStaffOrAdmin, iotController.getDevicesCount);
 
-// Lấy các hoạt động gần đây của thiết bị IoT
+// Get các hoạt động gần đây của thiết bị IoT
 router.get('/devices/activities', authenticate, isITStaffOrAdmin, iotController.getRecentActivities);
 
 // [ADMIN/IT STAFF] Tạo thiết bị IoT mới
@@ -38,7 +38,7 @@ router.put('/:id', authenticate, isITStaffOrAdmin, iotController.updateIoTDevice
 // [ADMIN/IT STAFF] Xoá thiết bị IoT
 router.delete('/:id', authenticate, isITStaffOrAdmin, iotController.deleteIoTDevice);
 
-// [ADMIN/IT STAFF] Bật/tắt thiết bị (on/off)
+// [ADMIN/IT STAFF] Bật/tắt thiết bị
 router.put('/:id/status', authenticate, isITStaffOrAdmin, iotController.toggleDeviceStatus);
 
 // [ADMIN/IT STAFF] Bật/tắt chế độ bảo trì

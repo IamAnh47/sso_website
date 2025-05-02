@@ -396,7 +396,6 @@
   </div>
   
   <script>
-    // API endpoints
     const API_BASE_URL = '/api';
     const ENDPOINTS = {
       USERS: `${API_BASE_URL}/users`,
@@ -408,14 +407,12 @@
       AUTH_LOGOUT: `${API_BASE_URL}/auth/logout`
     };
     
-    // State variables
     let currentUser = null;
     let currentPeriod = 'week';
     let usageChart = null;
     let roomTypeChart = null;
     let bookingStatusChart = null;
     
-    // Room types map
     const roomTypeMap = {
       'classroom': 'Phòng học',
       'study_room': 'Phòng tự học',
@@ -423,7 +420,6 @@
       'lab': 'Phòng thí nghiệm'
     };
     
-    // Booking status map
     const bookingStatusMap = {
       'pending': 'Chờ xác nhận',
       'confirmed': 'Đã xác nhận',
@@ -432,7 +428,6 @@
       'cancelled': 'Đã hủy'
     };
     
-    // Chart colors
     const chartColors = {
       blue: '#0d6efd',
       indigo: '#6610f2',
@@ -447,7 +442,6 @@
       gray: '#6c757d'
     };
     
-    // Status colors
     const statusColors = {
       'pending': chartColors.yellow,
       'confirmed': chartColors.cyan,
@@ -456,7 +450,6 @@
       'cancelled': chartColors.red
     };
     
-    // Room type colors
     const roomTypeColors = {
       'classroom': chartColors.blue,
       'study_room': chartColors.green,
@@ -464,9 +457,7 @@
       'lab': chartColors.orange
     };
     
-    // Initialize page
     document.addEventListener('DOMContentLoaded', function() {
-      // Check if user is authenticated
       verifyAuth()
         .then(userData => {
           if (userData && userData.role === 'student') {
@@ -486,7 +477,6 @@
         });
     });
     
-    // Setup navigation
     function setupNavigation() {
       document.getElementById('dashboard-menu-item').addEventListener('click', function() {
         window.location.href = 'student-dashboard.html';
@@ -528,34 +518,26 @@
         }
       });
       
-      // Set up notification bell click
       document.getElementById('notification-bell').addEventListener('click', function() {
         window.location.href = 'student-notifications.html';
       });
     }
     
-    // Clear auth data
     function clearAuthData() {
       sessionStorage.removeItem('user');
       localStorage.removeItem('authToken');
     }
     
-    // Initialize page
     async function initializePage() {
-      // Set user greeting
       document.getElementById('user-greeting').innerHTML = `Xin chào, <span id="user-full-name">${currentUser.full_name || currentUser.username}</span>`;
       
-      // Load unread notifications count
       loadNotificationsCount();
       
-      // Set up period selector
       setupPeriodSelector();
       
-      // Load statistics
       await loadStatistics();
     }
     
-    // Load notifications count
     async function loadNotificationsCount() {
       try {
         const response = await fetch(ENDPOINTS.UNREAD_NOTIFICATIONS, {
@@ -566,7 +548,6 @@
           const data = await response.json();
           document.getElementById('notification-count').textContent = data.count;
           
-          // Show notification count only if there are unread notifications
           if (data.count > 0) {
             document.getElementById('notification-count').style.display = 'inline-block';
           } else {
@@ -578,30 +559,23 @@
       }
     }
     
-    // Setup period selector
     function setupPeriodSelector() {
       const periodButtons = document.querySelectorAll('.period-btn');
       periodButtons.forEach(button => {
         button.addEventListener('click', function() {
-          // Remove active class from all buttons
           periodButtons.forEach(btn => btn.classList.remove('active'));
           
-          // Add active class to clicked button
           this.classList.add('active');
           
-          // Update current period
           currentPeriod = this.getAttribute('data-period');
           
-          // Reload statistics
           loadStatistics();
         });
       });
     }
     
-    // Load statistics
     async function loadStatistics() {
       try {
-        // Fetch user bookings with period parameter
         const response = await fetch(`${ENDPOINTS.USER_BOOKINGS}?period=${currentPeriod}`, {
           credentials: 'include'
         });
@@ -613,22 +587,17 @@
         
         const bookings = await response.json();
         
-        // Calculate statistics
         const stats = calculateStats(bookings);
         
-        // Update summary cards
         updateSummaryCards(stats);
         
-        // Update charts
         updateCharts(stats);
         
-        // Update tables
         updateTables(stats);
         
       } catch (error) {
         console.error('Error loading statistics:', error);
         
-        // Display an error message to the user
         const container = document.querySelector('.dashboard-content');
         if (container) {
           container.innerHTML = `
@@ -644,9 +613,7 @@
       }
     }
     
-    // Calculate statistics from bookings
     function calculateStats(bookings) {
-      // Summary stats
       const totalBookings = bookings.length;
       
       let totalHours = 0;
@@ -656,7 +623,6 @@
       let confirmedBookings = 0;
       let inUseBookings = 0;
       
-      // Room usage stats
       const roomStats = {};
       const roomTypeStats = {
         'classroom': 0,
@@ -666,12 +632,9 @@
         'other': 0
       };
       
-      // Time series data
       let timeSeriesData = {};
       
-      // Process each booking
       bookings.forEach(booking => {
-        // Count by status
         switch(booking.status) {
           case 'completed':
             completedBookings++;
@@ -690,21 +653,18 @@
             break;
         }
         
-        // Calculate hours for completed and in-use bookings
         if (booking.status === 'completed' || booking.status === 'in_use') {
           const startTime = new Date(`${booking.booking_date}T${booking.start_time}`);
           const endTime = new Date(`${booking.booking_date}T${booking.end_time}`);
           const durationHours = (endTime - startTime) / (1000 * 60 * 60);
           totalHours += durationHours;
           
-          // Add to time series data
           const dateKey = booking.booking_date;
           if (!timeSeriesData[dateKey]) {
             timeSeriesData[dateKey] = 0;
           }
           timeSeriesData[dateKey] += durationHours;
           
-          // Room stats
           if (!roomStats[booking.room_id]) {
             roomStats[booking.room_id] = {
               room_id: booking.room_id,
@@ -719,38 +679,31 @@
           roomStats[booking.room_id].usage_count++;
           roomStats[booking.room_id].usage_hours += durationHours;
           
-          // Room type stats
           const roomType = booking.room_type || 'other';
           roomTypeStats[roomType]++;
         }
       });
       
-      // Format time series data for chart
       const labels = [];
       const data = [];
       
-      // Get dates for the selected period
       const dates = getDatesForPeriod(currentPeriod);
       
-      // Fill in data for each date
       dates.forEach(date => {
         labels.push(formatDate(date));
         data.push(timeSeriesData[date] || 0);
       });
       
-      // Convert room stats to array and sort by usage
       const roomStatsArray = Object.values(roomStats).sort((a, b) => b.usage_hours - a.usage_hours);
       
-      // Unique rooms count
       const uniqueRoomsCount = Object.keys(roomStats).length;
       
-      // Calculate completion rate
       const completionRate = totalBookings > 0 ? 
         Math.round((completedBookings / totalBookings) * 100) : 0;
       
       return {
         totalBookings,
-        totalHours: Math.round(totalHours * 10) / 10, // Round to 1 decimal place
+        totalHours: Math.round(totalHours * 10) / 10,
         completionRate,
         uniqueRoomsCount,
         statusCounts: {
@@ -766,11 +719,10 @@
           labels,
           data
         },
-        recentBookings: bookings.slice(0, 5) // Get 5 most recent bookings
+        recentBookings: bookings.slice(0, 5)
       };
     }
     
-    // Update summary cards with statistics
     function updateSummaryCards(stats) {
       document.getElementById('total-bookings').textContent = stats.totalBookings;
       document.getElementById('total-hours').textContent = stats.totalHours;
@@ -778,23 +730,17 @@
       document.getElementById('rooms-used').textContent = stats.uniqueRoomsCount;
     }
     
-    // Update charts with statistics
     function updateCharts(stats) {
-      // Update usage time chart
       updateUsageChart(stats.timeSeriesData);
       
-      // Update room type chart
       updateRoomTypeChart(stats.roomTypeStats);
       
-      // Update booking status chart
       updateBookingStatusChart(stats.statusCounts);
     }
     
-    // Update usage chart
     function updateUsageChart(timeSeriesData) {
       const ctx = document.getElementById('usage-chart').getContext('2d');
       
-      // Destroy previous chart if it exists
       if (usageChart) {
         usageChart.destroy();
       }
@@ -843,11 +789,9 @@
       });
     }
     
-    // Update room type chart
     function updateRoomTypeChart(roomTypeStats) {
       const ctx = document.getElementById('room-type-chart').getContext('2d');
       
-      // Prepare data for chart
       const labels = [];
       const data = [];
       const backgroundColor = [];
@@ -860,7 +804,6 @@
         }
       }
       
-      // Destroy previous chart if it exists
       if (roomTypeChart) {
         roomTypeChart.destroy();
       }
@@ -887,11 +830,9 @@
       });
     }
     
-    // Update booking status chart
     function updateBookingStatusChart(statusCounts) {
       const ctx = document.getElementById('booking-status-chart').getContext('2d');
       
-      // Prepare data for chart
       const labels = [];
       const data = [];
       const backgroundColor = [];
@@ -904,7 +845,6 @@
         }
       }
       
-      // Destroy previous chart if it exists
       if (bookingStatusChart) {
         bookingStatusChart.destroy();
       }
@@ -931,16 +871,12 @@
       });
     }
     
-    // Update tables with statistics
     function updateTables(stats) {
-      // Update most used rooms table
       updateMostUsedRoomsTable(stats.roomStatsArray);
       
-      // Update recent bookings table
       updateRecentBookingsTable(stats.recentBookings);
     }
     
-    // Update most used rooms table
     function updateMostUsedRoomsTable(roomStats) {
       const tableBody = document.getElementById('most-used-rooms-body');
       tableBody.innerHTML = '';
@@ -950,7 +886,6 @@
         return;
       }
       
-      // Display top 5 most used rooms
       const topRooms = roomStats.slice(0, 5);
       
       topRooms.forEach(room => {
@@ -968,7 +903,6 @@
       });
     }
     
-    // Update recent bookings table
     function updateRecentBookingsTable(bookings) {
       const tableBody = document.getElementById('recent-bookings-body');
       tableBody.innerHTML = '';
@@ -981,10 +915,8 @@
       bookings.forEach(booking => {
         const row = document.createElement('tr');
         
-        // Format date
         const formattedDate = formatDate(booking.booking_date);
         
-        // Determine status class
         let statusClass = '';
         let statusText = '';
         
@@ -1025,7 +957,6 @@
       });
     }
     
-    // Helper function to get dates for the selected period
     function getDatesForPeriod(period) {
       const dates = [];
       const today = new Date();
@@ -1033,22 +964,18 @@
       
       switch(period) {
         case 'week':
-          // Past 7 days
           startDate = new Date(today);
           startDate.setDate(today.getDate() - 6);
           break;
         case 'month':
-          // Past 30 days
           startDate = new Date(today);
           startDate.setDate(today.getDate() - 29);
           break;
         case 'semester':
-          // Current semester (simplified - just use past 4 months)
           startDate = new Date(today);
           startDate.setMonth(today.getMonth() - 3);
           break;
         case 'year':
-          // Past year
           startDate = new Date(today);
           startDate.setFullYear(today.getFullYear() - 1);
           break;
@@ -1057,7 +984,6 @@
           startDate.setDate(today.getDate() - 6);
       }
       
-      // Generate array of dates
       for (let date = new Date(startDate); date <= today; date.setDate(date.getDate() + 1)) {
         dates.push(formatDateISOString(date));
       }
@@ -1065,13 +991,11 @@
       return dates;
     }
     
-    // Helper function to format date for display
     function formatDate(dateString) {
       const date = new Date(dateString);
       return date.toLocaleDateString('vi-VN');
     }
     
-    // Helper function to format date as ISO string (YYYY-MM-DD)
     function formatDateISOString(date) {
       return date.toISOString().split('T')[0];
     }

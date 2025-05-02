@@ -1,10 +1,8 @@
-// Global variables
 let allBookings = [];
 let filteredBookings = [];
 let currentPage = 1;
 const bookingsPerPage = 10;
 
-// API Endpoints
 const API_BASE_URL = '/api';
 const ENDPOINTS = {
     BOOKINGS: `${API_BASE_URL}/bookings`,
@@ -12,26 +10,18 @@ const ENDPOINTS = {
     ROOMS: `${API_BASE_URL}/rooms`
 };
 
-// Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Check authentication
     checkAdminAuth();
     
-    // Initialize data
     loadBookings();
     
-    // Set up event listeners
     setupEventListeners();
 });
 
-// Check if user is authenticated as admin
 function checkAdminAuth() {
-    // This function would normally check if the user is authenticated as admin
-    // For now, we'll just set up the navigation
     setupNavigation();
 }
 
-// Setup navigation event listeners
 function setupNavigation() {
     document.getElementById('overview-menu-item').addEventListener('click', function() {
         window.location.href = 'admin-overview.html';
@@ -62,23 +52,18 @@ function setupNavigation() {
     });
 }
 
-// Set up all event listeners
 function setupEventListeners() {
-    // Filter inputs
     document.getElementById('search-input').addEventListener('input', applyFilters);
     document.getElementById('date-filter').addEventListener('change', applyFilters);
     document.getElementById('status-filter').addEventListener('change', applyFilters);
     document.getElementById('room-type-filter').addEventListener('change', applyFilters);
     
-    // Export CSV button
     document.getElementById('export-csv').addEventListener('click', exportToCSV);
     
-    // Modal close button
     document.querySelector('.modal-close').addEventListener('click', function() {
         document.getElementById('booking-details-modal').style.display = 'none';
     });
     
-    // Close modal when clicking outside
     window.addEventListener('click', function(event) {
         const modal = document.getElementById('booking-details-modal');
         if (event.target === modal) {
@@ -87,10 +72,8 @@ function setupEventListeners() {
     });
 }
 
-// Load all bookings from API
 async function loadBookings() {
     try {
-        // Show loading indicator
         document.getElementById('bookings-loading').style.display = 'flex';
         document.getElementById('bookings-table-container').style.display = 'none';
         document.getElementById('no-bookings').style.display = 'none';
@@ -105,14 +88,12 @@ async function loadBookings() {
         
         allBookings = await response.json();
         
-        // Sort bookings by date and time (newest first)
         allBookings.sort((a, b) => {
             const dateA = new Date(a.booking_date + 'T' + a.start_time);
             const dateB = new Date(b.booking_date + 'T' + b.start_time);
             return dateB - dateA;
         });
         
-        // Apply filters and display
         filteredBookings = [...allBookings];
         displayBookings();
         
@@ -128,7 +109,6 @@ async function loadBookings() {
     }
 }
 
-// Apply filters to bookings
 function applyFilters() {
     const searchValue = document.getElementById('search-input').value.toLowerCase();
     const dateValue = document.getElementById('date-filter').value;
@@ -136,42 +116,33 @@ function applyFilters() {
     const roomTypeValue = document.getElementById('room-type-filter').value;
     
     filteredBookings = allBookings.filter(booking => {
-        // Search filter
         const matchesSearch = searchValue === '' || 
             (booking.id && booking.id.toString().includes(searchValue)) ||
             (booking.user_name && booking.user_name.toLowerCase().includes(searchValue)) ||
             (booking.room_name && booking.room_name.toLowerCase().includes(searchValue));
         
-        // Date filter
         const matchesDate = dateValue === '' || booking.booking_date === dateValue;
         
-        // Status filter
         const matchesStatus = statusValue === '' || booking.status === statusValue;
         
-        // Room type filter
         const matchesRoomType = roomTypeValue === '' || booking.room_type === roomTypeValue;
         
         return matchesSearch && matchesDate && matchesStatus && matchesRoomType;
     });
     
-    // Reset to first page when filters change
     currentPage = 1;
     
-    // Display filtered results
     displayBookings();
 }
 
-// Display bookings with pagination
 function displayBookings() {
     const tableContainer = document.getElementById('bookings-table-container');
     const noBookings = document.getElementById('no-bookings');
     const bookingsList = document.getElementById('bookings-list');
     const loading = document.getElementById('bookings-loading');
     
-    // Hide loading indicator
     loading.style.display = 'none';
     
-    // Clear current bookings
     bookingsList.innerHTML = '';
     
     if (filteredBookings.length === 0) {
@@ -180,45 +151,36 @@ function displayBookings() {
         return;
     }
     
-    // Show table container
     tableContainer.style.display = 'block';
     noBookings.style.display = 'none';
     
-    // Calculate pagination
     const startIndex = (currentPage - 1) * bookingsPerPage;
     const endIndex = Math.min(startIndex + bookingsPerPage, filteredBookings.length);
     const pageBookings = filteredBookings.slice(startIndex, endIndex);
     
-    // Render bookings
     pageBookings.forEach(booking => {
         const row = document.createElement('tr');
         
-        // ID cell
         const idCell = document.createElement('td');
         idCell.textContent = booking.id || '';
         row.appendChild(idCell);
         
-        // User cell
         const userCell = document.createElement('td');
         userCell.textContent = booking.user_name || '';
         row.appendChild(userCell);
         
-        // Room cell
         const roomCell = document.createElement('td');
         roomCell.textContent = booking.room_name || '';
         row.appendChild(roomCell);
         
-        // Date cell
         const dateCell = document.createElement('td');
         dateCell.textContent = formatDate(booking.booking_date) || '';
         row.appendChild(dateCell);
         
-        // Time cell
         const timeCell = document.createElement('td');
         timeCell.textContent = `${booking.start_time || ''} - ${booking.end_time || ''}`;
         row.appendChild(timeCell);
         
-        // Status cell
         const statusCell = document.createElement('td');
         const statusSpan = document.createElement('span');
         statusSpan.className = `status status-${booking.status || 'pending'}`;
@@ -226,17 +188,13 @@ function displayBookings() {
         statusCell.appendChild(statusSpan);
         row.appendChild(statusCell);
         
-        // Purpose cell
         const purposeCell = document.createElement('td');
         purposeCell.textContent = booking.purpose || 'N/A';
         row.appendChild(purposeCell);
         
-        // Actions cell
         const actionsCell = document.createElement('td');
         
-        // Different actions based on booking status
         if (booking.status === 'pending') {
-            // Approve button
             const approveBtn = document.createElement('button');
             approveBtn.className = 'btn btn-success';
             approveBtn.innerHTML = '<i class="fas fa-check"></i>';
@@ -244,7 +202,6 @@ function displayBookings() {
             approveBtn.addEventListener('click', () => approveBooking(booking.id));
             actionsCell.appendChild(approveBtn);
             
-            // Cancel button
             const cancelBtn = document.createElement('button');
             cancelBtn.className = 'btn btn-danger';
             cancelBtn.innerHTML = '<i class="fas fa-times"></i>';
@@ -252,7 +209,6 @@ function displayBookings() {
             cancelBtn.addEventListener('click', () => cancelBooking(booking.id));
             actionsCell.appendChild(cancelBtn);
         } else if (booking.status === 'confirmed') {
-            // Check-in button
             const checkinBtn = document.createElement('button');
             checkinBtn.className = 'btn btn-primary';
             checkinBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i>';
@@ -260,7 +216,6 @@ function displayBookings() {
             checkinBtn.addEventListener('click', () => checkInBooking(booking.id));
             actionsCell.appendChild(checkinBtn);
             
-            // Cancel button
             const cancelBtn = document.createElement('button');
             cancelBtn.className = 'btn btn-danger';
             cancelBtn.innerHTML = '<i class="fas fa-times"></i>';
@@ -268,7 +223,6 @@ function displayBookings() {
             cancelBtn.addEventListener('click', () => cancelBooking(booking.id));
             actionsCell.appendChild(cancelBtn);
         } else if (booking.status === 'in_use') {
-            // Check-out button
             const checkoutBtn = document.createElement('button');
             checkoutBtn.className = 'btn btn-warning';
             checkoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
@@ -277,7 +231,6 @@ function displayBookings() {
             actionsCell.appendChild(checkoutBtn);
         }
         
-        // View details button (for all statuses)
         const viewBtn = document.createElement('button');
         viewBtn.className = 'btn btn-info';
         viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
@@ -290,23 +243,19 @@ function displayBookings() {
         bookingsList.appendChild(row);
     });
     
-    // Render pagination
     renderPagination();
 }
 
-// Render pagination controls
 function renderPagination() {
     const paginationContainer = document.getElementById('pagination');
     paginationContainer.innerHTML = '';
     
     const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage);
     
-    // Don't show pagination if only one page
     if (totalPages <= 1) {
         return;
     }
     
-    // Previous button
     const prevButton = document.createElement('div');
     prevButton.className = 'page-item';
     prevButton.innerHTML = '<i class="fas fa-chevron-left"></i>';
@@ -318,7 +267,6 @@ function renderPagination() {
     });
     paginationContainer.appendChild(prevButton);
     
-    // Page numbers
     const startPage = Math.max(1, currentPage - 2);
     const endPage = Math.min(totalPages, startPage + 4);
     
@@ -336,7 +284,6 @@ function renderPagination() {
         paginationContainer.appendChild(pageButton);
     }
     
-    // Next button
     const nextButton = document.createElement('div');
     nextButton.className = 'page-item';
     nextButton.innerHTML = '<i class="fas fa-chevron-right"></i>';
@@ -349,7 +296,6 @@ function renderPagination() {
     paginationContainer.appendChild(nextButton);
 }
 
-// Get text representation of booking status
 function getStatusText(status) {
     switch (status) {
         case 'pending': return 'Chờ xác nhận';
@@ -361,7 +307,6 @@ function getStatusText(status) {
     }
 }
 
-// Format date for display
 function formatDate(dateString) {
     if (!dateString) return '';
     
@@ -371,7 +316,6 @@ function formatDate(dateString) {
     return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
 }
 
-// View booking details
 async function viewBookingDetails(bookingId) {
     try {
         const response = await fetch(`${ENDPOINTS.BOOKINGS}/${bookingId}`, {
@@ -383,9 +327,8 @@ async function viewBookingDetails(bookingId) {
         }
         
         const booking = await response.json();
-        console.log('Booking details:', booking); // Debug
+        console.log('Booking details:', booking);
         
-        // Format the details
         const bookingDetailsContent = document.getElementById('booking-details-content');
         bookingDetailsContent.innerHTML = `
             <div style="margin-bottom: 20px;">
@@ -406,10 +349,8 @@ async function viewBookingDetails(bookingId) {
             </div>
         `;
         
-        // Show modal
         document.getElementById('booking-details-modal').style.display = 'flex';
         
-        // Rebind close button event
         document.querySelector('.modal-close').addEventListener('click', function() {
             document.getElementById('booking-details-modal').style.display = 'none';
         });
@@ -420,7 +361,6 @@ async function viewBookingDetails(bookingId) {
     }
 }
 
-// Approve a booking
 async function approveBooking(bookingId) {
     if (!confirm('Bạn có chắc chắn muốn xác nhận đặt phòng này?')) {
         return;
@@ -436,7 +376,6 @@ async function approveBooking(bookingId) {
             throw new Error('Failed to confirm booking');
         }
         
-        // Reload bookings
         await loadBookings();
         
         alert('Đã xác nhận đặt phòng thành công');
@@ -463,7 +402,6 @@ async function cancelBooking(bookingId) {
             throw new Error('Failed to cancel booking');
         }
         
-        // Reload bookings
         await loadBookings();
         
         alert('Đã hủy đặt phòng thành công');
@@ -490,7 +428,6 @@ async function checkInBooking(bookingId) {
             throw new Error('Failed to check in booking');
         }
         
-        // Reload bookings
         await loadBookings();
         
         alert('Đã check-in đặt phòng thành công');
@@ -517,7 +454,6 @@ async function checkOutBooking(bookingId) {
             throw new Error('Failed to check out booking');
         }
         
-        // Reload bookings
         await loadBookings();
         
         alert('Đã check-out đặt phòng thành công');
@@ -528,17 +464,14 @@ async function checkOutBooking(bookingId) {
     }
 }
 
-// Export bookings to CSV
 function exportToCSV() {
     if (filteredBookings.length === 0) {
         alert('Không có dữ liệu để xuất');
         return;
     }
     
-    // CSV header
     let csvContent = 'ID,Người dùng,Phòng,Ngày,Giờ bắt đầu,Giờ kết thúc,Trạng thái,Mục đích,Số người\n';
     
-    // Add each booking as a row
     filteredBookings.forEach(booking => {
         const row = [
             booking.id || '',
@@ -548,24 +481,20 @@ function exportToCSV() {
             booking.start_time || '',
             booking.end_time || '',
             getStatusText(booking.status),
-            (booking.purpose || '').replace(/,/g, ';'), // Replace commas in purpose
+            (booking.purpose || '').replace(/,/g, ';'),
             booking.num_attendees || ''
         ];
         
-        // Add row to CSV content
         csvContent += row.join(',') + '\n';
     });
     
-    // Create download link
     const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
     link.setAttribute('download', `bookings_export_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     
-    // Trigger download
     link.click();
     
-    // Clean up
     document.body.removeChild(link);
 } 

@@ -6,34 +6,34 @@ const { authenticate, isAdmin, isStaff } = require('../middlewares/auth');
 // Lấy danh sách đặt phòng
 router.get('/', authenticate, bookingController.getBookings);
 
-// Get bookings for current user - must come before /:id route
+// Get bookings for current user /:id route
 router.get('/user', authenticate, bookingController.getUserBookings);
 
-// Lấy thông tin đặt phòng theo ID
+// Get booking by ID
 router.get('/:id', authenticate, bookingController.getBookingById);
 
-// Tạo đặt phòng mới
+// Create new booking
 router.post('/', authenticate, bookingController.createBooking);
 
-// Cập nhật thông tin đặt phòng
+// Update booking info
 router.put('/:id', authenticate, bookingController.updateBooking);
 
-// Huỷ đặt phòng
+// Cancel booking
 router.delete('/:id', authenticate, bookingController.cancelBooking);
 
-// Check-in vào phòng
+// Check-in
 router.put('/:id/checkin', authenticate, bookingController.checkIn);
 
-// Check-out khỏi phòng
+// Check-out
 router.put('/:id/checkout', authenticate, bookingController.checkOut);
 
-// Confirm a booking (new route)
+// Confirm a booking
 router.post('/:id/confirm', authenticate, bookingController.confirmBooking);
 
-// Perform check-in for a booking
+// Perform check-in
 router.post('/:id/checkin', authenticate, bookingController.checkInBooking);
 
-// Perform check-out for a booking
+// Perform check-out
 router.post('/:id/checkout', authenticate, bookingController.checkOutBooking);
 
 // Cancel a booking

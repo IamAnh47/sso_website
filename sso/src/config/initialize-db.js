@@ -1,38 +1,27 @@
-/**
- * Database Initialization Script
- * 
- * This script initializes the database and creates default accounts
- * Supports creating admin and test user accounts automatically
- */
-
 const { db, initializeDatabase, dbPath } = require('./database');
 const fs = require('fs');
 const bcrypt = require('bcrypt');
 const readline = require('readline');
 const path = require('path');
 
-// Ensure data directory exists
 const dbDir = path.join(__dirname, '../../data');
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir);
   console.log('Created data directory.');
 }
 
-// Kiểm tra xem database đã tồn tại chưa
+// Check database
 const isNewDb = !fs.existsSync(dbPath);
 
-// Khởi tạo database và tạo tài khoản
+// Initialize database and create accounts
 async function init() {
   try {
-    // Khởi tạo cấu trúc database
     await initializeDatabase();
     
-    // Tạo tài khoản nếu cần
     if (isNewDb) {
       console.log('New database detected. Creating default accounts...');
       await createDefaultUsers();
     } else {
-      // Kiểm tra nếu không có tài khoản admin nào
       const adminExists = await checkAdminExists();
       if (!adminExists) {
         console.log('No admin user found. Creating default admin...');
@@ -42,7 +31,6 @@ async function init() {
       }
     }
     
-    // Hỏi người dùng có muốn tạo thêm tài khoản không
     promptForUserCreation();
   } catch (error) {
     console.error('Error initializing database:', error.message);
@@ -65,7 +53,6 @@ function checkAdminExists() {
   });
 }
 
-// Tạo các tài khoản mặc định
 async function createDefaultUsers() {
   try {
     await createAdminUser();
@@ -77,7 +64,7 @@ async function createDefaultUsers() {
   }
 }
 
-// Tạo tài khoản admin
+// Admin
 function createAdminUser() {
   const saltRounds = 10;
   const adminPassword = 'admin123';
@@ -114,7 +101,7 @@ function createAdminUser() {
   });
 }
 
-// Tạo tài khoản test (sinh viên)
+// Student
 function createTestUser() {
   const saltRounds = 10;
   const userPassword = 'user123';
@@ -123,7 +110,7 @@ function createTestUser() {
     bcrypt.hash(userPassword, saltRounds, (err, hashedPassword) => {
       if (err) {
         console.error('Error hashing user password:', err.message);
-        resolve(); // Không chặn quá trình nếu lỗi khi tạo user
+        resolve();
         return;
       }
       
@@ -150,7 +137,7 @@ function createTestUser() {
   });
 }
 
-// Tạo tài khoản staff
+// Staff
 function createStaffUser() {
   const saltRounds = 10;
   const staffPassword = 'staff123';
@@ -159,7 +146,7 @@ function createStaffUser() {
     bcrypt.hash(staffPassword, saltRounds, (err, hashedPassword) => {
       if (err) {
         console.error('Error hashing staff password:', err.message);
-        resolve(); // Không chặn quá trình nếu lỗi khi tạo staff
+        resolve();
         return;
       }
       
@@ -186,7 +173,7 @@ function createStaffUser() {
   });
 }
 
-// Hỏi người dùng có muốn tạo thêm tài khoản không
+// Muốn tạo thêm không ?
 function promptForUserCreation() {
   const rl = readline.createInterface({
     input: process.stdin,
@@ -204,7 +191,7 @@ function promptForUserCreation() {
   });
 }
 
-// Hỏi chi tiết thông tin người dùng mới
+// Thông tin người dùng mới
 function promptForUserDetails(rl) {
   console.log('\nEnter user details:');
   
@@ -280,7 +267,7 @@ function createCustomUser(userData, callback) {
   });
 }
 
-// Đóng kết nối database và thoát
+// Đóng kết nối database
 function closeDbAndExit() {
   console.log('Closing database connection...');
   db.close((err) => {
@@ -293,11 +280,11 @@ function closeDbAndExit() {
   });
 }
 
-// Xử lý khi người dùng nhấn Ctrl+C
+// Ctrl+C
 process.on('SIGINT', () => {
   console.log('\nInitialization interrupted.');
   closeDbAndExit();
 });
 
-// Khởi chạy script
+// Run
 init(); 

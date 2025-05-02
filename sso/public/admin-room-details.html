@@ -903,7 +903,6 @@
     </div>
 
     <script>
-        // Navigation setup
         document.getElementById('overview-menu-item').addEventListener('click', function() {
             window.location.href = 'admin-overview.html';
         });
@@ -930,18 +929,15 @@
             window.location.href = 'index.html';
         });
         
-        // Image change function
         function changeMainImage(src, thumbElement) {
             document.getElementById('main-room-image').src = src;
             
-            // Update active thumbnail
             document.querySelectorAll('.detail-thumbnail').forEach(thumb => {
                 thumb.classList.remove('active');
             });
             thumbElement.classList.add('active');
         }
         
-        // Modal functionality
         const editRoomModal = document.getElementById('edit-room-modal');
         const uploadImageModal = document.getElementById('upload-image-modal');
         
@@ -958,12 +954,10 @@
             
             let equipmentData = {};
             
-            // Parse facilities if it's a string
             if (typeof facilities === 'string') {
                 try {
                     equipmentData = JSON.parse(facilities);
                 } catch (e) {
-                    // If can't parse, split by comma
                     const items = facilities.split(',').map(item => item.trim());
                     items.forEach(item => {
                         equipmentData[item] = 1;
@@ -973,7 +967,6 @@
                 equipmentData = facilities;
             }
             
-            // Equipment type names
             const equipmentTypeNames = {
                 'projector': 'Máy chiếu',
                 'computer': 'Máy tính',
@@ -983,22 +976,17 @@
                 'fan': 'Quạt'
             };
             
-            // Get IoT devices for this room
             const roomId = document.getElementById('room-id').value;
             
-            // Display equipment items
             for (const [type, count] of Object.entries(equipmentData)) {
                 if (count > 0) {
                     const itemElement = document.createElement('div');
                     itemElement.className = 'equipment-item-display';
                     
-                    // Use friendly name if available
                     const typeName = equipmentTypeNames[type] || type;
                     
                     itemElement.textContent = `${typeName} (${count})`;
                     
-                    // Add IoT badge if this has IoT enabled equipment
-                    // Note: in a production environment, you'd check if IoT devices exist
                     if (roomId) {
                         const iotBadge = document.createElement('span');
                         iotBadge.className = 'equipment-iot-badge';
@@ -1012,7 +1000,6 @@
         }
         
         document.getElementById('edit-room-btn').addEventListener('click', function() {
-            // Make sure the form has the latest data before showing
             if (roomData && roomData.details) {
                 document.getElementById('room-name').value = roomData.details.room_name || '';
                 document.getElementById('room-id').value = roomData.details.id || '';
@@ -1021,15 +1008,12 @@
                 document.getElementById('room-status').value = roomData.details.status || 'available';
                 document.getElementById('room-location').value = roomData.details.location || '';
                 
-                // Make sure description populates correctly, even if empty
                 const description = roomData.details.description;
                 document.getElementById('room-description').value = description !== null && description !== undefined ? description : '';
                 
-                // Display equipment instead of setting up checkboxes
                 displayEquipment(roomData.details.facilities);
             }
             
-            // Show the modal
             editRoomModal.style.display = 'flex';
         });
         
@@ -1044,7 +1028,6 @@
             });
         });
         
-        // Close modal when clicking outside
         window.addEventListener('click', function(event) {
             if (event.target === editRoomModal) {
                 editRoomModal.style.display = 'none';
@@ -1054,7 +1037,6 @@
             }
         });
         
-        // Setup file upload
         function setupFileUpload() {
             const dropArea = document.getElementById('drop-area');
             const fileInput = document.getElementById('file-input');
@@ -1071,18 +1053,15 @@
                 fileInput.click();
             });
             
-            // Add highlight on drag over
             dropArea.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 dropArea.style.borderColor = 'var(--primary-color)';
             });
             
-            // Remove highlight when drag leave
             dropArea.addEventListener('dragleave', () => {
                 dropArea.style.borderColor = '#ccc';
             });
             
-            // Handle dropped files
             dropArea.addEventListener('drop', (e) => {
                 e.preventDefault();
                 dropArea.style.borderColor = '#ccc';
@@ -1092,14 +1071,12 @@
                 }
             });
             
-            // Handle selected files
             fileInput.addEventListener('change', () => {
                 if (fileInput.files.length) {
                     handleFiles(fileInput.files);
                 }
             });
             
-            // Upload images
             if (uploadBtn) {
                 uploadBtn.addEventListener('click', async function() {
                     if (!previewContainer || previewContainer.children.length === 0) {
@@ -1109,7 +1086,6 @@
                     
                     const formData = new FormData();
                     
-                    // Get all files from file input
                     for (const file of fileInput.files) {
                         if (file.type.match('image.*')) {
                             formData.append('images', file);
@@ -1127,17 +1103,14 @@
                             throw new Error('Failed to upload images');
                         }
                         
-                        // Refresh room details
                         await fetchRoomDetails();
                         updateRoomDetails();
                         
-                        // Close modal
                         const modal = document.getElementById('upload-image-modal');
                         if (modal) {
                             modal.style.display = 'none';
                         }
                         
-                        // Clear preview container
                         previewContainer.innerHTML = '';
                         
                         alert('Ảnh đã được tải lên thành công!');
@@ -1151,19 +1124,16 @@
             }
         }
         
-        // Delete room confirmation
         document.getElementById('delete-room-btn').addEventListener('click', function() {
             if (confirm('Bạn có chắc chắn muốn xóa phòng này? Hành động này không thể hoàn tác.')) {
                 deleteRoom(roomData.details.id);
             }
         });
         
-        // Change room status
         document.getElementById('change-status-btn').addEventListener('click', function() {
             toggleRoomStatus(roomData.details.id, roomData.details.status);
         });
         
-        // Get room ID from URL
         const roomId = new URLSearchParams(window.location.search).get('id');
         
         if (!roomId) {
@@ -1171,14 +1141,12 @@
             window.location.href = 'admin-room-management.html';
         }
         
-        // State management for room data
         let roomData = {
             details: {},
             stats: {},
             bookingHistory: []
         };
         
-        // API endpoints
         const API_BASE_URL = '/api';
         const ENDPOINTS = {
             ROOMS: `${API_BASE_URL}/rooms`,
@@ -1188,55 +1156,41 @@
             IOT: `${API_BASE_URL}/iot`
         };
         
-        // For development without a proper backend
         const USE_SAMPLE_DATA = false; // Change to false when you have a working backend
         
-        // Charts
         let dayChart, timeChart;
         
-        // Initialize page
         document.addEventListener('DOMContentLoaded', async function() {
-            // Show loading indicators
             showLoading();
             
-            // Set up equipment checkbox handlers
             setupEquipmentHandlers();
             
-            // Initialize Charts
             initializeCharts();
             
             try {
-                // Load room data
                 await fetchRoomDetails();
                 try {
                     await fetchRoomStats();
                 } catch (statsError) {
                     console.error("Error loading stats:", statsError);
-                    // Just log the error but continue with room details
                 }
                 
-                // Update UI with fetched data
                 updateRoomDetails();
                 
-                // Only update stats if we have data
                 if (roomData.stats && roomData.stats.bookingStats) {
                     updateRoomStats();
                     renderBookingHistory();
                 } else {
-                    // Show placeholder data for stats
                     showPlaceholderStats();
                 }
                 
-                // Hide loading indicators
                 hideLoading();
             } catch (error) {
                 console.error("Error loading data:", error);
-                // Handle the error in the UI
                 handleError(error);
                 hideLoading();
             }
             
-            // Setup IoT device management button
             document.getElementById('manage-iot-btn').addEventListener('click', function() {
                 const roomId = getRoomIdFromUrl();
                 if (roomId) {
@@ -1246,42 +1200,34 @@
                 }
             });
             
-            // Event listeners for period selection
             document.getElementById('period-select').addEventListener('change', async function() {
-                // Add any additional logic you want to execute when period changes
                 console.log('Period selected:', this.value);
                     await fetchRoomStats();
                     updateRoomStats();
             });
         });
         
-        // Setup equipment checkbox handlers
         function setupEquipmentHandlers() {
-            // Equipment checkbox event listeners
             document.querySelectorAll('input[name="equipment"]').forEach(checkbox => {
                 const countInput = document.getElementById(`${checkbox.value}-count`);
                 const iotCheckbox = document.getElementById(`${checkbox.value}-iot`);
                 
-                // Enable/disable count input based on checkbox
                 checkbox.addEventListener('change', function() {
                     countInput.disabled = !this.checked;
                     if (!this.checked) {
                         countInput.value = 0;
-                        // If equipment is unchecked, also uncheck IoT
                         if (iotCheckbox) {
                             iotCheckbox.checked = false;
                             iotCheckbox.disabled = true;
                         }
                     } else {
                         countInput.value = 1;
-                        // Enable IoT checkbox when equipment is checked
                         if (iotCheckbox) {
                             iotCheckbox.disabled = false;
                         }
                     }
                 });
                 
-                // When count changes, check if it's 0 and update checkbox
                 countInput.addEventListener('change', function() {
                     if (parseInt(this.value) <= 0) {
                         checkbox.checked = false;
@@ -1293,14 +1239,11 @@
                     }
                 });
                 
-                // Initially disable count inputs
                 countInput.disabled = !checkbox.checked;
                 
-                // IoT checkbox setup
                 if (iotCheckbox) {
                     iotCheckbox.disabled = !checkbox.checked;
                     
-                    // When IoT is checked, ensure equipment is checked too
                     iotCheckbox.addEventListener('change', function() {
                         if (this.checked && !checkbox.checked) {
                             checkbox.checked = true;
@@ -1314,15 +1257,11 @@
             });
         }
         
-        // Show loading indicators
         function showLoading() {
-            // Add loading indicators to the page
             const detailContainer = document.querySelector('.detail-container');
             if (detailContainer) {
-                // Save the current content instead of replacing it
                 const originalContent = detailContainer.innerHTML;
                 
-                // Create a loading element and add it
                 const loadingEl = document.createElement('div');
                 loadingEl.className = 'loading-spinner main-loading';
                 loadingEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...';
@@ -1335,21 +1274,18 @@
                 loadingEl.style.borderRadius = '5px';
                 loadingEl.style.zIndex = '10';
                 
-                // Make sure the container has position relative for absolute positioning
                 if (getComputedStyle(detailContainer).position === 'static') {
                     detailContainer.style.position = 'relative';
                 }
                 
                 detailContainer.appendChild(loadingEl);
                 
-                // Store original content to restore if needed
                 detailContainer.dataset.originalContent = originalContent;
             } else {
                 console.error("Could not find detail container for adding loader");
             }
         }
         
-        // Show loading indicators for stats only
         function showStatsLoading() {
             const statsSection = document.querySelector('.stats-section');
             if (statsSection) {
@@ -1370,7 +1306,6 @@
             }
         }
         
-        // Hide loading indicators
         function hideLoading() {
             const mainLoading = document.querySelector('.main-loading');
             if (mainLoading) {
@@ -1378,7 +1313,6 @@
             }
         }
         
-        // Hide stats loading indicators
         function hideStatsLoading() {
             const statsLoading = document.querySelector('.stats-loading');
             if (statsLoading) {
@@ -1386,7 +1320,6 @@
             }
         }
         
-        // Handle errors
         function handleError(error) {
             const contentContainer = document.querySelector('.content-container');
             if (contentContainer) {
@@ -1403,7 +1336,6 @@
             }
         }
         
-        // Initialize charts with empty data
         function initializeCharts() {
             const dayChartEl = document.getElementById('day-chart');
             const timeChartEl = document.getElementById('time-chart');
@@ -1468,7 +1400,6 @@
             }
         }
         
-        // Fetch room details
         async function fetchRoomDetails() {
             try {
                 const response = await fetch(ENDPOINTS.ROOM_DETAIL, {
@@ -1495,7 +1426,6 @@
             }
         }
         
-        // Fetch room statistics
         async function fetchRoomStats() {
             try {
                 const period = document.getElementById('period-select').value;
@@ -1525,7 +1455,6 @@
                 roomData.stats = await response.json();
                 console.log('Received stats data:', roomData.stats);
             
-                // Update booking history from the stats data
                 if (roomData.stats.recentBookings) {
                     roomData.bookingHistory = roomData.stats.recentBookings;
                 }
@@ -1533,13 +1462,11 @@
                 return roomData.stats;
             } catch (error) {
                 console.error('Error fetching room stats:', error);
-                // Set empty stats data rather than throwing error
                 roomData.stats = { bookingStats: null };
                 return null;
             }
         }
         
-        // Get translated equipment names
         function getEquipmentName(key) {
             const equipmentMap = {
                 'projector': 'Máy chiếu',
@@ -1561,7 +1488,6 @@
             return equipmentMap[key] || key;
         }
         
-        // Function to update the room details in the UI
         function updateRoomDetails() {
             if (!roomData.details) {
                 return;
@@ -1569,49 +1495,9 @@
             
             const room = roomData.details;
             
-            // Update page title
             document.title = `${room.room_name} - Admin Dashboard`;
             
             try {
-                // Update room images
-                // if (room.image_url) {
-                //     document.getElementById('main-room-image').src = room.image_url;
-                //     console.log('Set main image to:', room.image_url);
-                    
-                //     // Update thumbnails if there are multiple images
-                //     // const thumbnailContainer = document.querySelector('.detail-thumbnails');
-                //     // if (thumbnailContainer) {
-                //     //     thumbnailContainer.innerHTML = '';
-                        
-                //     //     // Add main image as first thumbnail
-                //     //     const mainThumb = document.createElement('img');
-                //     //     mainThumb.src = room.image_url;
-                //     //     mainThumb.alt = room.room_name;
-                //     //     mainThumb.className = 'detail-thumbnail active';
-                //     //     mainThumb.onclick = function() {
-                //     //         changeMainImage(room.image_url, this);
-                //     //     };
-                //     //     thumbnailContainer.appendChild(mainThumb);
-                        
-                //     //     // Add additional images if available
-                //     //     if (room.additional_images && Array.isArray(room.additional_images)) {
-                //     //         room.additional_images.forEach(imgUrl => {
-                //     //             const thumb = document.createElement('img');
-                //     //             thumb.src = imgUrl;
-                //     //             thumb.alt = room.room_name;
-                //     //             thumb.className = 'detail-thumbnail';
-                //     //             thumb.onclick = function() {
-                //     //                 changeMainImage(imgUrl, this);
-                //     //             };
-                //     //             thumbnailContainer.appendChild(thumb);
-                //     //         });
-                //     //     }
-                //     // }
-                // } else {
-                //     console.warn('No image URL found in room data');
-                // }
-                
-                // Update room header info
                 const detailTitle = document.querySelector('.detail-title');
                 if (detailTitle) {
                     detailTitle.textContent = room.room_name || 'Chi tiết phòng';
@@ -1620,7 +1506,6 @@
                     console.warn('Could not find .detail-title element');
                 }
             
-            // Update room status
                 const statusElement = document.querySelector('.status');
                 if (statusElement) {
                     statusElement.className = 'status';
@@ -1648,11 +1533,9 @@
                     console.warn('Could not find .status element');
                 }
                 
-                // Update basic information
                 document.getElementById('location-value').textContent = room.location || 'N/A';
                 document.getElementById('capacity-value').textContent = room.capacity ? `${room.capacity} người` : 'N/A';
                 
-                // Get room type display name
                 let roomTypeName = 'N/A';
                 switch(room.room_type) {
                     case 'meeting':
@@ -1681,13 +1564,11 @@
                 }
                 document.getElementById('room-type-value').textContent = roomTypeName;
                 
-                // Format update date
                 const updateDate = room.updated_at ? formatDate(room.updated_at) : 'N/A';
                 document.getElementById('update-date-value').textContent = updateDate;
                 
                 console.log('Updated basic information');
                 
-                // Update equipment/facilities list
                 const facilitiesList = document.getElementById('equipment-list');
                 if (facilitiesList) {
                     facilitiesList.innerHTML = '';
@@ -1698,19 +1579,15 @@
                         console.log('Facilities data type:', typeof room.facilities);
                         
                         try {
-                            // Parse facilities into an array of objects with name and count
                             if (typeof room.facilities === 'string') {
                                 try {
-                                    // Try to parse as JSON first
                                     const parsedFacilities = JSON.parse(room.facilities);
                                     
                                     if (Array.isArray(parsedFacilities)) {
-                                        // If it's an array, assume it's just names
                                         facilitiesArray = parsedFacilities.map(item => {
                                             return { name: item, count: 1 };
                                         });
                                     } else if (typeof parsedFacilities === 'object') {
-                                        // If it's an object, it's key-value pairs for name and count
                                         facilitiesArray = [];
                                         for (const [key, value] of Object.entries(parsedFacilities)) {
                                             if (value && value > 0) {
@@ -1723,12 +1600,10 @@
                                     }
                                 } catch (parseError) {
                                     console.log('Facilities not in JSON format, using comma split:', parseError);
-                                    // If parsing fails, split by comma and extract name and count if possible
                                     facilitiesArray = room.facilities.split(',')
                                         .map(item => item.trim())
                                         .filter(item => item)
                                         .map(item => {
-                                            // Try to extract count (e.g., "Máy chiếu x2" -> name: "Máy chiếu", count: 2)
                                             const match = item.match(/(.+)\s*x\s*(\d+)/);
                                             if (match) {
                                                 return { name: match[1].trim(), count: parseInt(match[2]) };
@@ -1737,12 +1612,10 @@
                                         });
                                 }
                             } else if (Array.isArray(room.facilities)) {
-                                // If it's already an array, assume it's just names
                                 facilitiesArray = room.facilities.map(item => {
                                     return { name: item, count: 1 };
                                 });
                             } else if (typeof room.facilities === 'object' && room.facilities !== null) {
-                                // If it's an object, it's key-value pairs for name and count
                                 facilitiesArray = [];
                                 for (const [key, value] of Object.entries(room.facilities)) {
                                     if (value && value > 0) {
@@ -1756,7 +1629,6 @@
                         } catch (error) {
                             console.error('Error processing facilities:', error);
                             
-                            // Fallback to string if available
                             if (typeof room.facilities === 'string') {
                                 facilitiesArray = room.facilities.split(',')
                                     .map(item => item.trim())
@@ -1776,7 +1648,6 @@
                         facilitiesArray.forEach(facility => {
                             if (facility && facility.name) {
                                 const li = document.createElement('li');
-                                // Translate equipment name if needed and format display
                                 const translatedName = getEquipmentName(facility.name);
                                 if (facility.count && facility.count > 1) {
                                     li.textContent = `${translatedName} x${facility.count}`;
@@ -1793,12 +1664,9 @@
                     console.warn('Could not find facilities list element');
                 }
                 
-                // Update description
                 const descriptionP = document.getElementById('room-description-text');
                 if (descriptionP) {
-                    // FORCE DISPLAY: Set description directly from room.description with no transformations
                     if (room.description !== undefined && room.description !== null) {
-                        // Use the raw value exactly as it comes from the database
                         descriptionP.textContent = room.description;
                         console.log('FORCE SET description to:', room.description);
                     } else {
@@ -1809,10 +1677,8 @@
                     console.warn('Could not find description element');
                 }
                 
-                // Populate edit form for equipment
                 setupEquipmentCheckboxes(room.facilities);
                 
-                // Populate other form fields
                 document.getElementById('room-name').value = room.room_name || '';
                 document.getElementById('room-id').value = room.id || '';
                 document.getElementById('room-type').value = room.room_type || '';
@@ -1829,9 +1695,7 @@
             }
         }
         
-        // Function to set up equipment checkboxes based on room data
         function setupEquipmentCheckboxes(facilities) {
-            // Reset all checkboxes first
             const checkboxes = document.querySelectorAll('input[name="equipment"]');
             checkboxes.forEach(checkbox => {
                 checkbox.checked = false;
@@ -1841,7 +1705,6 @@
                     countInput.disabled = true;
                 }
                 
-                // Reset IoT checkboxes
                 const iotCheckbox = document.getElementById(`${checkbox.value}-iot`);
                 if (iotCheckbox) {
                     iotCheckbox.checked = false;
@@ -1854,7 +1717,6 @@
             let equipmentData = {};
             
             try {
-                // Parse facilities if it's a string
                 if (typeof facilities === 'string') {
                     try {
                         const parsed = JSON.parse(facilities);
@@ -1862,7 +1724,6 @@
                             equipmentData = parsed;
                         }
                     } catch (e) {
-                        // Try to parse comma-separated format
                         const items = facilities.split(',').map(item => item.trim());
                         items.forEach(item => {
                             const parts = item.split(':').map(part => part.trim());
@@ -1878,10 +1739,8 @@
                     equipmentData = facilities;
                 }
                 
-                // Set checkboxes based on equipment data
                 for (const [equipment, count] of Object.entries(equipmentData)) {
                     if (count && count > 0) {
-                        // Find the checkbox with matching value attribute
                         const checkbox = document.querySelector(`input[name="equipment"][value="${equipment}"]`);
                         if (checkbox) {
                             checkbox.checked = true;
@@ -1891,7 +1750,6 @@
                                 countInput.disabled = false;
                             }
                             
-                            // Enable IoT checkbox
                             const iotCheckbox = document.getElementById(`${checkbox.value}-iot`);
                             if (iotCheckbox) {
                                 iotCheckbox.disabled = false;
@@ -1900,18 +1758,15 @@
                 }
                 }
                 
-                // Fetch and set IoT devices after setting up equipment
                 populateIoTDeviceInputs(roomId);
             } catch (error) {
                 console.error('Error setting up equipment checkboxes:', error);
             }
         }
         
-        // Get equipment data from checkboxes
         function getEquipmentData() {
             let equipment = {};
             
-            // Loop through all equipment checkboxes
             document.querySelectorAll('input[name="equipment"]').forEach(checkbox => {
                 if (checkbox.checked) {
                     const countInput = document.getElementById(`${checkbox.value}-count`);
@@ -1923,21 +1778,17 @@
             return equipment;
         }
         
-        // Get IoT device data
         function getIoTDeviceData() {
             let iotDevices = [];
             
-            // Loop through all IoT-enabled checkboxes
             document.querySelectorAll('input[name="iot-enabled"]').forEach(checkbox => {
                 if (checkbox.checked) {
                     const equipmentType = checkbox.dataset.equipment;
                     const countInput = document.getElementById(`${equipmentType}-count`);
                     const count = parseInt(countInput.value) || 0;
                     
-                    // Skip if count is 0
                     if (count <= 0) return;
                     
-                    // Define a friendly name for device type
                     const deviceTypeNames = {
                 'projector': 'Máy chiếu',
                 'computer': 'Máy tính',
@@ -1947,7 +1798,6 @@
                         'fan': 'Quạt'
                     };
                     
-                    // Create device objects with auto-incrementing names
                     for (let i = 1; i <= count; i++) {
                         iotDevices.push({
                             device_type: equipmentType,
@@ -1960,15 +1810,12 @@
             return iotDevices;
         }
         
-        // Get IoT devices for a room and populate inputs
         function populateIoTDeviceInputs(roomId) {
-            // Reset all IoT device checkboxes first
             document.querySelectorAll('input[name="iot-enabled"]').forEach(checkbox => {
                 checkbox.checked = false;
                 checkbox.disabled = true;
             });
             
-            // Fetch existing IoT devices for the room
             if (!roomId) return;
             
             console.log(`Fetching IoT devices for room ID: ${roomId}`);
@@ -1983,7 +1830,6 @@
                 
                 return response.text().then(text => {
                     try {
-                        // Try to parse as JSON
                         if (text.trim() === '') return []; // Handle empty response
                         if (text.includes('<!DOCTYPE')) {
                             console.error('Received HTML instead of JSON. API endpoint might be incorrect.');
@@ -2000,27 +1846,22 @@
             .then(devices => {
                 if (!devices || devices.length === 0) return;
                 
-                // Count devices by type
                 const deviceCounts = {};
                 devices.forEach(device => {
                     deviceCounts[device.device_type] = (deviceCounts[device.device_type] || 0) + 1;
                 });
                 
-                // Update checkboxes and counts
                 for (const [deviceType, count] of Object.entries(deviceCounts)) {
-                    // Ensure the equipment is checked
                     const equipmentCheckbox = document.getElementById(deviceType);
                     if (equipmentCheckbox) {
                         equipmentCheckbox.checked = true;
                         
-                        // Update count
                         const countInput = document.getElementById(`${deviceType}-count`);
                         if (countInput) {
                             countInput.value = count;
                             countInput.disabled = false;
                         }
                         
-                        // Check IoT checkbox
                         const iotCheckbox = document.getElementById(`${deviceType}-iot`);
                         if (iotCheckbox) {
                             iotCheckbox.checked = true;
@@ -2034,19 +1875,15 @@
             });
         }
         
-        // Add IoT devices to a room
         async function addIoTDevicesToRoom(roomId, iotDevices) {
             try {
-                // Kiểm tra roomId có hợp lệ không
                 if (!roomId) {
                     console.error('Không thể thêm thiết bị IoT: Thiếu room_id');
                     return;
                 }
                 
-                // Convert roomId to number if it's a string (optional)
                 const roomIdNumber = Number(roomId) || roomId;
                 
-                // Create each device one by one
                 for (const device of iotDevices) {
                     console.log(`Thêm thiết bị IoT: ${device.device_name} (${device.device_type}) cho phòng ${roomIdNumber}`);
                     
@@ -2057,7 +1894,6 @@
                         status: 'off'
             };
                     
-                    // Log device data for debugging
                     console.log('Dữ liệu thiết bị gửi đi:', JSON.stringify(deviceData));
                     
                     const response = await fetch(ENDPOINTS.IOT, {
@@ -2083,10 +1919,8 @@
             }
         }
         
-        // Update IoT devices for a room
         async function updateRoomIoTDevices(roomId, newIotDevices) {
             try {
-                // Lấy danh sách thiết bị hiện tại
                 const response = await fetch(`${ENDPOINTS.IOT}?room_id=${roomId}`, {
                     credentials: 'include'
                 });
@@ -2111,7 +1945,6 @@
                     currentDevices = [];
                 }
                 
-                // Tạo map thiết bị hiện tại theo loại
                 const currentDevicesByType = {};
                 currentDevices.forEach(device => {
                     if (!currentDevicesByType[device.device_type]) {
@@ -2120,7 +1953,6 @@
                     currentDevicesByType[device.device_type].push(device);
                 });
                 
-                // Tạo map thiết bị mới theo loại
                 const newDevicesByType = {};
                 newIotDevices.forEach(device => {
                     if (!newDevicesByType[device.device_type]) {
@@ -2129,7 +1961,6 @@
                     newDevicesByType[device.device_type].push(device);
                 });
                 
-                // Xử lý từng loại thiết bị
                 const deviceTypes = [...new Set([
                     ...Object.keys(currentDevicesByType),
                     ...Object.keys(newDevicesByType)
@@ -2139,18 +1970,12 @@
                     const currentTypeDevices = currentDevicesByType[deviceType] || [];
                     const newTypeDevices = newDevicesByType[deviceType] || [];
                     
-                    // Nếu số lượng thiết bị hiện tại ít hơn số lượng mới, thêm thiết bị
                     if (currentTypeDevices.length < newTypeDevices.length) {
-                        // Tính số lượng thiết bị cần thêm
                         const devicesToAdd = newTypeDevices.slice(currentTypeDevices.length);
-                        // Thêm thiết bị mới với tên tự tăng
                         await addIoTDevicesToRoom(roomId, devicesToAdd);
                     } 
-                    // Nếu số lượng thiết bị hiện tại nhiều hơn số lượng mới, xóa bớt
                     else if (currentTypeDevices.length > newTypeDevices.length) {
-                        // Tính số lượng thiết bị cần xóa
                         const devicesToRemove = currentTypeDevices.slice(newTypeDevices.length);
-                        // Xóa từng thiết bị
                         for (const device of devicesToRemove) {
                             await fetch(`${ENDPOINTS.IOT}/${device.id}`, {
                                 method: 'DELETE',
@@ -2166,10 +1991,8 @@
             }
         }
         
-        // Update statistics in the UI
         function updateRoomStats() {
             if (!roomData.stats || !roomData.stats.bookingStats) {
-                // Handle missing stats data
                 document.getElementById('total-bookings').textContent = '0';
                 document.getElementById('usage-rate').textContent = '0%';
                 document.getElementById('avg-time').textContent = '0h';
@@ -2179,7 +2002,6 @@
             
             const stats = roomData.stats.bookingStats;
             
-            // Update stat cards
             document.getElementById('total-bookings').textContent = stats.totalBookings || '0';
             document.getElementById('usage-rate').textContent = `${stats.usageRate || '0'}%`;
             document.getElementById('avg-time').textContent = `${Math.round((stats.avgUsageTime || 0) / 60)}h`;
@@ -2188,7 +2010,6 @@
                 Math.round((stats.statusCount.cancelled / stats.statusCount.total) * 100) : 0;
             document.getElementById('cancel-rate').textContent = `${cancelRate}%`;
             
-            // Update charts
             if (stats.bookingsByDayOfWeek && dayChart) {
                 const dayData = stats.bookingsByDayOfWeek.map(day => day.count);
                 dayChart.data.datasets[0].data = dayData;
@@ -2202,7 +2023,6 @@
             }
         }
         
-        // Render booking history
         function renderBookingHistory() {
             const tableBody = document.getElementById('booking-history');
             if (!tableBody) return;
@@ -2280,7 +2100,6 @@
                     editBtn.className = 'btn btn-outline btn-sm';
                     editBtn.innerHTML = '<i class="fas fa-edit"></i> Sửa';
                     editBtn.addEventListener('click', function() {
-                        // Redirect to booking edit page
                         window.location.href = `admin-booking-edit.html?id=${booking.id}`;
                     });
                     
@@ -2291,7 +2110,6 @@
                     viewBtn.className = 'btn btn-outline btn-sm';
                     viewBtn.innerHTML = '<i class="fas fa-eye"></i> Xem';
                     viewBtn.addEventListener('click', function() {
-                        // Redirect to booking details page
                         window.location.href = `admin-booking-details.html?id=${booking.id}`;
                     });
                     
@@ -2310,7 +2128,6 @@
             });
         }
         
-        // Export booking history to CSV
         function exportBookingHistory() {
             const bookings = roomData.bookingHistory || [];
             
@@ -2321,10 +2138,8 @@
             
             let csvContent = "data:text/csv;charset=utf-8,";
             
-            // Add headers
             csvContent += "ID,Người đặt,Thời gian bắt đầu,Thời gian kết thúc,Trạng thái,Mục đích\n";
             
-            // Add rows
             bookings.forEach(booking => {
                 const status = getStatusText(booking.status);
                 const row = [
@@ -2336,7 +2151,6 @@
                     booking.purpose || ''
                 ];
                 
-                // Escape fields that might contain commas
                 const escapedRow = row.map(field => {
                     if (typeof field === 'string' && (field.includes(',') || field.includes('"') || field.includes('\n'))) {
                         return `"${field.replace(/"/g, '""')}"`;
@@ -2347,21 +2161,17 @@
                 csvContent += escapedRow.join(',') + '\n';
             });
             
-            // Create download link
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement('a');
             link.setAttribute('href', encodedUri);
             link.setAttribute('download', `bookings-${roomData.details.room_name}-${formatDate(new Date())}.csv`);
             document.body.appendChild(link);
             
-            // Trigger download
             link.click();
             
-            // Clean up
             document.body.removeChild(link);
         }
         
-        // Get status text from status code
         function getStatusText(status) {
             switch (status) {
                 case 'completed': return 'Đã hoàn thành';
@@ -2373,7 +2183,6 @@
             }
         }
         
-        // Format date
         function formatDate(dateString) {
             const date = new Date(dateString);
             if (isNaN(date.getTime())) return dateString;
@@ -2385,7 +2194,6 @@
             return `${day}/${month}/${year}`;
         }
         
-        // Cancel a booking
         async function cancelBooking(bookingId) {
             try {
                 const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/cancel`, {
@@ -2402,7 +2210,6 @@
                 
                 alert('Đã hủy đặt phòng thành công');
                 
-                // Refresh data
                 await fetchRoomStats();
                 renderBookingHistory();
             } catch (error) {
@@ -2411,9 +2218,7 @@
             }
         }
         
-        // Update room information
         async function updateRoomInfo() {
-            // Get form values
             const roomName = document.getElementById('room-name').value.trim();
             const roomType = document.getElementById('room-type').value;
             const capacityInput = document.getElementById('room-capacity').value;
@@ -2421,14 +2226,11 @@
             const status = document.getElementById('room-status').value;
             const description = document.getElementById('room-description').value.trim();
             
-            // Parse and clean capacity input
             const capacity = parseInt(capacityInput) || 0;
             
-            // Get equipment data from checkboxes
             const facilities = getEquipmentData();
             const iotDevices = getIoTDeviceData();
             
-            // Prepare room data
             const roomData = {
                 room_name: roomName,
                 room_type: roomType,
@@ -2439,7 +2241,6 @@
                 facilities: facilities
             };
             
-            // Validate form data
             if (!roomData.room_name) {
                 alert('Vui lòng nhập tên phòng!');
                 document.getElementById('room-name').focus();
@@ -2459,13 +2260,11 @@
             }
             
             try {
-                // Show loading indicator
                 const updateBtn = document.getElementById('save-room-btn');
                 const originalBtnText = updateBtn.innerHTML;
                 updateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang cập nhật...';
                 updateBtn.disabled = true;
                 
-                // Send API request
                 const response = await fetch(`${ENDPOINTS.ROOMS}/${roomId}`, {
                     method: 'PUT',
                     headers: {
@@ -2475,7 +2274,6 @@
                     body: JSON.stringify(roomData)
                 });
                 
-                // Reset button
                 updateBtn.innerHTML = originalBtnText;
                 updateBtn.disabled = false;
                 
@@ -2484,17 +2282,14 @@
                     throw new Error(errorData?.message || 'Không thể cập nhật thông tin phòng');
                 }
                 
-                // Xử lý thiết bị IoT sau khi cập nhật phòng thành công
                 if (roomId && iotDevices.length > 0) {
                     await updateRoomIoTDevices(roomId, iotDevices);
                 }
                 
                 alert('Phòng đã được cập nhật thành công!');
                 
-                // Close modal
                 document.getElementById('edit-room-modal').style.display = 'none';
                 
-                // Refresh room data
                 await fetchRoomDetails();
                 updateRoomDetails();
             } catch (error) {
@@ -2503,9 +2298,7 @@
             }
         }
 
-        // Toggle room status (available/maintenance)
         async function toggleRoomStatus(roomId, currentStatus) {
-            // Determine new status
             let newStatus = 'available';
             if (currentStatus === 'available') {
                 newStatus = 'maintenance';
@@ -2527,7 +2320,6 @@
                 
                 alert(`Đã chuyển trạng thái phòng thành ${newStatus === 'available' ? 'còn trống' : 'bảo trì'}`);
                 
-                // Refresh room data
                 await fetchRoomDetails();
             updateRoomDetails();
             } catch (error) {
@@ -2536,14 +2328,12 @@
             }
         }
         
-        // Delete room
         async function deleteRoom(roomId) {
             if (!confirm("Bạn có chắc chắn muốn xóa phòng này? Tất cả thiết bị IoT của phòng cũng sẽ bị xóa.")) {
                 return;
             }
             
             try {
-                // First, fetch all IoT devices associated with this room
                 console.log(`Fetching IoT devices for room ${roomId} before deletion`);
                 const iotResponse = await fetch(`${ENDPOINTS.IOT}?room_id=${roomId}`, {
                     credentials: 'include'
@@ -2552,11 +2342,9 @@
                 if (iotResponse.ok) {
                     const iotDevices = await iotResponse.json();
                     
-                    // If there are IoT devices, delete them one by one
                     if (iotDevices && iotDevices.length > 0) {
                         console.log(`Found ${iotDevices.length} IoT devices to delete`);
                         
-                        // Show loading message
                         const loadingMessage = document.createElement('div');
                         loadingMessage.className = 'loading-message';
                         loadingMessage.style.position = 'fixed';
@@ -2571,7 +2359,6 @@
                         loadingMessage.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang xóa ${iotDevices.length} thiết bị IoT...`;
                         document.body.appendChild(loadingMessage);
                         
-                        // Delete each IoT device
                         for (const device of iotDevices) {
                             try {
                                 const deleteResponse = await fetch(`${ENDPOINTS.IOT}/${device.id}`, {
@@ -2589,7 +2376,6 @@
                             }
                         }
                         
-                        // Remove loading message
                         document.body.removeChild(loadingMessage);
                     } else {
                         console.log('No IoT devices found for this room');
@@ -2598,7 +2384,6 @@
                     console.warn(`Could not fetch IoT devices: ${iotResponse.status}`);
                 }
                 
-                // Now proceed with room deletion
                 console.log(`Deleting room ${roomId}`);
                 const response = await fetch(`${ENDPOINTS.ROOMS}/${roomId}`, {
                     method: 'DELETE',
@@ -2619,15 +2404,12 @@
             }
         }
 
-        // Show placeholder stats when real stats cannot be loaded
         function showPlaceholderStats() {
-            // Update stats cards with placeholder values
             document.getElementById('total-bookings').textContent = '0';
             document.getElementById('usage-rate').textContent = '0%';
             document.getElementById('avg-time').textContent = '0h';
             document.getElementById('cancel-rate').textContent = '0%';
             
-            // Reset charts to show empty data
             if (dayChart) {
                 dayChart.data.datasets[0].data = [0, 0, 0, 0, 0, 0, 0];
                 dayChart.update();
@@ -2638,7 +2420,6 @@
                 timeChart.update();
             }
             
-            // Show message in booking history table
             const tableBody = document.getElementById('booking-history');
             if (tableBody) {
                 tableBody.innerHTML = `
@@ -2652,7 +2433,6 @@
             }
         }
 
-        // Process files and generate previews
         function handleFiles(files) {
             const previewContainer = document.getElementById('preview-container');
             if (!previewContainer) {
@@ -2703,13 +2483,11 @@
             }
         }
 
-        // Get room ID from URL parameters
         function getRoomIdFromUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('id');
         }
 
-        // Show loading indicators
     </script>
 </body>
 </html> 

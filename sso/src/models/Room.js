@@ -7,12 +7,10 @@ class Room {
         if (err) {
           reject(err);
         } else {
-          // Parse facilities JSON if needed
           if (row && row.facilities && typeof row.facilities === 'string') {
             try {
               row.facilities = JSON.parse(row.facilities);
             } catch (e) {
-              // Failed to parse facilities JSON
             }
           }
           resolve(row);
@@ -27,7 +25,7 @@ class Room {
         if (err) {
           reject(err);
         } else {
-          resolve(row); // Will be null if no match found
+          resolve(row);
         }
       });
     });
@@ -37,7 +35,6 @@ class Room {
     try {
       console.log('Creating room with data:', roomData);
       
-      // Đảm bảo description và status luôn tồn tại và là string
       const description = (roomData.description !== undefined && roomData.description !== null) 
         ? String(roomData.description) 
         : null;
@@ -49,13 +46,11 @@ class Room {
       console.log('Description type:', typeof description, 'Value:', description);
       console.log('Status type:', typeof status, 'Value:', status);
       
-      // Kiểm tra xem phòng đã tồn tại chưa
       const existingRoom = await this.findByNameAndLocation(roomData.room_name, roomData.location);
       if (existingRoom) {
         throw new Error(`Room with name "${roomData.room_name}" at location "${roomData.location}" already exists.`);
       }
       
-      // Sử dụng tên cột rõ ràng trong câu lệnh SQL
       const sql = `
         INSERT INTO rooms (
           room_name, location, capacity, room_type, 
@@ -84,7 +79,6 @@ class Room {
           } else {
             console.log(`Room created with ID: ${this.lastID}`);
             
-            // Lấy thông tin phòng vừa tạo để kiểm tra
             db.get(`SELECT * FROM rooms WHERE id = ?`, [this.lastID], (err, room) => {
               if (err) {
                 console.error('Error retrieving created room:', err);
@@ -113,13 +107,11 @@ class Room {
   static update(id, roomData) {
     const { room_name, location, capacity, room_type, description, status, facilities } = roomData;
     
-    // Đảm bảo các giá trị là chuỗi
     const safeDescription = description === undefined || description === null ? '' : String(description).trim();
     const safeStatus = status === undefined || status === null ? 'available' : String(status).trim();
     const facilitiesStr = typeof facilities === 'object' ? JSON.stringify(facilities) : facilities;
     
     return new Promise((resolve, reject) => {
-      // Sử dụng tên cột rõ ràng trong câu lệnh SQL để tránh nhầm lẫn thứ tự
       const sqlQuery = `
         UPDATE rooms 
         SET 
@@ -148,7 +140,7 @@ class Room {
       console.log('Room.update: SQL Query:', sqlQuery);
       console.log('Room.update: SQL Params:', JSON.stringify(params, null, 2));
       
-      // Thực hiện UPDATE
+      //UPDATE
       db.run(sqlQuery, params, function(err) {
         if (err) {
           console.error('Room.update: Database error:', err);
@@ -156,7 +148,6 @@ class Room {
         } else {
           console.log('Room.update: Success! Rows affected:', this.changes);
           
-          // Thực hiện truy vấn đơn giản để kiểm tra trực tiếp giá trị đã được cập nhật
           db.get('SELECT description, status FROM rooms WHERE id = ?', [id], (checkErr, checkRow) => {
             if (checkErr) {
               console.error('Error in direct check after update:', checkErr);
@@ -167,7 +158,6 @@ class Room {
             }
           });
           
-          // Lấy lại dữ liệu vừa cập nhật từ database để đảm bảo trả về đúng những gì đã được lưu
           db.get('SELECT * FROM rooms WHERE id = ?', [id], (err, row) => {
             if (err) {
               console.error('Room.update: Error fetching updated room:', err);
@@ -252,7 +242,6 @@ class Room {
 
   static getAvailableRooms(date, startTime, endTime, capacity, room_type, location) {
     return new Promise((resolve, reject) => {
-      // Build the base query
       let query = `
         SELECT r.* FROM rooms r
         WHERE r.status = 'available'
@@ -265,23 +254,18 @@ class Room {
         )
       `;
       
-      // Prepare parameters
       let params = [capacity || 1, date, startTime, endTime];
       
-      // Add room_type filter if provided
       if (room_type && room_type !== 'all') {
         query += ' AND r.room_type = ?';
         params.push(room_type);
       }
       
-      // Add location filter if provided
       if (location && location !== 'all') {
         query += ' AND r.location = ?';
         params.push(location);
       }
       
-      // console.log('getAvailableRooms query:', query);
-      // console.log('getAvailableRooms params:', params);
       
       db.all(query, params, (err, rows) => {
         if (err) {
@@ -289,28 +273,6 @@ class Room {
         } else {
           resolve(rows);
         }
-      });
-    });
-  }
-
-  // Kiểm tra cấu trúc bảng rooms
-  static checkTableStructure() {
-    console.log('Checking rooms table structure...');
-    return new Promise((resolve, reject) => {
-      // Lấy thông tin về cấu trúc bảng
-      db.all("PRAGMA table_info(rooms)", [], (err, columns) => {
-        if (err) {
-          console.error('Error getting table structure:', err);
-          reject(err);
-          return;
-        }
-        
-        console.log('Rooms table structure:');
-        columns.forEach(col => {
-          console.log(`- ${col.cid}: ${col.name} (${col.type}) ${col.notnull ? 'NOT NULL' : ''} ${col.pk ? 'PRIMARY KEY' : ''} DEFAULT: ${col.dflt_value || 'NULL'}`);
-        });
-        
-        resolve(columns);
       });
     });
   }

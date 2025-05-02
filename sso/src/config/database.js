@@ -2,7 +2,6 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
-// Đảm bảo thư mục data tồn tại
 const dbDir = path.join(__dirname, '../../data');
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir);
@@ -10,7 +9,6 @@ if (!fs.existsSync(dbDir)) {
 
 const dbPath = path.join(dbDir, 'smart_study_space.db');
 
-// Enable SQLite tracing for debug (ghi nhật ký các truy vấn)
 sqlite3.verbose();
 
 const db = new sqlite3.Database(dbPath, (err) => {
@@ -19,10 +17,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
   } else {
     console.log('Connected to the SQLite database.');
     
-    // Enable foreign keys
     db.run('PRAGMA foreign_keys = ON;');
     
-    // Ghi nhật ký schema để kiểm tra cấu trúc bảng khi khởi động
     db.all("SELECT name FROM sqlite_master WHERE type='table'", [], (err, tables) => {
       if (err) {
         console.error('Error getting table list:', err);
@@ -33,13 +29,11 @@ const db = new sqlite3.Database(dbPath, (err) => {
   }
 });
 
-// Hàm khởi tạo database - được export để gọi từ bên ngoài
 function initializeDatabase() {
   console.log('Creating database tables...');
   
   return new Promise((resolve, reject) => {
     db.serialize(() => {
-      // Tạo bảng Users
       db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
@@ -54,7 +48,6 @@ function initializeDatabase() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`);
 
-      // Tạo bảng Rooms
       db.run(`CREATE TABLE IF NOT EXISTS rooms (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         room_name TEXT NOT NULL,
@@ -68,7 +61,6 @@ function initializeDatabase() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`);
 
-      // Tạo bảng Bookings
       db.run(`CREATE TABLE IF NOT EXISTS bookings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
@@ -85,7 +77,6 @@ function initializeDatabase() {
         FOREIGN KEY (room_id) REFERENCES rooms (id)
       )`);
 
-      // Tạo bảng IoT devices
       db.run(`CREATE TABLE IF NOT EXISTS iot_devices (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         device_name TEXT NOT NULL,
@@ -101,7 +92,6 @@ function initializeDatabase() {
         FOREIGN KEY (room_id) REFERENCES rooms (id)
       )`);
 
-      // Tạo bảng IoT device activities
       db.run(`CREATE TABLE IF NOT EXISTS iot_device_activities (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         device_id INTEGER NOT NULL,
@@ -114,7 +104,6 @@ function initializeDatabase() {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
       )`);
 
-      // Tạo bảng Notifications
       db.run(`CREATE TABLE IF NOT EXISTS notifications (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         sender_id INTEGER,
@@ -127,7 +116,6 @@ function initializeDatabase() {
         FOREIGN KEY (sender_id) REFERENCES users (id)
       )`);
 
-      // Tạo bảng Sessions để lưu trữ token và phiên làm việc
       db.run(`CREATE TABLE IF NOT EXISTS sessions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
@@ -137,7 +125,6 @@ function initializeDatabase() {
         FOREIGN KEY (user_id) REFERENCES users (id)
       )`);
 
-      // Tạo bảng Room Activities để theo dõi check-in/check-out
       db.run(`CREATE TABLE IF NOT EXISTS room_activities (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         booking_id INTEGER NOT NULL,
@@ -168,50 +155,31 @@ function initializeDatabase() {
  */
 const createAdminIfNotExists = () => {
   return new Promise((resolve, reject) => {
-    // Check if admin already exists
     db.get('SELECT * FROM users WHERE role = "admin" LIMIT 1', (err, row) => {
       if (err) {
         console.error('Error checking for admin:', err);
         return reject(err);
       }
       
-      // If admin exists, do nothing
       if (row) {
         console.log('Admin user already exists');
         return resolve();
       }
       
-      // Import bcrypt to hash password
       const bcrypt = require('bcrypt');
       
-      // Create admin user
       bcrypt.hash('admin123', 10, (err, hashedPassword) => {
         if (err) {
           console.error('Error hashing password:', err);
           return reject(err);
         }
         
-        // Insert admin user
-        // db.run(
-        //   `INSERT INTO users (username, password, email, full_name, student_id, role, phone, department_id) 
-        //    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        //   ['admin', hashedPassword, 'admin@hcmut.edu.vn', 'System Administrator', 'ADMIN001', 'admin', '', ''],
-        //   function(err) {
-        //     if (err) {
-        //       console.error('Error creating admin user:', err);
-        //       return reject(err);
-        //     }
             
-        //     console.log('Admin user created successfully');
-        //     resolve();
-        //   }
-        // );
       });
     });
   });
 };
 
-// Export functions for use elsewhere
 module.exports = {
   db,
   createAdminIfNotExists,

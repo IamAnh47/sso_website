@@ -3,10 +3,10 @@ const router = express.Router();
 const notificationController = require('../controllers/notification/notification.controller');
 const auth = require('../middlewares/auth');
 
-// Yêu cầu xác thực cho tất cả các routes
+// Yêu cầu xác thực
 router.use(auth.verifyToken);
 
-// Chỉ cho phép quản trị viên và nhân viên truy cập
+// Chỉ cho phép admin và staff truy cập
 router.use((req, res, next) => {
     if (req.user && (req.user.role === 'admin' || req.user.role === 'staff')) {
         next();
@@ -15,13 +15,13 @@ router.use((req, res, next) => {
     }
 });
 
-// API để tạo thông báo cho một người dùng
+// API tạo thông báo
 router.post('/', notificationController.createNotification);
 
-// API để tạo thông báo hàng loạt hoặc cho tất cả người dùng
+// API tạo thông báo hàng loạt
 router.post('/bulk', notificationController.createBulkNotifications);
 
-// API để lấy lịch sử thông báo
+// API lấy lịch sử thông báo
 router.get('/history', notificationController.getNotificationHistory);
 
 module.exports = router; 

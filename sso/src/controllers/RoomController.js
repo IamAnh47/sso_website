@@ -24,7 +24,6 @@ exports.getAllRooms = async (req, res) => {
 exports.getRoomTypes = async (req, res) => {
   try {
     console.log('Inside getRoomTypes function');
-    // Danh sách các loại phòng
     const roomTypes = [
       { id: 1, name: 'Phòng học', code: 'classroom' },
       { id: 2, name: 'Phòng họp', code: 'meeting_room' },
@@ -58,7 +57,7 @@ exports.getRoomById = async (req, res) => {
   }
 };
 
-// [CHỈ ADMIN/STAFF] Tạo phòng mới
+// [ADMIN/STAFF] Tạo phòng mới
 exports.createRoom = async (req, res) => {
   try {
     const { room_name, location, capacity, room_type, description, status, facilities} = req.body;
@@ -82,19 +81,17 @@ exports.createRoom = async (req, res) => {
   }
 };
 
-// [CHỈ ADMIN/STAFF] Cập nhật thông tin phòng
+// [ADMIN/STAFF] Cập nhật thông tin phòng
 exports.updateRoom = async (req, res) => {
   try {
     const { id } = req.params;
     const { room_name, location, capacity, room_type, description, status, facilities } = req.body;
     
-    // Kiểm tra xem phòng có tồn tại không
     const room = await Room.findById(id);
     if (!room) {
       return res.status(404).json({ error: 'Room not found' });
     }
     
-    // Cập nhật thông tin phòng
     const updatedRoom = await Room.update(id, {
       room_name: room_name || room.room_name,
       location: location || room.location,
@@ -115,7 +112,7 @@ exports.updateRoom = async (req, res) => {
   }
 };
 
-// [CHỈ ADMIN/STAFF] Cập nhật trạng thái phòng
+// [ADMIN/STAFF] Cập nhật trạng thái phòng
 exports.updateRoomStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -123,21 +120,17 @@ exports.updateRoomStatus = async (req, res) => {
     
     console.log(`[updateRoomStatus] Đang cập nhật trạng thái phòng ${id} thành ${status}`);
     
-    // Kiểm tra trạng thái hợp lệ
     if (!['available', 'unavailable', 'maintenance'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
     
-    // Kiểm tra xem phòng có tồn tại không
     const room = await Room.findById(id);
     if (!room) {
       return res.status(404).json({ error: 'Room not found' });
     }
     
-    // Cập nhật trạng thái phòng
     const updatedRoom = await Room.updateStatus(id, status);
     
-    // Nếu chuyển sang trạng thái bảo trì, hủy các đặt phòng trong tương lai
     if (status === 'maintenance') {
       try {
         const RoomActivity = require('../models/RoomActivity');
@@ -145,23 +138,19 @@ exports.updateRoomStatus = async (req, res) => {
         
         console.log(`[updateRoomStatus] Đang chuyển phòng ${id} sang trạng thái bảo trì. Chuẩn bị hủy các booking`);
         
-        // Lấy các booking đang chờ hoặc đã xác nhận của phòng này
         const bookings = await Booking.getRoomBookings(id);
         console.log(`[updateRoomStatus] Tìm thấy ${bookings.length} booking cho phòng ${id}`);
         
         const activeBookings = bookings.filter(b => ['pending', 'confirmed'].includes(b.status));
         console.log(`[updateRoomStatus] Có ${activeBookings.length} booking cần hủy do bảo trì`);
         
-        // Hủy từng booking và gửi thông báo
         for (const booking of activeBookings) {
           console.log(`[updateRoomStatus] Đang hủy booking #${booking.id} do phòng bảo trì`);
           
           try {
-            // Cập nhật trạng thái booking thành cancelled
             await Booking.updateStatus(booking.id, 'cancelled');
             console.log(`[updateRoomStatus] Đã cập nhật trạng thái booking #${booking.id} thành cancelled`);
             
-            // Ghi log hoạt động
             await RoomActivity.create({
               room_id: id,
               user_id: req.user.id,
@@ -171,11 +160,9 @@ exports.updateRoomStatus = async (req, res) => {
             });
             console.log(`[updateRoomStatus] Đã tạo room activity log cho booking #${booking.id}`);
             
-            // Xử lý trường hợp room.location không tồn tại
             const location = room.location || 'không xác định';
             const roomName = room.room_name || `ID: ${room.id}`;
             
-            // Gửi thông báo cho người dùng
             const notification = await Notification.create({
               user_id: booking.user_id,
               title: '[ROOM] Đăng ký đặt phòng của bạn bị hủy',
@@ -185,14 +172,12 @@ exports.updateRoomStatus = async (req, res) => {
             console.log(`[updateRoomStatus] Đã gửi thông báo hủy booking #${booking.id} thành công: ${JSON.stringify(notification)}`);
           } catch (bookingError) {
             console.error(`[updateRoomStatus] Lỗi khi xử lý hủy booking #${booking.id}: ${bookingError}`);
-            // Tiếp tục với booking tiếp theo, không dừng quá trình
           }
         }
         
         console.log(`[updateRoomStatus] Đã hủy ${activeBookings.length} booking do phòng ${id} chuyển sang bảo trì`);
       } catch (error) {
         console.error(`[updateRoomStatus] Lỗi khi hủy bookings do bảo trì: ${error}`);
-        // Tiếp tục xử lý, không ảnh hưởng đến việc cập nhật trạng thái phòng
       }
     }
     
@@ -206,18 +191,16 @@ exports.updateRoomStatus = async (req, res) => {
   }
 };
 
-// [CHỈ ADMIN/STAFF] Xoá phòng
+// [ADMIN/STAFF] Xoá phòng
 exports.deleteRoom = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Kiểm tra xem phòng có tồn tại không
     const room = await Room.findById(id);
     if (!room) {
       return res.status(404).json({ error: 'Room not found' });
     }
     
-    // Kiểm tra xem phòng có đang được đặt hoặc sử dụng không
     const bookings = await Booking.getRoomBookings(id);
     const activeBookings = bookings.filter(b => ['pending', 'confirmed', 'in_use'].includes(b.status));
     
@@ -225,7 +208,6 @@ exports.deleteRoom = async (req, res) => {
       return res.status(400).json({ error: 'Cannot delete room with active bookings' });
     }
     
-    // Xoá phòng
     await Room.delete(id);
     
     res.json({ message: 'Room deleted successfully' });
@@ -235,19 +217,16 @@ exports.deleteRoom = async (req, res) => {
   }
 };
 
-// Lấy danh sách các phòng trống theo thời gian
+// Lấy danh sách các phòng trống theo time
 exports.getAvailableRooms = async (req, res) => {
   try {
     const { date, start_time, end_time, capacity, room_type, location } = req.query;
     
-    // console.log('getAvailableRooms query parameters:', req.query);
     
-    // Kiểm tra dữ liệu đầu vào
     if (!date || !start_time || !end_time) {
       return res.status(400).json({ error: 'Date, start time, and end time are required' });
     }
     
-    // Pass all filters directly to the model
     const availableRooms = await Room.getAvailableRooms(
       date,
       start_time,
@@ -257,7 +236,6 @@ exports.getAvailableRooms = async (req, res) => {
       location
     );
     
-    // console.log(`Found ${availableRooms.length} available rooms after filtering`);
     
     res.json(availableRooms);
   } catch (error) {
@@ -280,7 +258,6 @@ exports.getRoomCount = async (req, res) => {
 // Lấy danh sách các tòa nhà
 exports.getBuildingList = async (req, res) => {
   try {
-    // Use the db imported from config instead of req.app.locals.db
     const { db } = require('../config/database');
     
     const buildingsResult = await new Promise((resolve, reject) => {
@@ -300,7 +277,6 @@ exports.getBuildingList = async (req, res) => {
 // Lấy danh sách các tầng
 exports.getFloorList = async (req, res) => {
   try {
-    // Use the db imported from config instead of req.app.locals.db
     const { db } = require('../config/database');
     
     const floorsResult = await new Promise((resolve, reject) => {

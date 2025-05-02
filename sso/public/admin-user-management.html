@@ -194,7 +194,6 @@
   </div>
 
   <script>
-    // API endpoints
     const API_BASE_URL = '/api';
     const ENDPOINTS = {
       USERS: `${API_BASE_URL}/users`,
@@ -203,17 +202,13 @@
       AUTH_LOGOUT: `${API_BASE_URL}/auth/logout`
     };
 
-    // Initialize users data
     let usersData = [];
     let userRoles = [];
 
-    // Navigation setup
     document.addEventListener('DOMContentLoaded', function() {
-      // Check if user is authenticated
       verifyAuth()
         .then(userData => {
           if (userData && (userData.role === 'admin' || userData.role === 'staff')) {
-            // Initialize the page components
             setupNavigation();
             initializeUsersPage();
           } else {
@@ -229,7 +224,6 @@
         });
     });
     
-    // Verify authentication with server
     async function verifyAuth() {
       try {
         console.log('Verifying authentication with server...');
@@ -251,10 +245,8 @@
       }
     }
     
-    // Clear all authentication data
     function clearAuthData() {
       sessionStorage.removeItem('sso_user');
-      // The cookie will be cleared by the server
     }
 
     function setupNavigation() {
@@ -269,7 +261,6 @@
         window.location.href = 'admin-booking-management.html';
       });
       document.getElementById('user-management-menu-item').addEventListener('click', function() {
-        // Current page, no need to navigate
       });
       
       document.getElementById('statistics-menu-item').addEventListener('click', function() {
@@ -285,11 +276,9 @@
       });
       
       document.getElementById('logout-btn').addEventListener('click', function() {
-        // Use the logout function if available from auth.js
         if (typeof window.logout === 'function') {
             window.logout();
         } else {
-            // Fallback if the logout function is not available
             fetch(ENDPOINTS.AUTH_LOGOUT, {
               method: 'POST',
               credentials: 'include' // Include cookies
@@ -309,19 +298,14 @@
 
     async function initializeUsersPage() {
       try {
-        // Initialize modal functionality
         setupModalFunctionality();
         
-        // Set up filter handlers
         setupFilterHandlers();
         
-        // Load user roles
         await loadUserRoles();
         
-        // Load user data
         await loadUsers();
         
-        // Render user table based on loaded data
         renderUserTable(usersData);
       } catch (error) {
         console.error('Error initializing users page:', error);
@@ -329,11 +313,9 @@
       }
     }
 
-    // Create headers for API requests
     function createAuthHeaders() {
       return {
         'Content-Type': 'application/json'
-        // The authentication is handled by cookies
       };
     }
 
@@ -396,25 +378,18 @@
         
         userRoles = await response.json();
         
-        // Check if it_staff role exists in the API response
         const hasITStaffRole = userRoles.some(role => role.code === 'it_staff');
         
-        // If it_staff is missing, add it manually
         if (!hasITStaffRole) {
           userRoles.push({ id: 4, name: 'Nhân viên IT', code: 'it_staff' });
         }
         
-        // KEEP THE EXISTING ROLE FILTERS - Don't clear them
-        // Just ensure all API roles are represented
         const roleFilter = document.getElementById('role-filter');
-        // Preserve the "all" option
         let allOption = roleFilter.querySelector('option[value="all"]');
         
-        // Get all existing role codes in the filter
         const existingRoleCodes = Array.from(roleFilter.querySelectorAll('option'))
           .map(option => option.value);
         
-        // Add any roles from API that aren't already in the filter
         userRoles.forEach(role => {
           if (!existingRoleCodes.includes(role.code) && role.code !== 'all') {
           const option = document.createElement('option');
@@ -424,12 +399,10 @@
           }
         });
         
-        // Do the same for the role select in the modal
         const roleSelect = document.getElementById('role');
         const existingModalRoleCodes = Array.from(roleSelect.querySelectorAll('option'))
           .map(option => option.value);
         
-        // Add any roles from API that aren't already in the modal
         userRoles.forEach(role => {
           if (!existingModalRoleCodes.includes(role.code)) {
           const option = document.createElement('option');
@@ -499,7 +472,6 @@
       users.forEach(user => {
         const row = document.createElement('tr');
         
-        // Create table cells
         const idCell = document.createElement('td');
         idCell.textContent = user.id;
         
@@ -519,7 +491,6 @@
         const roleSelect = document.createElement('select');
         roleSelect.className = 'filter-select';
         
-        // Add role options
         userRoles.forEach(role => {
           const option = document.createElement('option');
           option.value = role.code;
@@ -544,7 +515,6 @@
         
         statusCell.appendChild(statusBadge);
         
-        // Actions cell
         const actionsCell = document.createElement('td');
         
         const viewButton = document.createElement('button');
@@ -573,7 +543,6 @@
         actionsCell.appendChild(saveButton);
         actionsCell.appendChild(deleteButton);
         
-        // Add event listeners
         viewButton.addEventListener('click', function() {
           window.location.href = `admin-user-details.html?id=${user.id}`;
         });
@@ -590,7 +559,6 @@
           deleteUser(user.id, user.full_name);
         });
         
-        // Append cells to row
         row.appendChild(idCell);
         row.appendChild(usernameCell);
         row.appendChild(fullNameCell);
@@ -600,7 +568,6 @@
         row.appendChild(statusCell);
         row.appendChild(actionsCell);
         
-        // Append row to table body
         tableBody.appendChild(row);
       });
     }
@@ -616,7 +583,6 @@
         
         if (!response.ok) throw new Error('Failed to update user role');
         
-        // Update local data
         const updatedUserData = await response.json();
         const userIndex = usersData.findIndex(u => u.id === userId);
         
@@ -642,10 +608,8 @@
           
           if (!response.ok) throw new Error('Failed to delete user');
           
-          // Remove from local data
           usersData = usersData.filter(user => user.id !== userId);
           
-          // Re-render table
           applyFilters();
           
           alert('Đã xóa người dùng!');
@@ -667,7 +631,6 @@
         
         if (!response.ok) throw new Error('Failed to update user status');
         
-        // Update local data
         const updatedUserData = await response.json();
         const userIndex = usersData.findIndex(u => u.id === userId);
         
@@ -675,7 +638,6 @@
           usersData[userIndex] = { ...usersData[userIndex], ...updatedUserData.user };
         }
         
-        // Re-render table
         applyFilters();
         
         alert(`Người dùng đã được ${newStatus === 'locked' ? 'khóa' : 'mở khóa'}!`);
@@ -693,7 +655,6 @@
       modalTitle.textContent = 'Thêm người dùng mới';
       form.reset();
       
-      // Reset hidden user ID
       form.dataset.userId = '';
       
       modal.style.display = 'flex';
@@ -707,7 +668,6 @@
     async function saveUser() {
       const form = document.getElementById('user-form');
       
-      // Gather form data
       const userData = {
         username: document.getElementById('username').value,
         full_name: document.getElementById('fullname').value,
@@ -719,7 +679,6 @@
         password: document.getElementById('password').value
       };
       
-      // Validate form data
       if (!userData.username || !userData.full_name || !userData.email) {
         alert('Vui lòng điền đầy đủ thông tin bắt buộc: Tên đăng nhập, họ tên và email!');
         return;
@@ -740,11 +699,9 @@
         
         if (!response.ok) throw new Error('Failed to create user');
         
-        // Add to local data
         const result = await response.json();
         usersData.push(result.user);
         
-        // Re-render table and close modal
         applyFilters();
         closeModal();
         

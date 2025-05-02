@@ -26,7 +26,7 @@ router.get('/admin', authenticate, isAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, '../../public/admin-user-management.html'));
 });
 
-// Route for the main dashboard
+// Dashboard
 router.get('/dashboard', authenticate, (req, res) => {
   res.sendFile(path.join(__dirname, '../../public/dashboard.html'));
 });

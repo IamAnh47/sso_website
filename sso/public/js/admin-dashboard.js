@@ -1,9 +1,3 @@
-/**
- * Admin Dashboard JavaScript
- * Handles user management functionality for admin users
- */
-
-// API endpoints
 const API_BASE_URL = '/api';
 const ENDPOINTS = {
     USERS: `${API_BASE_URL}/users`,
@@ -11,7 +5,6 @@ const ENDPOINTS = {
     DEPARTMENTS: `${API_BASE_URL}/departments`
 };
 
-// State management
 let usersData = [];
 let departmentsData = [];
 let currentFilters = {
@@ -23,22 +16,16 @@ let currentFilters = {
 let currentPage = 1;
 const PAGE_SIZE = 10;
 
-// Initialize page
 document.addEventListener('DOMContentLoaded', function() {
-    // Setup navigation
     setupNavigation();
     
-    // Initialize users table
     initializeDashboard();
     
-    // Add event listeners for modals
     setupModalListeners();
     
-    // Add event listeners for filters
     setupFilterListeners();
 });
 
-// Setup navigation between pages
 function setupNavigation() {
     document.getElementById('overview-menu-item').addEventListener('click', function() {
         window.location.href = 'admin-overview.html';
@@ -57,7 +44,6 @@ function setupNavigation() {
     });
     
     document.getElementById('logout-btn').addEventListener('click', function() {
-        // Call logout API
         fetch(`${API_BASE_URL}/auth/logout`, {
             method: 'POST',
             credentials: 'include'
@@ -74,17 +60,14 @@ function setupNavigation() {
 
 async function initializeDashboard() {
     try {
-        // Load departments and users data
         await Promise.all([
             loadDepartments(),
             loadUsersData(),
             loadUserStats()
         ]);
         
-        // Populate department filter
         populateDepartmentFilter();
         
-        // Render users table
         renderUsersTable();
     } catch (error) {
         console.error('Error initializing dashboard:', error);
@@ -97,19 +80,14 @@ function setupModalListeners() {
     const editUserModal = document.getElementById('edit-user-modal');
     const userDetailsModal = document.getElementById('user-details-modal');
     
-    // Add user button
     document.getElementById('add-user-btn').addEventListener('click', function() {
-        // Reset form
         document.getElementById('add-user-form').reset();
         
-        // Populate department select
         populateDepartmentSelect('add-user-department');
         
-        // Show modal
         addUserModal.style.display = 'flex';
     });
     
-    // Close modals
     document.querySelectorAll('.modal-close, .cancel-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             addUserModal.style.display = 'none';
@@ -118,7 +96,6 @@ function setupModalListeners() {
         });
     });
     
-    // Close modal when clicking outside
     window.addEventListener('click', function(event) {
         if (event.target === addUserModal) {
             addUserModal.style.display = 'none';
@@ -131,13 +108,11 @@ function setupModalListeners() {
         }
     });
     
-    // Submit add user form
     document.getElementById('add-user-form').addEventListener('submit', async function(event) {
         event.preventDefault();
         await addUser();
     });
     
-    // Submit edit user form
     document.getElementById('edit-user-form').addEventListener('submit', async function(event) {
         event.preventDefault();
         await updateUser();
@@ -145,28 +120,24 @@ function setupModalListeners() {
 }
 
 function setupFilterListeners() {
-    // Role filter
     document.getElementById('role-filter').addEventListener('change', function() {
         currentFilters.role = this.value;
         currentPage = 1;
         applyFilters();
     });
     
-    // Department filter
     document.getElementById('department-filter').addEventListener('change', function() {
         currentFilters.department = this.value;
         currentPage = 1;
         applyFilters();
     });
     
-    // Status filter
     document.getElementById('status-filter').addEventListener('change', function() {
         currentFilters.status = this.value;
         currentPage = 1;
         applyFilters();
     });
     
-    // Search input
     let searchTimeout;
     document.getElementById('search-input').addEventListener('input', function() {
         clearTimeout(searchTimeout);
@@ -177,7 +148,6 @@ function setupFilterListeners() {
         }, 300);
     });
     
-    // Clear filters
     document.getElementById('clear-filters').addEventListener('click', function() {
         document.getElementById('role-filter').value = 'all';
         document.getElementById('department-filter').value = 'all';
@@ -195,7 +165,6 @@ function setupFilterListeners() {
         applyFilters();
     });
     
-    // Refresh button
     document.getElementById('refresh-btn').addEventListener('click', async function() {
         try {
             await loadUsersData();
@@ -208,7 +177,6 @@ function setupFilterListeners() {
         }
     });
     
-    // Export button
     document.getElementById('export-btn').addEventListener('click', exportUsersToCSV);
 }
 
@@ -226,7 +194,6 @@ async function loadDepartments() {
         return departmentsData;
     } catch (error) {
         console.error('Error loading departments:', error);
-        // Fallback data if API fails
         departmentsData = [
             { id: 1, name: 'Khoa Khoa học và Kỹ thuật Máy tính', code: 'CSE' },
             { id: 2, name: 'Khoa Điện - Điện tử', code: 'EEE' },
@@ -252,7 +219,6 @@ async function loadUsersData() {
         return usersData;
     } catch (error) {
         console.error('Error loading users data:', error);
-        // Fallback data if API fails
         usersData = [
             {
                 id: 1,
@@ -310,7 +276,6 @@ async function loadUserStats() {
         
         const stats = await response.json();
         
-        // Update dashboard stats
         document.getElementById('total-users').textContent = stats.total || 0;
         document.getElementById('active-users').textContent = stats.active || 0;
         document.getElementById('admin-users').textContent = stats.admin || 0;
@@ -320,7 +285,6 @@ async function loadUserStats() {
     } catch (error) {
         console.error('Error loading user stats:', error);
         
-        // Use counts from fallback data if API fails
         const totalUsers = usersData.length;
         const activeUsers = usersData.filter(user => user.status === 'active').length;
         const adminUsers = usersData.filter(user => user.role === 'admin').length;
@@ -342,12 +306,10 @@ async function loadUserStats() {
 function populateDepartmentFilter() {
     const departmentFilter = document.getElementById('department-filter');
     
-    // Clear existing options except first one
     while (departmentFilter.options.length > 1) {
         departmentFilter.remove(1);
     }
     
-    // Add departments from data
     departmentsData.forEach(dept => {
         const option = document.createElement('option');
         option.value = dept.id;
@@ -359,10 +321,8 @@ function populateDepartmentFilter() {
 function populateDepartmentSelect(elementId) {
     const departmentSelect = document.getElementById(elementId);
     
-    // Clear existing options
     departmentSelect.innerHTML = '';
     
-    // Add departments from data
     departmentsData.forEach(dept => {
         const option = document.createElement('option');
         option.value = dept.id;
@@ -374,22 +334,18 @@ function populateDepartmentSelect(elementId) {
 function applyFilters() {
     let filteredUsers = [...usersData];
     
-    // Apply role filter
     if (currentFilters.role !== 'all') {
         filteredUsers = filteredUsers.filter(user => user.role === currentFilters.role);
     }
     
-    // Apply department filter
     if (currentFilters.department !== 'all') {
         filteredUsers = filteredUsers.filter(user => user.department_id.toString() === currentFilters.department);
     }
     
-    // Apply status filter
     if (currentFilters.status !== 'all') {
         filteredUsers = filteredUsers.filter(user => user.status === currentFilters.status);
     }
     
-    // Apply search filter
     if (currentFilters.search) {
         filteredUsers = filteredUsers.filter(user => 
             user.username.toLowerCase().includes(currentFilters.search) ||
@@ -398,11 +354,9 @@ function applyFilters() {
         );
     }
     
-    // Update filtered count
     const countElement = document.getElementById('filtered-count');
     countElement.textContent = `${filteredUsers.length} / ${usersData.length}`;
     
-    // Render users table with pagination
     renderUsersTable(filteredUsers);
     updatePagination(filteredUsers);
 }
@@ -422,7 +376,6 @@ function renderUsersTable(filteredData = usersData) {
         return;
     }
     
-    // Calculate pagination
     const startIndex = (currentPage - 1) * PAGE_SIZE;
     const endIndex = Math.min(startIndex + PAGE_SIZE, filteredData.length);
     const paginatedData = filteredData.slice(startIndex, endIndex);
@@ -430,27 +383,22 @@ function renderUsersTable(filteredData = usersData) {
     paginatedData.forEach((user, index) => {
         const row = document.createElement('tr');
         
-        // Serial number
         const serialCell = document.createElement('td');
         serialCell.textContent = startIndex + index + 1;
         row.appendChild(serialCell);
         
-        // Username
         const usernameCell = document.createElement('td');
         usernameCell.textContent = user.username;
         row.appendChild(usernameCell);
         
-        // Full Name
         const nameCell = document.createElement('td');
         nameCell.textContent = user.fullname;
         row.appendChild(nameCell);
         
-        // Department
         const deptCell = document.createElement('td');
         deptCell.textContent = user.department_name;
         row.appendChild(deptCell);
         
-        // Role
         const roleCell = document.createElement('td');
         const roleSpan = document.createElement('span');
         roleSpan.className = `role-badge ${user.role === 'admin' ? 'role-admin' : 'role-user'}`;
@@ -458,7 +406,6 @@ function renderUsersTable(filteredData = usersData) {
         roleCell.appendChild(roleSpan);
         row.appendChild(roleCell);
         
-        // Status
         const statusCell = document.createElement('td');
         const statusSpan = document.createElement('span');
         statusSpan.className = `status-badge ${user.status === 'active' ? 'status-active' : 'status-inactive'}`;
@@ -466,11 +413,9 @@ function renderUsersTable(filteredData = usersData) {
         statusCell.appendChild(statusSpan);
         row.appendChild(statusCell);
         
-        // Actions
         const actionsCell = document.createElement('td');
         actionsCell.className = 'actions-cell';
         
-        // View button
         const viewButton = document.createElement('button');
         viewButton.className = 'action-btn view-btn';
         viewButton.innerHTML = '<i class="fas fa-eye"></i>';
@@ -478,7 +423,6 @@ function renderUsersTable(filteredData = usersData) {
         viewButton.addEventListener('click', () => showUserDetails(user));
         actionsCell.appendChild(viewButton);
         
-        // Edit button
         const editButton = document.createElement('button');
         editButton.className = 'action-btn edit-btn';
         editButton.innerHTML = '<i class="fas fa-edit"></i>';
@@ -486,7 +430,6 @@ function renderUsersTable(filteredData = usersData) {
         editButton.addEventListener('click', () => openEditUserModal(user));
         actionsCell.appendChild(editButton);
         
-        // Delete button
         const deleteButton = document.createElement('button');
         deleteButton.className = 'action-btn delete-btn';
         deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
@@ -513,7 +456,6 @@ function updatePagination(filteredData = usersData) {
     
     const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
     
-    // Previous button
     const prevButton = document.createElement('button');
     prevButton.className = 'pagination-btn';
     prevButton.innerHTML = '<i class="fas fa-angle-left"></i>';
@@ -527,7 +469,6 @@ function updatePagination(filteredData = usersData) {
     });
     paginationContainer.appendChild(prevButton);
     
-    // Page buttons
     const startPage = Math.max(1, currentPage - 2);
     const endPage = Math.min(totalPages, startPage + 4);
     
@@ -543,7 +484,6 @@ function updatePagination(filteredData = usersData) {
         paginationContainer.appendChild(pageButton);
     }
     
-    // Next button
     const nextButton = document.createElement('button');
     nextButton.className = 'pagination-btn';
     nextButton.innerHTML = '<i class="fas fa-angle-right"></i>';
@@ -561,7 +501,6 @@ function updatePagination(filteredData = usersData) {
 function showUserDetails(user) {
     const modal = document.getElementById('user-details-modal');
     
-    // Fill in user details
     document.getElementById('detail-username').textContent = user.username || 'N/A';
     document.getElementById('detail-fullname').textContent = user.fullname || 'N/A';
     document.getElementById('detail-email').textContent = user.email || 'N/A';
@@ -570,41 +509,34 @@ function showUserDetails(user) {
     document.getElementById('detail-role').textContent = user.role === 'admin' ? 'Quản trị viên' : 'Người dùng';
     document.getElementById('detail-status').textContent = user.status === 'active' ? 'Hoạt động' : 'Không hoạt động';
     
-    // Format dates
     const createdDate = user.created_at ? new Date(user.created_at).toLocaleString('vi-VN') : 'N/A';
     const lastLoginDate = user.last_login ? new Date(user.last_login).toLocaleString('vi-VN') : 'N/A';
     
     document.getElementById('detail-created').textContent = createdDate;
     document.getElementById('detail-last-login').textContent = lastLoginDate;
     
-    // Set action buttons data
     document.getElementById('detail-edit-btn').setAttribute('data-id', user.id);
     document.getElementById('detail-edit-btn').addEventListener('click', () => {
         modal.style.display = 'none';
         openEditUserModal(user);
     });
     
-    // Show modal
     modal.style.display = 'flex';
 }
 
 function openEditUserModal(user) {
-    // Populate form with user data
     document.getElementById('edit-user-id').value = user.id;
     document.getElementById('edit-username').value = user.username;
     document.getElementById('edit-email').value = user.email;
     document.getElementById('edit-fullname').value = user.fullname;
     document.getElementById('edit-phone').value = user.phone || '';
     
-    // Populate department select
     populateDepartmentSelect('edit-user-department');
     document.getElementById('edit-user-department').value = user.department_id;
     
-    // Set role and status
     document.getElementById('edit-role').value = user.role;
     document.getElementById('edit-status').value = user.status;
     
-    // Show modal
     document.getElementById('edit-user-modal').style.display = 'flex';
 }
 
@@ -620,7 +552,6 @@ async function addUser() {
         status: document.getElementById('add-status').value
     };
     
-    // Validate form data
     if (!userData.username || !userData.email || !userData.password || !userData.fullname) {
         alert('Vui lòng điền đầy đủ thông tin bắt buộc: Tên đăng nhập, email, mật khẩu và họ tên!');
         return;
@@ -640,11 +571,9 @@ async function addUser() {
             throw new Error('Failed to add user');
         }
         
-        // Refresh users data
         await Promise.all([loadUsersData(), loadUserStats()]);
         applyFilters();
         
-        // Close modal
         document.getElementById('add-user-modal').style.display = 'none';
         
         alert('Người dùng đã được thêm thành công!');
@@ -667,13 +596,11 @@ async function updateUser() {
         status: document.getElementById('edit-status').value
     };
     
-    // Add password only if it's provided (not empty)
     const password = document.getElementById('edit-password').value;
     if (password) {
         userData.password = password;
     }
     
-    // Validate form data
     if (!userData.username || !userData.email || !userData.fullname) {
         alert('Vui lòng điền đầy đủ thông tin bắt buộc: Tên đăng nhập, email và họ tên!');
         return;
@@ -693,11 +620,9 @@ async function updateUser() {
             throw new Error('Failed to update user');
         }
         
-        // Refresh users data
         await Promise.all([loadUsersData(), loadUserStats()]);
         applyFilters();
         
-        // Close modal
         document.getElementById('edit-user-modal').style.display = 'none';
         
         alert('Người dùng đã được cập nhật thành công!');
@@ -718,7 +643,6 @@ async function deleteUser(userId) {
             throw new Error('Failed to delete user');
         }
         
-        // Refresh users data
         await Promise.all([loadUsersData(), loadUserStats()]);
         applyFilters();
         
@@ -730,10 +654,8 @@ async function deleteUser(userId) {
 }
 
 function exportUsersToCSV() {
-    // Get filtered users
     let filteredUsers = [...usersData];
     
-    // Apply current filters
     if (currentFilters.role !== 'all') {
         filteredUsers = filteredUsers.filter(user => user.role === currentFilters.role);
     }
@@ -759,13 +681,10 @@ function exportUsersToCSV() {
         return;
     }
     
-    // Generate CSV content
     let csvContent = "data:text/csv;charset=utf-8,";
     
-    // Headers
     csvContent += "ID,Tên đăng nhập,Họ và tên,Email,Số điện thoại,Khoa/Phòng ban,Vai trò,Trạng thái,Ngày tạo,Đăng nhập cuối\n";
     
-    // Data rows
     filteredUsers.forEach(user => {
         const role = user.role === 'admin' ? 'Quản trị viên' : 'Người dùng';
         const status = user.status === 'active' ? 'Hoạt động' : 'Không hoạt động';
@@ -775,14 +694,12 @@ function exportUsersToCSV() {
         csvContent += `${user.id},"${user.username}","${user.fullname}","${user.email}","${user.phone || ''}","${user.department_name}","${role}","${status}","${createdDate}","${lastLoginDate}"\n`;
     });
     
-    // Create download link
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", `danh-sach-nguoi-dung-${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     
-    // Trigger download
     link.click();
     document.body.removeChild(link);
     

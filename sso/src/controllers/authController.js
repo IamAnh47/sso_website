@@ -3,18 +3,16 @@ const Session = require('../models/Session');
 const bcrypt = require('bcrypt');
 const config = require('../config/config');
 
-// Đăng ký người dùng mới
+// Register
 exports.register = async (req, res) => {
   try {
     const { username, password, email, full_name, student_id, phone, department_id } = req.body;
     
-    // Kiểm tra xem username đã tồn tại chưa
     const existingUser = await User.findByUsername(username);
     if (existingUser) {
       return res.status(400).json({ error: 'Username already exists' });
     }
     
-    // Kiểm tra xem student_id đã tồn tại chưa
     if (student_id) {
       const existingStudentId = await User.findByStudentId(student_id);
       if (existingStudentId) {
@@ -22,7 +20,6 @@ exports.register = async (req, res) => {
       }
     }
     
-    // Tạo người dùng mới
     const newUser = await User.create({
       username,
       password,
@@ -32,7 +29,6 @@ exports.register = async (req, res) => {
       phone,
       department_id
     });
-    // Trả về thông tin người dùng (không bao gồm mật khẩu)
     res.status(201).json({
       message: 'User registered successfully',
       user: {
@@ -52,23 +48,20 @@ exports.register = async (req, res) => {
   }
 };
 
-// Đăng nhập
+// Login
 exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
     
-    // Xác thực người dùng
     const user = await User.authenticate(username, password);
     if (!user) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
     
-    // Tạo session mới
     const session = await Session.create(user.id);
     
     console.log('Created new session with token:', session.token.substring(0, 10) + '...');
     
-    // Lưu token vào HTTP-only cookie
     const cookieOptions = {
       ...config.cookie,
       path: '/'
@@ -77,7 +70,6 @@ exports.login = async (req, res) => {
     console.log('Setting cookie with options:', JSON.stringify(cookieOptions));
     res.cookie('token', session.token, cookieOptions);
     
-    // Trả về thông tin người dùng (không bao gồm token)
     res.json({
       message: 'Login successful',
       user: {
@@ -97,10 +89,9 @@ exports.login = async (req, res) => {
   }
 };
 
-// Đăng xuất
+// Logout
 exports.logout = async (req, res) => {
   try {
-    // Lấy token từ cookie
     const token = req.cookies.token;
     if (!token) {
       return res.status(400).json({ error: 'No token provided' });
@@ -108,10 +99,8 @@ exports.logout = async (req, res) => {
     
     console.log('Logging out user with token:', token.substring(0, 10) + '...');
     
-    // Xoá session
     await Session.delete(token);
     
-    // Xoá cookie với đúng các options giống khi tạo cookie
     const cookieOptions = {
       path: '/',
       httpOnly: true,
@@ -125,7 +114,6 @@ exports.logout = async (req, res) => {
     res.json({ message: 'Logout successful' });
   } catch (error) {
     console.error('Logout error:', error);
-    // Vẫn xóa cookie ngay cả khi có lỗi
     res.clearCookie('token', {
       path: '/',
       httpOnly: true,
@@ -136,13 +124,11 @@ exports.logout = async (req, res) => {
   }
 };
 
-// Kiểm tra token có hợp lệ không và trả về thông tin người dùng
+// Check if token is valid and return user inf
 exports.verify = async (req, res) => {
   try {
-    // User đã được đưa vào req bởi middleware authenticate
     const { user } = req;
     
-    // Trả về thông tin người dùng
     res.json({
       user: {
         id: user.id,

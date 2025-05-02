@@ -865,7 +865,6 @@
     </div>
 
     <script>
-        // API endpoints
         const API_BASE_URL = '/api';
         const ENDPOINTS = {
             ROOMS: `${API_BASE_URL}/rooms`,
@@ -873,11 +872,9 @@
             IOT: `${API_BASE_URL}/iot`
         };
 
-        // Initialize rooms data
         let roomsData = [];
         let roomTypes = [];
         
-        // Navigation setup
         document.addEventListener('DOMContentLoaded', function() {
             setupNavigation();
             initializeRoomsPage();
@@ -913,17 +910,14 @@
         }
 
         function setupFormEventListeners() {
-            // Add room modal form event listeners
             const roomNameInput = document.getElementById('room-name');
             const locationSelect = document.getElementById('room-location-select');
             
-            // Auto generate room ID from location and room name
             function updateRoomId() {
                 const roomName = roomNameInput.value.trim();
                 const location = locationSelect.value;
                 
                 if (roomName && location) {
-                    // Create room ID in format "H1.101"
                     document.getElementById('room-id').value = `${location}.${roomName}`;
                 } else {
                     document.getElementById('room-id').value = '';
@@ -933,11 +927,9 @@
             roomNameInput.addEventListener('input', updateRoomId);
             locationSelect.addEventListener('change', updateRoomId);
             
-            // Equipment checkbox event listeners
             document.querySelectorAll('input[name="equipment"]').forEach(checkbox => {
                 const countInput = document.getElementById(`${checkbox.value}-count`);
                 
-                // Enable/disable count input based on checkbox
                 checkbox.addEventListener('change', function() {
                     countInput.disabled = !this.checked;
                     if (!this.checked) {
@@ -947,24 +939,19 @@
                     }
                 });
                 
-                // Khi thay đổi số lượng, kiểm tra và cập nhật thiết bị
                 countInput.addEventListener('change', function() {
-                    // Nếu số lượng = 0, bỏ chọn thiết bị
                     if (parseInt(this.value) <= 0) {
                         checkbox.checked = false;
                         countInput.disabled = true;
                     }
                 });
                 
-                // Initially disable count inputs
                 countInput.disabled = !checkbox.checked;
             });
             
-            // Image upload preview
             const imageInput = document.getElementById('room-image');
             const imagePreview = document.getElementById('image-preview');
             
-            // Initial placeholder
             imagePreview.innerHTML = '<div class="image-preview-placeholder">Chưa có ảnh phòng</div>';
             
             imageInput.addEventListener('change', function(e) {
@@ -979,7 +966,6 @@
                             </div>
                         `;
                         
-                        // Add event listener for remove button
                         document.getElementById('remove-image').addEventListener('click', removeImage);
                     }
                     
@@ -993,20 +979,15 @@
                 imagePreview.innerHTML = '<div class="image-preview-placeholder">Chưa có ảnh phòng</div>';
             }
             
-            // Add listener for room-modal close button
             document.querySelector('.modal-close').addEventListener('click', closeModal);
             document.getElementById('cancel-btn').addEventListener('click', closeModal);
             
-            // Add room button
             document.getElementById('add-room-btn').addEventListener('click', openAddModal);
             
-            // Save room button
             document.getElementById('save-room-btn').addEventListener('click', saveRoom);
 
-            // Export button
             document.getElementById('export-btn').addEventListener('click', exportRoomsData);
             
-            // Setup confirm delete modal
             document.getElementById('cancel-delete-btn').addEventListener('click', function() {
                 document.getElementById('confirm-delete-modal').style.display = 'none';
             });
@@ -1014,7 +995,6 @@
             document.getElementById('confirm-delete-btn').addEventListener('click', confirmDeleteRoom);
         }
 
-        // Variables for delete confirmation
         let roomToDeleteId = null;
         
         function deleteRoom(roomId) {
@@ -1024,13 +1004,10 @@
                 return;
             }
             
-            // Set the room ID to be deleted
             roomToDeleteId = roomId;
             
-            // Display room ID in the confirmation message
             document.getElementById('delete-room-id').textContent = `${room.id} (${room.room_name || ''})`;
             
-            // Show confirmation modal
             document.getElementById('confirm-delete-modal').style.display = 'flex';
         }
         
@@ -1038,7 +1015,6 @@
             if (!roomToDeleteId) return;
             
             try {
-                // First, check if the room has IoT devices
                 const iotResponse = await fetch(`${ENDPOINTS.IOT}?room_id=${roomToDeleteId}`, {
                     credentials: 'include'
                 });
@@ -1046,10 +1022,8 @@
                 if (iotResponse.ok) {
                     const iotDevices = await iotResponse.json();
                     if (iotDevices && iotDevices.length > 0) {
-                        // Room has IoT devices, automatically delete them
                         console.log(`Deleting ${iotDevices.length} IoT devices for room ${roomToDeleteId}`);
                         
-                        // Delete each IoT device
                         for (const device of iotDevices) {
                             try {
                                 const deleteResponse = await fetch(`${ENDPOINTS.IOT}/${device.id}`, {
@@ -1067,7 +1041,6 @@
                     }
                 }
                 
-                // Now proceed with room deletion
                 const response = await fetch(`${ENDPOINTS.ROOMS}/${roomToDeleteId}`, {
                     method: 'DELETE',
                     credentials: 'include'
@@ -1079,10 +1052,8 @@
                     throw new Error(errorMessage);
                 }
                 
-                // Hide confirmation modal
                 document.getElementById('confirm-delete-modal').style.display = 'none';
                 
-                // Reload rooms and update display
                 await loadRooms();
                 generateRoomCards(roomsData);
                 
@@ -1097,7 +1068,6 @@
 
         async function initializeRoomsPage() {
             try {
-                // Load room types
                 const roomTypeResponse = await fetch(ENDPOINTS.ROOM_TYPES, {
                     credentials: 'include'
                 });
@@ -1106,13 +1076,10 @@
                     populateRoomTypeFilter(roomTypes);
                 }
                 
-                // Load rooms
                 roomsData = await loadRooms();
                 
-                // Generate room cards
                 generateRoomCards(roomsData);
                 
-                // Setup search and filter listeners
                 setupFiltersAndSearch();
             } catch (error) {
                 console.error('Error initializing rooms page:', error);
@@ -1146,7 +1113,6 @@
         function getEquipmentData() {
             let equipment = {};
             
-            // Loop through all equipment checkboxes
             document.querySelectorAll('input[name="equipment"]').forEach(checkbox => {
                 if (checkbox.checked) {
                     const countInput = document.getElementById(`${checkbox.value}-count`);
@@ -1161,17 +1127,14 @@
         function getIoTDeviceData() {
             let iotDevices = [];
             
-            // Loop through all equipment checkboxes
             document.querySelectorAll('input[name="equipment"]').forEach(checkbox => {
                 if (checkbox.checked) {
                     const equipmentType = checkbox.value;
                     const countInput = document.getElementById(`${equipmentType}-count`);
                     const count = parseInt(countInput.value) || 0;
                     
-                    // Skip if count is 0
                     if (count <= 0) return;
                     
-                    // Define a friendly name for device type
                     const deviceTypeNames = {
                         'projector': 'Máy chiếu',
                         'computer': 'Máy tính',
@@ -1181,7 +1144,6 @@
                         'fan': 'Quạt'
                     };
                     
-                    // Create device objects with auto-incrementing names
                     for (let i = 1; i <= count; i++) {
                         iotDevices.push({
                             device_type: equipmentType,
@@ -1195,7 +1157,6 @@
         }
         
         function populateEquipmentInputs(facilities) {
-            // Reset all checkboxes first
             document.querySelectorAll('input[name="equipment"]').forEach(checkbox => {
                 checkbox.checked = false;
                 const countInput = document.getElementById(`${checkbox.value}-count`);
@@ -1207,13 +1168,11 @@
             
             let facilitiesObj = {};
             
-            // Parse facilities if it's a string
             if (typeof facilities === 'string') {
                 try {
                     facilitiesObj = JSON.parse(facilities);
                 } catch (e) {
                     console.error('Error parsing facilities:', e);
-                    // If can't parse, split by comma and set value to 1
                     const facilitiesArray = facilities.split(',').map(item => item.trim());
                     facilitiesArray.forEach(item => {
                         facilitiesObj[item] = 1;
@@ -1223,7 +1182,6 @@
                 facilitiesObj = facilities;
             }
             
-            // Set checkbox and count for each equipment
             for (const [key, value] of Object.entries(facilitiesObj)) {
                 const checkbox = document.querySelector(`input[name="equipment"][value="${key}"]`);
                 if (checkbox) {
@@ -1238,12 +1196,10 @@
         function populateRoomTypeFilter(types) {
             const typeFilter = document.getElementById('type-filter');
             
-            // Clear existing options except the first one
             while (typeFilter.options.length > 1) {
                 typeFilter.remove(1);
             }
             
-            // Add room type options
             const roomTypeLabels = {
                 'classroom': 'Phòng học',
                 'meeting': 'Phòng họp',
@@ -1266,7 +1222,6 @@
             const statusFilter = document.getElementById('status-filter');
             const typeFilter = document.getElementById('type-filter');
             
-            // Apply filters on input/change
             searchInput.addEventListener('input', applyFilters);
             statusFilter.addEventListener('change', applyFilters);
             typeFilter.addEventListener('change', applyFilters);
@@ -1303,11 +1258,9 @@
             const roomId = form.dataset.roomId;
             const isEditMode = !!roomId;
             
-            // Lấy dữ liệu input
             const roomName = document.getElementById('room-name').value.trim();
             const location = document.getElementById('room-location-select').value;
             
-            // Validate dữ liệu chính
             if (!roomName) {
                 alert('Vui lòng nhập tên phòng!');
                 return;
@@ -1318,7 +1271,6 @@
                 return;
             }
             
-            // Tạo đối tượng dữ liệu để gửi lên server
             const roomData = {
                 room_name: roomName,
                 location: location,
@@ -1329,9 +1281,7 @@
                 updated_at: new Date().toISOString()
             };
             
-            // Chỉ cập nhật thiết bị nếu đang thêm phòng mới, không phải chỉnh sửa
             if (!isEditMode) {
-                // Lấy dữ liệu thiết bị
                 const equipment = getEquipmentData();
                 const iotDevices = getIoTDeviceData();
                 roomData.facilities = equipment;
@@ -1342,7 +1292,6 @@
                 let response;
                 let endpoint = roomId ? `${ENDPOINTS.ROOMS}/${roomId}` : ENDPOINTS.ROOMS;
                 
-                // Gửi dữ liệu lên server
                 response = await fetch(endpoint, {
                     method: roomId ? 'PUT' : 'POST',
                     headers: {
@@ -1358,10 +1307,8 @@
                 }
                 
                 const savedRoomData = await response.json();
-                // Lấy ID phòng từ dữ liệu trả về HOẶC từ roomId hiện tại (nếu đang cập nhật)
                 let savedRoomId;
                 
-                // Xử lý các cấu trúc phản hồi khác nhau từ API
                 if (typeof savedRoomData === 'object') {
                     if (savedRoomData.id) {
                         savedRoomId = savedRoomData.id;
@@ -1372,35 +1319,28 @@
                     }
                 }
                 
-                // Nếu không thể lấy ID từ phản hồi, sử dụng ID hiện tại (nếu có)
                 if (!savedRoomId && roomId) {
                     savedRoomId = roomId;
                 }
                 
-                // Kiểm tra nếu không có ID phòng
                 if (!savedRoomId) {
                     console.error('Không thể xác định ID phòng');
                     alert('Phòng đã được lưu nhưng không thể xác định ID phòng. Vui lòng thử lại sau.');
                     
-                    // Tải lại danh sách phòng và đóng modal
                     await loadRooms();
                     generateRoomCards(roomsData);
                     closeModal();
                     return;
                 }
                 
-                // Chỉ xử lý thiết bị IoT khi thêm phòng mới
                 if (!isEditMode) {
-                    // Lấy dữ liệu thiết bị
                     const iotDevices = getIoTDeviceData();
                     
-                    // Thêm thiết bị IoT nếu có
                     if (iotDevices.length > 0) {
                         await addIoTDevicesToRoom(savedRoomId, iotDevices);
                     }
                 }
                 
-                // Xử lý upload ảnh nếu có file được chọn
                 const imageInput = document.getElementById('room-image');
                 if (imageInput.files && imageInput.files[0]) {
                     const formData = new FormData();
@@ -1417,7 +1357,6 @@
                     }
                 }
                 
-                // Xử lý xóa ảnh nếu người dùng đã chọn xóa
                 if (form.dataset.removeImage === 'true' && roomId) {
                     const deleteImageResponse = await fetch(`${ENDPOINTS.ROOMS}/${roomId}/image`, {
                         method: 'DELETE',
@@ -1429,7 +1368,6 @@
                     }
                 }
                 
-                // Tải lại danh sách phòng và đóng modal
                 await loadRooms();
                 generateRoomCards(roomsData);
                 closeModal();
@@ -1448,18 +1386,15 @@
             document.getElementById('room-status').value = 'available';
             document.getElementById('room-type').value = 'classroom';
             
-            // Reset equipment
             document.querySelectorAll('input[name="equipment"]').forEach(checkbox => {
                 checkbox.checked = false;
                 document.getElementById(`${checkbox.value}-count`).disabled = true;
                 document.getElementById(`${checkbox.value}-count`).value = 0;
             });
             
-            // Reset image preview
             const imagePreview = document.getElementById('image-preview');
             imagePreview.innerHTML = '<div class="image-preview-placeholder">Chưa có ảnh phòng</div>';
             
-            // Show modal
             document.getElementById('room-modal').style.display = 'flex';
         }
         
@@ -1476,12 +1411,10 @@
             
             let equipmentData = {};
             
-            // Parse facilities if it's a string
             if (typeof facilities === 'string') {
                 try {
                     equipmentData = JSON.parse(facilities);
                 } catch (e) {
-                    // If can't parse, split by comma
                     const items = facilities.split(',').map(item => item.trim());
                     items.forEach(item => {
                         equipmentData[item] = 1;
@@ -1491,7 +1424,6 @@
                 equipmentData = facilities;
             }
             
-            // Equipment type names
             const equipmentTypeNames = {
                 'projector': 'Máy chiếu',
                 'computer': 'Máy tính',
@@ -1501,23 +1433,19 @@
                 'fan': 'Quạt'
             };
             
-            // Display equipment items as a list
             for (const [type, count] of Object.entries(equipmentData)) {
                 if (count > 0) {
                     const itemElement = document.createElement('div');
                     itemElement.className = 'equipment-item-display';
                     
-                    // Use friendly name if available
                     const typeName = equipmentTypeNames[type] || type;
                     
-                    // Format display based on count
                     if (count > 1) {
                         itemElement.textContent = `${typeName} x${count}`;
             } else {
                         itemElement.textContent = typeName;
                     }
                     
-                    // Add IoT badge if needed
                     const roomId = document.getElementById('room-form').dataset.roomId;
                     if (roomId) {
                         fetch(`${ENDPOINTS.IOT}?room_id=${roomId}&device_type=${type}`, {
@@ -1551,18 +1479,14 @@
             document.getElementById('room-status').value = room.status || 'available';
             document.getElementById('edit-room-description').value = room.description || '';
             
-            // Reset image preview
             const imagePreview = document.getElementById('image-preview');
             imagePreview.innerHTML = '<div class="image-preview-placeholder">Chọn hình ảnh để thay đổi</div>';
             
-            // Thiết lập hiển thị thiết bị chỉ để xem
             const equipmentOptions = document.querySelector('.equipment-options');
             const originalEquipmentOptions = equipmentOptions.innerHTML;
             
-            // Lưu lại HTML gốc để khôi phục khi đóng modal
             document.getElementById('room-form').dataset.originalEquipment = originalEquipmentOptions;
             
-            // Hiển thị thiết bị dạng chỉ đọc
             let readOnlyEquipment = '<div class="equipment-display">';
             
             if (!room.facilities || (typeof room.facilities === 'object' && Object.keys(room.facilities).length === 0)) {
@@ -1570,7 +1494,6 @@
             } else {
                 let facilitiesObj = {};
                 
-                // Parse facilities if it's a string
                 if (typeof room.facilities === 'string') {
                     try {
                         facilitiesObj = JSON.parse(room.facilities);
@@ -1584,7 +1507,6 @@
                     facilitiesObj = room.facilities;
                 }
                 
-                // Equipment type names
                 const equipmentTypeNames = {
                     'projector': 'Máy chiếu',
                     'computer': 'Máy tính',
@@ -1594,7 +1516,6 @@
                     'fan': 'Quạt'
                 };
                 
-                // Fetch IoT devices for this room to check which are IoT-enabled
                 fetch(`${ENDPOINTS.IOT}?room_id=${room.id}`, {
                     credentials: 'include'
                 })
@@ -1602,7 +1523,6 @@
                 .then(iotDevices => {
                     let iotDevicesByType = {};
                     if (iotDevices && iotDevices.length > 0) {
-                        // Group IoT devices by type
                         iotDevices.forEach(device => {
                             if (!iotDevicesByType[device.device_type]) {
                                 iotDevicesByType[device.device_type] = [];
@@ -1611,7 +1531,6 @@
                         });
                     }
                     
-                    // Display equipment items
                     for (const [type, count] of Object.entries(facilitiesObj)) {
                         if (count > 0) {
                             const typeName = equipmentTypeNames[type] || type;
@@ -1626,7 +1545,6 @@
                                 itemElement.textContent = typeName;
                             }
                             
-                            // Add IoT badge if there are IoT devices of this type
                             if (iotDevicesOfType.length > 0) {
                                 const iotBadge = document.createElement('span');
                                 iotBadge.className = 'equipment-iot-badge';
@@ -1641,7 +1559,6 @@
                 .catch(error => {
                     console.error('Error fetching IoT devices:', error);
                     
-                    // Display equipment without IoT information if fetch fails
                     for (const [type, count] of Object.entries(facilitiesObj)) {
                         if (count > 0) {
                             const typeName = equipmentTypeNames[type] || type;
@@ -1661,11 +1578,9 @@
                 });
             }
             
-            // Initial display before IoT data loads
             readOnlyEquipment += '</div>';
             equipmentOptions.innerHTML = readOnlyEquipment;
             
-            // Show modal
             document.getElementById('room-modal').style.display = 'flex';
         }
         
@@ -1673,7 +1588,6 @@
             const modal = document.getElementById('room-modal');
             modal.style.display = 'none';
             
-            // Khôi phục HTML gốc của phần thiết bị nếu cần
             const roomForm = document.getElementById('room-form');
             const originalEquipment = roomForm.dataset.originalEquipment;
             
@@ -1698,7 +1612,6 @@
             
             roomGrid.innerHTML = '';
             
-            // Room type labels for display
             const roomTypeLabels = {
                 'classroom': 'Phòng học',
                 'meeting': 'Phòng họp',
@@ -1708,9 +1621,7 @@
                 'study': 'Không gian học tập'
             };
             
-            // Generate room cards
             rooms.forEach(room => {
-                // Create room status element
                 let statusClass = '';
                 let statusText = '';
                 
@@ -1732,22 +1643,18 @@
                         statusText = 'Trống';
                 }
                 
-                // Parse facilities if it's a string
                 let facilitiesDisplay = '';
                     if (room.facilities) {
                     let facilitiesObj = {};
                     
                         if (typeof room.facilities === 'string') {
                         try {
-                            // Try to parse JSON string
                             facilitiesObj = JSON.parse(room.facilities);
                 } catch (e) {
                             console.log('Error parsing facilities:', e);
-                            // Check if it looks like JSON but failed to parse
                             if (room.facilities.includes('{') && room.facilities.includes('}')) {
                                 facilitiesDisplay = 'Không có';
                             } else {
-                                // If not JSON, split by comma
                                 const facilitiesArray = room.facilities.split(',').map(item => item.trim());
                                 facilitiesArray.forEach(item => {
                                     if (item) facilitiesObj[item] = 1;
@@ -1758,9 +1665,7 @@
                         facilitiesObj = room.facilities;
                     }
                     
-                    // Only create display if we don't have an error message already
                     if (!facilitiesDisplay) {
-                        // Format facilities for display
                         const facilityLabels = {
                     'projector': 'Máy chiếu',
                     'computer': 'Máy tính',
@@ -1784,7 +1689,6 @@
                     }
                 }
                 
-                // Create card HTML
                 const card = document.createElement('div');
                 card.className = 'room-card';
                 card.innerHTML = `
@@ -1829,7 +1733,6 @@
                     </div>
                 `;
                 
-                // Add event listeners to action buttons
                 const editBtn = card.querySelector('.edit-btn');
                 editBtn.addEventListener('click', () => openEditModal(room));
                 
@@ -1842,13 +1745,11 @@
                 const toggleStatusBtn = card.querySelector('.toggle-status-btn');
                 toggleStatusBtn.addEventListener('click', () => toggleRoomStatus(room.id));
                 
-                // Add card to grid
                 roomGrid.appendChild(card);
             });
         }
         
         function exportRoomsData() {
-            // Get currently filtered rooms
             const statusValue = document.getElementById('status-filter').value;
             const typeValue = document.getElementById('type-filter').value;
             const searchValue = document.querySelector('.search-box input').value.toLowerCase();
@@ -1871,13 +1772,10 @@
                 );
             }
             
-            // Generate CSV content
             let csvContent = "data:text/csv;charset=utf-8,";
             
-            // Headers
             csvContent += "ID,Tên phòng,Loại phòng,Vị trí,Sức chứa,Trạng thái,Thiết bị\n";
             
-            // Data rows
             filteredRooms.forEach(room => {
                 const roomTypeLabel = roomTypes.find(t => t.value === room.room_type)?.label || room.room_type;
                 let statusText = '';
@@ -1889,16 +1787,13 @@
                     default: statusText = room.status;
                 }
                 
-                // Format facilities for CSV
                 let facilitiesText = '';
                 if (room.facilities) {
                     try {
-                        // Try to parse if it's a string
                         const facilities = typeof room.facilities === 'string' 
                             ? JSON.parse(room.facilities) 
                             : room.facilities;
                         
-                        // Convert to a simple text format for CSV
                         const facilityLabels = {
                             'projector': 'Máy chiếu',
                             'computer': 'Máy tính',
@@ -1920,14 +1815,12 @@
                 csvContent += `${room.id},"${room.room_name}","${roomTypeLabel}","${room.location}",${room.capacity},"${statusText}","${facilitiesText}"\n`;
             });
             
-            // Create download link
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
             link.setAttribute("download", `danh-sach-phong-${new Date().toISOString().split('T')[0]}.csv`);
             document.body.appendChild(link);
             
-            // Trigger download
             link.click();
             document.body.removeChild(link);
         }
@@ -1941,7 +1834,6 @@
                     throw new Error('Không tìm thấy thông tin phòng!');
                 }
                 
-                // Xác định trạng thái mới (đối lập với trạng thái hiện tại)
                 let newStatus;
                 if (room.status === 'available') {
                     newStatus = 'maintenance';
@@ -1955,8 +1847,6 @@
                     }
                 }
                 
-                // Create a simplified update payload with just the necessary fields
-                // This avoids sending the entire room object with potentially pre-stringified facilities
                 const updatedRoom = {
                     id: room.id,
                     room_name: room.room_name,
@@ -1965,7 +1855,6 @@
                     room_type: room.room_type,
                     description: room.description,
                     status: newStatus,
-                    // Don't include facilities to avoid double-encoding
                     updated_at: new Date().toISOString()
                 };
                 
@@ -1981,7 +1870,6 @@
                 });
                 
                 if (!response.ok) {
-                    // Check response content type for proper error handling
                     const contentType = response.headers.get('Content-Type');
                     let errorMessage = '';
                     
@@ -1991,13 +1879,11 @@
                             errorMessage = errorData.message || errorData.error || `Lỗi: ${response.status} ${response.statusText}`;
                         } catch (parseError) {
                             console.error('Error parsing error response:', parseError);
-                            // Try to get the text response if JSON parsing fails
                             const textResponse = await response.text();
                             console.log('Response text:', textResponse);
                             errorMessage = `Lỗi: ${response.status} ${response.statusText}`;
                         }
                     } else {
-                        // If not JSON, get text response
                         const textResponse = await response.text();
                         console.warn('Non-JSON error response:', textResponse);
                         errorMessage = `Lỗi: ${response.status} ${response.statusText}`;
@@ -2006,10 +1892,8 @@
                     throw new Error(errorMessage || 'Không thể cập nhật trạng thái phòng');
                 }
                 
-                // Handle successful response
                 let responseData;
                 try {
-                    // Validate content type and parse JSON
                     const contentType = response.headers.get('Content-Type');
                     if (!contentType || !contentType.includes('application/json')) {
                         console.warn(`Expected JSON response but got ${contentType}. Attempting to parse anyway.`);
@@ -2017,11 +1901,9 @@
                     responseData = await response.json();
                 } catch (parseError) {
                     console.error('Error parsing success response:', parseError);
-                    // Success but couldn't parse response - still continue
                     console.log('Response text:', await response.text());
                 }
                 
-                // Tải lại danh sách phòng
                 await loadRooms();
                 generateRoomCards(roomsData);
                 
@@ -2032,7 +1914,6 @@
             }
         }
         
-        // Room Detail Modal
         function openDetailModal(roomId) {
             const room = roomsData.find(r => r.id.toString() === roomId.toString());
             if (!room) {
@@ -2040,11 +1921,9 @@
                 return;
             }
             
-            // Redirect to the room details page
             window.location.href = `admin-room-details.html?id=${roomId}`;
         }
         
-        // Hàm xem chi tiết phòng
         function viewRoomDetails(roomId) {
             const room = roomsData.find(r => r.id.toString() === roomId.toString());
             if (!room) {
@@ -2052,12 +1931,8 @@
                 return;
             }
             
-            // Chuyển hướng đến trang chi tiết phòng hoặc hiển thị modal chi tiết
-            // Thay thế bằng cách mở trang chi tiết phòng 
             window.location.href = `admin-room-details.html?id=${roomId}`;
             
-            // Hoặc có thể mở modal thông tin chi tiết phòng nếu có
-            // openDetailModal(roomId);
         }
         
         function formatDate(dateString) {
@@ -2066,12 +1941,10 @@
             try {
                 const date = new Date(dateString);
                 
-                // Check if date is valid
                 if (isNaN(date.getTime())) {
                     return null;
                 }
                 
-                // Format date
                 const day = String(date.getDate()).padStart(2, '0');
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const year = date.getFullYear();
@@ -2087,16 +1960,13 @@
 
         async function addIoTDevicesToRoom(roomId, iotDevices) {
             try {
-                // Kiểm tra roomId có hợp lệ không
                 if (!roomId) {
                     console.error('Không thể thêm thiết bị IoT: Thiếu room_id');
                     return;
                 }
                 
-                // Convert roomId to number if it's a string (optional)
                 const roomIdNumber = Number(roomId) || roomId;
                 
-                // Create each device one by one
                 for (const device of iotDevices) {
                     console.log(`Thêm thiết bị IoT: ${device.device_name} (${device.device_type}) cho phòng ${roomIdNumber}`);
                     
@@ -2107,7 +1977,6 @@
                         status: 'off'
                     };
                     
-                    // Log device data for debugging
                     console.log('Dữ liệu thiết bị gửi đi:', JSON.stringify(deviceData));
                     
                     const response = await fetch(ENDPOINTS.IOT, {
@@ -2120,7 +1989,6 @@
                     });
                     
                     if (!response.ok) {
-                        // Check if response has Content-Type header and it contains 'application/json'
                         const contentType = response.headers.get('Content-Type');
                         let errorMessage = '';
                         
@@ -2133,7 +2001,6 @@
                                 errorMessage = `Error: ${response.status} ${response.statusText}`;
                             }
                         } else {
-                            // If not JSON, get text response
                             const textResponse = await response.text();
                             console.warn('Non-JSON error response:', textResponse);
                             errorMessage = `Error: ${response.status} ${response.statusText}`;
@@ -2157,7 +2024,6 @@
             try {
                 console.log(`Updating IoT devices for room ${roomId}`);
                 
-                // Lấy danh sách thiết bị hiện tại
                 const response = await fetch(`${ENDPOINTS.IOT}?room_id=${roomId}`, {
                     credentials: 'include'
                 });
@@ -2166,7 +2032,6 @@
                     throw new Error(`Failed to get current IoT devices: ${response.status} ${response.statusText}`);
                 }
                 
-                // Check if response has Content-Type header and it contains 'application/json'
                 const contentType = response.headers.get('Content-Type');
                 if (!contentType || !contentType.includes('application/json')) {
                     console.warn(`Expected JSON response but got ${contentType}. Attempting to parse anyway.`);
@@ -2181,7 +2046,6 @@
                     throw new Error('Failed to parse device data as JSON');
                 }
                 
-                // Tạo map thiết bị hiện tại theo loại
                 const currentDevicesByType = {};
                 currentDevices.forEach(device => {
                     if (!currentDevicesByType[device.device_type]) {
@@ -2190,7 +2054,6 @@
                     currentDevicesByType[device.device_type].push(device);
                 });
                 
-                // Tạo map thiết bị mới theo loại
                 const newDevicesByType = {};
                 newIotDevices.forEach(device => {
                     if (!newDevicesByType[device.device_type]) {
@@ -2199,7 +2062,6 @@
                     newDevicesByType[device.device_type].push(device);
                 });
                 
-                // Xử lý từng loại thiết bị
                 const deviceTypes = [...new Set([
                     ...Object.keys(currentDevicesByType),
                     ...Object.keys(newDevicesByType)
@@ -2209,18 +2071,12 @@
                     const currentTypeDevices = currentDevicesByType[deviceType] || [];
                     const newTypeDevices = newDevicesByType[deviceType] || [];
                     
-                    // Nếu số lượng thiết bị hiện tại ít hơn số lượng mới, thêm thiết bị
                     if (currentTypeDevices.length < newTypeDevices.length) {
-                        // Tính số lượng thiết bị cần thêm
                         const devicesToAdd = newTypeDevices.slice(currentTypeDevices.length);
-                        // Thêm thiết bị mới với tên tự tăng
                         await addIoTDevicesToRoom(roomId, devicesToAdd);
                     } 
-                    // Nếu số lượng thiết bị hiện tại nhiều hơn số lượng mới, xóa bớt
                     else if (currentTypeDevices.length > newTypeDevices.length) {
-                        // Tính số lượng thiết bị cần xóa
                         const devicesToRemove = currentTypeDevices.slice(newTypeDevices.length);
-                        // Xóa từng thiết bị
                         for (const device of devicesToRemove) {
                             await fetch(`${ENDPOINTS.IOT}/${device.id}`, {
                                 method: 'DELETE',
@@ -2237,15 +2093,11 @@
             }
         }
 
-        // Hàm hiển thị modal xác nhận xóa phòng
         function showDeleteConfirmation(roomId, roomName) {
-            // Set the room ID to be deleted
             roomToDeleteId = roomId;
             
-            // Display room info in the confirmation message
             document.getElementById('delete-room-id').textContent = roomName ? `${roomId} (${roomName})` : roomId;
             
-            // Show confirmation modal
             document.getElementById('confirm-delete-modal').style.display = 'flex';
         }
     </script>

@@ -1,25 +1,16 @@
-// Admin Notifications JavaScript
-// This file is intentionally kept minimal to avoid errors with dependencies
-
-// Constants
 const NOTIFICATION_API_ENDPOINTS = {
     NOTIFICATIONS: '/api/notifications',
     NOTIFICATIONS_UNREAD: '/api/notifications/unread/count',
     NOTIFICATIONS_HISTORY: '/api/notifications/history'
 };
 
-// This function will be called when the DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Admin notifications module loaded');
     
-    // Fix auth.js errors by checking if elements exist before adding event listeners
     fixAuthJsErrors();
 });
 
-// Fix auth.js errors by adding dummy elements or checks
 function fixAuthJsErrors() {
-    // This function creates any missing elements that auth.js might be looking for
-    // and adds no-op event listeners to prevent errors
     const elementsToCheck = ['login-form', 'register-form', 'logout-link', 'profile-link'];
     
     elementsToCheck.forEach(id => {
@@ -29,7 +20,6 @@ function fixAuthJsErrors() {
             dummyElement.style.display = 'none';
             document.body.appendChild(dummyElement);
             
-            // Add empty event listener
             dummyElement.addEventListener('submit', e => {
                 e.preventDefault();
             });
@@ -39,8 +29,6 @@ function fixAuthJsErrors() {
         }
     });
     
-    // Fix for auth.js variables accessed directly
-    // Create dummy global variables that auth.js is trying to use
     if (typeof window.loginForm === 'undefined' || window.loginForm === null) {
         window.loginForm = document.createElement('form');
         window.loginForm.id = 'login-form';
@@ -80,7 +68,6 @@ function fixAuthJsErrors() {
     }
 }
 
-// Helper functions that may be used from the HTML
 function formatDateTime(dateString) {
     if (!dateString) return 'N/A';
     try {

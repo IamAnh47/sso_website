@@ -6,16 +6,16 @@ const { authenticate } = require('../middlewares/auth');
 // Middleware để đảm bảo tất cả các routes request login
 router.use(authenticate);
 
-// Lấy all notifications
+// Get all notifications
 router.get('/', notificationController.getUserNotifications);
 
-// Lấy thông báo theo type
+// Get thông báo theo type
 router.get('/type/:type', notificationController.getNotificationsByType);
 
-// Lấy count thông báo chưa đọc
+// Get count thông báo chưa đọc
 router.get('/unread/count', notificationController.getUnreadCount);
 
-// Lấy lịch sử thông báo đã send (admin và staff)
+// Get lịch sử thông báo đã send (admin và staff)
 router.get('/history', notificationController.getNotificationHistory);
 
 // Đánh dấu một thông báo là đã đọc
