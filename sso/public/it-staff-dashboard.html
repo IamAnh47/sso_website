@@ -292,7 +292,6 @@
                         document.getElementById('totalRooms').textContent = data.count || 0;
                     })
                     .catch(error => {
-                        console.error('Error loading room count:', error);
                         document.getElementById('totalRooms').textContent = 'Error';
                     });
                 
@@ -310,29 +309,8 @@
                         document.getElementById('offlineDevices').textContent = data.offline || 0;
                     })
                     .catch(error => {
-                        console.error('Error loading device count:', error);
                         document.getElementById('totalDevices').textContent = 'Error';
                     });
-                
-                // Hàm dịch hành động sang tiếng Việt
-                function translateAction(action) {
-                    const actionMap = {
-                        'turned on': 'Đã bật',
-                        'turned off': 'Đã tắt',
-                        'maintenance': 'Bảo trì',
-                        'reset': 'Khởi động lại',
-                        'updated': 'Cập nhật',
-                        'configured': 'Cấu hình',
-                        'connected': 'Đã kết nối',
-                        'disconnected': 'Mất kết nối',
-                        'error': 'Lỗi',
-                        'warning': 'Cảnh báo',
-                        'entered maintenance mode': 'Đã chuyển sang bảo trì',
-                        'exited maintenance mode': 'Đã kết thúc bảo trì'
-                    };
-                    
-                    return actionMap[action] || action;
-                }
                 
                 // Load recent activities
                 fetch('/api/iot/devices/activities')
@@ -353,41 +331,13 @@
                             return;
                         }
                         
-                        // In ra console để kiểm tra cấu trúc dữ liệu
-                        console.log("Dữ liệu hoạt động:", data);
-                        console.log("Mẫu dữ liệu đầu tiên:", data[0]);
-                        
                         data.forEach(activity => {
                             const row = document.createElement('tr');
-                            
-                            // Thử xác định tòa nhà từ nhiều nguồn khác nhau
-                            let buildingInfo = activity.location || activity.building || activity.building_name || '';
-                            
-                            // Nếu vẫn không có, thử trích xuất từ room_name
-                            if (!buildingInfo && activity.room_name) {
-                                // Giả sử tên phòng có dạng "H1.101", "H2.102", v.v.
-                                const match = activity.room_name.match(/^([A-Za-z]+\d+)/);
-                                if (match && match[1]) {
-                                    buildingInfo = match[1];
-                                }
-                                // Hoặc nếu có dạng "P.101 (H1)", "P.102 (H2)", v.v.
-                                else {
-                                    const parenthesesMatch = activity.room_name.match(/\(([A-Za-z]+\d+)\)/);
-                                    if (parenthesesMatch && parenthesesMatch[1]) {
-                                        buildingInfo = parenthesesMatch[1];
-                                    }
-                                }
-                            }
-                            
-                            // Nếu có room_data và có chứa thông tin tòa nhà
-                            if (!buildingInfo && activity.room_data && typeof activity.room_data === 'object') {
-                                buildingInfo = activity.room_data.location || activity.room_data.building || '';
-                            }
                             
                             row.innerHTML = `
                                 <td>${activity.device_name || 'Không xác định'}</td>
                                 <td>${activity.room_name || 'Không xác định'}</td>
-                                <td>${buildingInfo || 'Không xác định'}</td>
+                                <td>${activity.location || 'Không xác định'}</td>
                                 <td>${translateAction(activity.action) || 'Không có hành động'}</td>
                                 <td>${new Date(activity.timestamp).toLocaleString()}</td>
                                 <td>
@@ -396,14 +346,34 @@
                                     </span>
                                 </td>
                             `;
+                            
                             activitiesContainer.appendChild(row);
                         });
                     })
                     .catch(error => {
-                        console.error('Error loading activities:', error);
                         const activitiesContainer = document.getElementById('recentActivities');
-                        activitiesContainer.innerHTML = '<tr><td colspan="6" class="text-center">Lỗi khi tải dữ liệu</td></tr>';
+                        activitiesContainer.innerHTML = '<tr><td colspan="6" class="text-center">Lỗi khi tải hoạt động gần đây</td></tr>';
                     });
+            }
+            
+            // Function to translate action names to Vietnamese
+            function translateAction(action) {
+                const actionMap = {
+                    'turned on': 'Đã bật',
+                    'turned off': 'Đã tắt',
+                    'maintenance': 'Bảo trì',
+                    'reset': 'Khởi động lại',
+                    'updated': 'Cập nhật',
+                    'configured': 'Cấu hình',
+                    'connected': 'Đã kết nối',
+                    'disconnected': 'Mất kết nối',
+                    'error': 'Lỗi',
+                    'warning': 'Cảnh báo',
+                    'entered maintenance mode': 'Đã vào chế độ bảo trì',
+                    'exited maintenance mode': 'Đã thoát chế độ bảo trì'
+                };
+                
+                return actionMap[action] || action;
             }
         });
     </script>

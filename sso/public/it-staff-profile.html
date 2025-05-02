@@ -396,13 +396,11 @@
             setupNavigation();
             initializePage();
           } else {
-            console.error('User is not an IT staff or is not authenticated');
             clearAuthData();
             window.location.href = 'index.html';
           }
         })
         .catch(error => {
-          console.error('Authentication error:', error.message);
           clearAuthData();
           window.location.href = 'index.html';
         });

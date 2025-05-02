@@ -36,7 +36,6 @@ exports.getIoTStatus = async (req, res) => {
     const devices = await IoTDevice.getAll();
     res.json(devices);
   } catch (error) {
-    console.error('Get IoT status error:', error);
     res.status(500).json({ error: 'Error fetching IoT devices status' });
   }
 };
@@ -104,7 +103,6 @@ exports.controlIoTDevice = async (req, res) => {
     
     res.json(result);
   } catch (error) {
-    console.error('Control IoT device error:', error);
     res.status(500).json({ error: 'Error controlling IoT device' });
   }
 };
@@ -132,7 +130,6 @@ exports.createIoTDevice = async (req, res) => {
       device: newDevice
     });
   } catch (error) {
-    console.error('Create IoT device error:', error);
     res.status(500).json({ error: 'Error creating IoT device' });
   }
 };

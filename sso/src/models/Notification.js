@@ -62,19 +62,13 @@ class Notification {
 
   static markAsRead(id) {
     return new Promise((resolve, reject) => {
-      // Log the notification ID for debugging
-      console.log(`Model: Marking notification ${id} as read`);
-      
       db.run(
         `UPDATE notifications SET is_read = 1 WHERE id = ?`,
         [id],
         function(err) {
           if (err) {
-            console.error('Error in markAsRead SQL query:', err);
             reject(err);
           } else {
-            // Log the result of the update
-            console.log(`Notification update result: ${this.changes} row(s) updated`);
             resolve({ id, is_read: 1 });
           }
         }

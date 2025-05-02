@@ -2,28 +2,17 @@ const { db } = require('../config/database');
 
 class Room {
   static findById(id) {
-    console.log('Looking up room by ID:', id);
     return new Promise((resolve, reject) => {
       db.get('SELECT * FROM rooms WHERE id = ?', [id], (err, row) => {
         if (err) {
-          console.error('Database error in findById:', err);
           reject(err);
         } else {
-          console.log('DB Row retrieved:', row);
-          if (row) {
-            console.log('Room data structure:', Object.keys(row));
-            console.log('Description from DB:', row.description, 'Type:', typeof row.description);
-            console.log('Status from DB:', row.status, 'Type:', typeof row.status);
-            
-            // Check if we need to parse facilities JSON
-            if (row.facilities && typeof row.facilities === 'string') {
-              try {
-                const parsedFacilities = JSON.parse(row.facilities);
-                row.facilities = parsedFacilities;
-                console.log('Parsed facilities from string to object:', parsedFacilities);
-              } catch (e) {
-                console.warn('Failed to parse facilities JSON:', e);
-              }
+          // Parse facilities JSON if needed
+          if (row && row.facilities && typeof row.facilities === 'string') {
+            try {
+              row.facilities = JSON.parse(row.facilities);
+            } catch (e) {
+              // Failed to parse facilities JSON
             }
           }
           resolve(row);
@@ -33,14 +22,11 @@ class Room {
   }
 
   static findByNameAndLocation(room_name, location) {
-    console.log(`Looking up room by name and location: ${room_name}, ${location}`);
     return new Promise((resolve, reject) => {
       db.get('SELECT * FROM rooms WHERE room_name = ? AND location = ?', [room_name, location], (err, row) => {
         if (err) {
-          console.error('Database error in findByNameAndLocation:', err);
           reject(err);
         } else {
-          console.log('DB Row for name and location check:', row);
           resolve(row); // Will be null if no match found
         }
       });
@@ -127,19 +113,10 @@ class Room {
   static update(id, roomData) {
     const { room_name, location, capacity, room_type, description, status, facilities } = roomData;
     
-    console.log('Room.update: Original data:', JSON.stringify(roomData, null, 2));
-    console.log('Room.update: Description:', description, typeof description);
-    console.log('Room.update: Status:', status, typeof status);
-    
     // Đảm bảo các giá trị là chuỗi
     const safeDescription = description === undefined || description === null ? '' : String(description).trim();
     const safeStatus = status === undefined || status === null ? 'available' : String(status).trim();
     const facilitiesStr = typeof facilities === 'object' ? JSON.stringify(facilities) : facilities;
-    
-    console.log('Room.update: Safe values:');
-    console.log('- Description:', safeDescription, typeof safeDescription);
-    console.log('- Status:', safeStatus, typeof safeStatus);
-    console.log('- Facilities:', facilitiesStr, typeof facilitiesStr);
     
     return new Promise((resolve, reject) => {
       // Sử dụng tên cột rõ ràng trong câu lệnh SQL để tránh nhầm lẫn thứ tự
@@ -342,7 +319,6 @@ class Room {
     return new Promise((resolve, reject) => {
       db.get('SELECT COUNT(*) as count FROM rooms', (err, row) => {
         if (err) {
-          console.error('Error getting room count:', err);
           reject(err);
         } else {
           resolve(row.count);

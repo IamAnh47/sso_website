@@ -3,8 +3,6 @@ const Booking = require('../models/Booking');
 const RoomActivity = require('../models/RoomActivity');
 const Notification = require('../models/Notification');
 
-console.log('Loading RoomController.js');
-
 // Lấy danh sách tất cả các phòng
 exports.getAllRooms = async (req, res) => {
   try {

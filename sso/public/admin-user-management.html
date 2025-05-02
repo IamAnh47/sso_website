@@ -396,16 +396,11 @@
         
         userRoles = await response.json();
         
-        // Debug - Log the received roles
-        console.log('User roles received from API:', JSON.stringify(userRoles));
-        
         // Check if it_staff role exists in the API response
         const hasITStaffRole = userRoles.some(role => role.code === 'it_staff');
-        console.log('IT Staff role found in API:', hasITStaffRole);
         
         // If it_staff is missing, add it manually
         if (!hasITStaffRole) {
-          console.log('Adding IT Staff role manually');
           userRoles.push({ id: 4, name: 'Nhân viên IT', code: 'it_staff' });
         }
         
@@ -426,7 +421,6 @@
           option.value = role.code;
           option.textContent = role.name;
           roleFilter.appendChild(option);
-            console.log(`Added missing option to filter: ${role.name} (${role.code})`);
           }
         });
         
@@ -442,7 +436,6 @@
           option.value = role.code;
           option.textContent = role.name;
           roleSelect.appendChild(option);
-            console.log(`Added missing option to modal: ${role.name} (${role.code})`);
           }
         });
       } catch (error) {

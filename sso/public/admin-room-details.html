@@ -1471,9 +1471,6 @@
         // Fetch room details
         async function fetchRoomDetails() {
             try {
-                console.log('Fetching room details for ID:', roomId);
-                console.log('Using endpoint:', ENDPOINTS.ROOM_DETAIL);
-                
                 const response = await fetch(ENDPOINTS.ROOM_DETAIL, {
                     method: 'GET',
                     headers: {
@@ -1492,18 +1489,8 @@
                 }
             
                 roomData.details = await response.json();
-                console.log('Received room data from API:', roomData.details);
-                console.log('Direct description value:', roomData.details.description, 'Type:', typeof roomData.details.description);
-                
-                // Check if the description exists but might be empty
-                if (roomData.details.hasOwnProperty('description')) {
-                    console.log('Found description field in API response:', roomData.details.description);
-                } else {
-                    console.warn('Description field is missing in API response, available fields:', Object.keys(roomData.details));
-                }
                 return roomData.details;
             } catch (error) {
-                console.error('Error fetching room details:', error);
                 throw error;
             }
         }
@@ -1576,23 +1563,11 @@
         
         // Function to update the room details in the UI
         function updateRoomDetails() {
-            console.log('Updating room details in UI with data:', roomData.details);
-            
             if (!roomData.details) {
-                console.error('No room data available to update UI');
                 return;
             }
             
             const room = roomData.details;
-            
-            // DEBUG: Check description field directly from roomData.details
-            console.log('DESCRIPTION DEBUG LOG:');
-            console.log('- Description value:', room.description);
-            console.log('- Description type:', typeof room.description);
-            console.log('- Is null?', room.description === null);
-            console.log('- Is undefined?', room.description === undefined);
-            console.log('- Is empty string?', room.description === '');
-            console.log('- Length:', room.description ? room.description.length : 'N/A');
             
             // Update page title
             document.title = `${room.room_name} - Admin Dashboard`;
