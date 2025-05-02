@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const roomController = require('../controllers/FixedRoomController');
+const roomController = require('../controllers/roomController');
 const { authenticate, isAdmin, isStaff, isITStaffOrAdmin } = require('../middlewares/auth');
 
 // Lấy danh sách tất cả các phòng (công khai)

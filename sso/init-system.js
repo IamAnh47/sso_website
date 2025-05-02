@@ -1,12 +1,8 @@
 /**
  * Smart Study Space - System Initialization Tool
- * 
- * Script này sẽ:
- * 1. Xóa database hiện tại (nếu có) và tạo database mới
- * 2. Tạo tài khoản mặc định (admin, staff, student)
- * 3. Chuẩn bị hệ thống để chạy
- * 
- * Cách sử dụng: node init-system.js
+ * 1. Xóa database hiện tại và tạo database mới
+ * 2. Tạo tài khoản mặc định 
+ * 3. Chuẩn bị chạy
  */
 
 const fs = require('fs');
@@ -14,7 +10,6 @@ const path = require('path');
 const { spawn } = require('child_process');
 const readline = require('readline');
 
-// Thiết lập màu sắc cho console
 const colors = {
   reset: '\x1b[0m',
   bright: '\x1b[1m',
@@ -25,19 +20,16 @@ const colors = {
   cyan: '\x1b[36m'
 };
 
-// Tạo interface để nhập liệu từ terminal
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
 
-// Lấy đường dẫn database từ config
 const dbDir = path.join(__dirname, 'data');
 const dbPath = path.join(dbDir, 'smart_study_space.db');
 
 console.log(`${colors.bright}${colors.blue}=== SMART STUDY SPACE - KHỞI TẠO HỆ THỐNG ===${colors.reset}\n`);
 
-// Hỏi người dùng có muốn xóa database hiện tại không
 function askForDatabaseReset() {
   if (fs.existsSync(dbPath)) {
     console.log(`${colors.yellow}Đã phát hiện database hiện tại.${colors.reset}`);
@@ -56,7 +48,6 @@ function askForDatabaseReset() {
   }
 }
 
-// Xóa database hiện tại
 function resetDatabase() {
   console.log(`${colors.cyan}Đang xóa database hiện tại...${colors.reset}`);
   try {
@@ -72,7 +63,6 @@ function resetDatabase() {
   }
 }
 
-// Đảm bảo thư mục data tồn tại
 function ensureDbDirectory() {
   if (!fs.existsSync(dbDir)) {
     try {
@@ -85,7 +75,6 @@ function ensureDbDirectory() {
   }
 }
 
-// Khởi tạo database bằng cách chạy script initialize-db.js
 function initializeDatabase() {
   console.log(`${colors.cyan}Đang khởi tạo database...${colors.reset}`);
   
@@ -110,7 +99,6 @@ function initializeDatabase() {
   });
 }
 
-// Hoàn tất thiết lập
 function finishSetup() {
   console.log(`\n${colors.bright}${colors.green}=== KHỞI TẠO HỆ THỐNG HOÀN TẤT ===${colors.reset}`);
   console.log(`\n${colors.cyan}Thông tin đăng nhập mặc định:${colors.reset}`);
@@ -125,5 +113,4 @@ function finishSetup() {
   rl.close();
 }
 
-// Bắt đầu quá trình khởi tạo
 askForDatabaseReset(); 

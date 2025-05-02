@@ -23,29 +23,29 @@ app.use(helmet({
       fontSrc: ["'self'", "cdnjs.cloudflare.com", "cdn.jsdelivr.net"]
     }
   }
-})); // Bảo mật HTTP headers nhưng cho phép inline scripts
-
+}));
+// Bảo mật HTTP headers nhưng cho phép inline scripts
 // Cấu hình CORS để cho phép cookies
 app.use(cors({
-  origin: true, // Cho phép domain nguồn gốc của request
-  credentials: true // Cho phép gửi cookies qua CORS
+  origin: true, 
+  credentials: true 
 }));
 
-app.use(bodyParser.json()); // Parse JSON request body
-app.use(bodyParser.urlencoded({ extended: false })); // Parse URL-encoded bodies
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false })); 
 
-// Cấu hình cookie parser với chuỗi bí mật từ config
+// Cấu hình cookie parser với private key từ config
 app.use(cookieParser(config.cookieSecret));
 
-app.use(logger); // Ghi nhật ký request
+app.use(logger); // Ghi log request
 
-// API Routes - take precedence over static files
+// API Routes 
 app.use(routes);
 
-// Phục vụ các file tĩnh từ thư mục public
+// Static filea
 app.use(express.static(path.join(__dirname, '../public')));
 
-// Serving frontend for any route not matched by API
+// API Routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });

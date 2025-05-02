@@ -1,7 +1,5 @@
 const Room = require('../models/Room');
 const Booking = require('../models/Booking');
-const RoomActivity = require('../models/RoomActivity');
-const Notification = require('../models/Notification');
 
 // Lấy danh sách tất cả các phòng
 exports.getAllRooms = async (req, res) => {
@@ -63,35 +61,16 @@ exports.getRoomById = async (req, res) => {
 // [CHỈ ADMIN/STAFF] Tạo phòng mới
 exports.createRoom = async (req, res) => {
   try {
-    const { room_name, location, capacity, room_type, description, status, facilities } = req.body;
-    
-    console.log('RoomController.createRoom: Request body:', JSON.stringify(req.body, null, 2));
-    
-    // Kiểm tra tên phòng và location có bị trùng không
-    const existingRoom = await Room.findByNameAndLocation(room_name, location);
-    if (existingRoom) {
-      return res.status(400).json({ 
-        error: 'Phòng đã tồn tại',
-        message: `Phòng "${room_name}" tại vị trí "${location}" đã tồn tại trong hệ thống`
-      });
-    }
-    
-    // Đảm bảo các giá trị hợp lệ
-    const roomData = {
+    const { room_name, location, capacity, room_type, description, status, facilities} = req.body;
+    const newRoom = await Room.create({
       room_name,
       location,
       capacity,
       room_type,
-      description: description === undefined ? '' : description,
+      description,
       status: status || 'available',
-      facilities: facilities ? (typeof facilities === 'string' ? facilities : JSON.stringify(facilities)) : null
-    };
-    
-    console.log('RoomController.createRoom: Processed data:', JSON.stringify(roomData, null, 2));
-    
-    const newRoom = await Room.create(roomData);
-    
-    console.log('RoomController.createRoom: Room created:', JSON.stringify(newRoom, null, 2));
+      facilities: facilities ? JSON.stringify(facilities) : null
+    });
     
     res.status(201).json({
       message: 'Room created successfully',
@@ -109,35 +88,22 @@ exports.updateRoom = async (req, res) => {
     const { id } = req.params;
     const { room_name, location, capacity, room_type, description, status, facilities } = req.body;
     
-    console.log('RoomController.updateRoom: ID:', id);
-    console.log('RoomController.updateRoom: Request body:', JSON.stringify(req.body, null, 2));
-    console.log('RoomController.updateRoom: Description:', description, typeof description);
-    console.log('RoomController.updateRoom: Status:', status, typeof status);
-    
     // Kiểm tra xem phòng có tồn tại không
     const room = await Room.findById(id);
     if (!room) {
       return res.status(404).json({ error: 'Room not found' });
     }
     
-    console.log('RoomController.updateRoom: Current room data:', JSON.stringify(room, null, 2));
-    
     // Cập nhật thông tin phòng
-    const roomData = {
+    const updatedRoom = await Room.update(id, {
       room_name: room_name || room.room_name,
       location: location || room.location,
       capacity: capacity || room.capacity,
       room_type: room_type || room.room_type,
       description: description !== undefined ? description : room.description,
       status: status || room.status,
-      facilities: facilities ? (typeof facilities === 'string' ? facilities : JSON.stringify(facilities)) : room.facilities
-    };
-    
-    console.log('RoomController.updateRoom: Processed data:', JSON.stringify(roomData, null, 2));
-    
-    const updatedRoom = await Room.update(id, roomData);
-    
-    console.log('RoomController.updateRoom: Room updated:', JSON.stringify(updatedRoom, null, 2));
+      facilities: facilities ? JSON.stringify(facilities) : room.facilities
+    });
     
     res.json({
       message: 'Room updated successfully',
@@ -154,6 +120,8 @@ exports.updateRoomStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+    
+    console.log(`[updateRoomStatus] Đang cập nhật trạng thái phòng ${id} thành ${status}`);
     
     // Kiểm tra trạng thái hợp lệ
     if (!['available', 'unavailable', 'maintenance'].includes(status)) {
@@ -172,6 +140,9 @@ exports.updateRoomStatus = async (req, res) => {
     // Nếu chuyển sang trạng thái bảo trì, hủy các đặt phòng trong tương lai
     if (status === 'maintenance') {
       try {
+        const RoomActivity = require('../models/RoomActivity');
+        const Notification = require('../models/Notification');
+        
         console.log(`[updateRoomStatus] Đang chuyển phòng ${id} sang trạng thái bảo trì. Chuẩn bị hủy các booking`);
         
         // Lấy các booking đang chờ hoặc đã xác nhận của phòng này
@@ -286,7 +257,7 @@ exports.getAvailableRooms = async (req, res) => {
       location
     );
     
-    console.log(`Found ${availableRooms.length} available rooms after filtering`);
+    // console.log(`Found ${availableRooms.length} available rooms after filtering`);
     
     res.json(availableRooms);
   } catch (error) {
@@ -295,16 +266,53 @@ exports.getAvailableRooms = async (req, res) => {
   }
 };
 
-// Kiểm tra cấu trúc bảng rooms
-exports.checkTableStructure = async (req, res) => {
+// Lấy số lượng phòng trong hệ thống
+exports.getRoomCount = async (req, res) => {
   try {
-    const tableStructure = await Room.checkTableStructure();
-    res.json({
-      message: 'Kiểm tra cấu trúc bảng rooms thành công',
-      structure: tableStructure
-    });
+    const count = await Room.getCount();
+    return res.status(200).json({ count });
   } catch (error) {
-    console.error('Error checking table structure:', error);
-    res.status(500).json({ error: 'Lỗi khi kiểm tra cấu trúc bảng' });
+    console.error('Error getting room count:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Lấy danh sách các tòa nhà
+exports.getBuildingList = async (req, res) => {
+  try {
+    // Use the db imported from config instead of req.app.locals.db
+    const { db } = require('../config/database');
+    
+    const buildingsResult = await new Promise((resolve, reject) => {
+      db.all('SELECT DISTINCT location FROM rooms ORDER BY location', [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows.map(row => row.location).filter(Boolean));
+      });
+    });
+    
+    return res.status(200).json(buildingsResult);
+  } catch (error) {
+    console.error('Error getting building list:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Lấy danh sách các tầng
+exports.getFloorList = async (req, res) => {
+  try {
+    // Use the db imported from config instead of req.app.locals.db
+    const { db } = require('../config/database');
+    
+    const floorsResult = await new Promise((resolve, reject) => {
+      db.all('SELECT DISTINCT floor FROM rooms ORDER BY floor', [], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows.map(row => row.floor).filter(Boolean));
+      });
+    });
+    
+    return res.status(200).json(floorsResult);
+  } catch (error) {
+    console.error('Error getting floor list:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }; 

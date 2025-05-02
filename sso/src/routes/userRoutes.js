@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/FixedUserController');
+const userController = require('../controllers/userController');
 const { authenticate, isAdmin, isStaff } = require('../middlewares/auth');
 
-// Get user roles (public)
+// Get user roles
 router.get('/roles', userController.getUserRoles);
 
 // Get current user profile

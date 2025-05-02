@@ -32,7 +32,6 @@ exports.register = async (req, res) => {
       phone,
       department_id
     });
-    
     // Trả về thông tin người dùng (không bao gồm mật khẩu)
     res.status(201).json({
       message: 'User registered successfully',

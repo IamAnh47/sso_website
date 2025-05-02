@@ -6,13 +6,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "setup": "node setup-and-run.js",
-    "setup:test": "node setup-and-run.js --with-test-data",
-    "setup:fresh": "node setup-and-run.js --clear-data --with-test-data",
     "init": "node init-system.js",
     "dev:skip-auth": "cross-env NODE_ENV=development SKIP_AUTH=true nodemon src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "update-iot-db": "node scripts/create-iot-activities-table.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "HCMUT",

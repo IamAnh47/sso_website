@@ -3,9 +3,28 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('../config/config');
 
-console.log('Loading userController.js');
+console.log('Loading FixedUserController.js');
 
-// Lấy thông tin profile của người dùng hiện tại
+// Get user roles
+exports.getUserRoles = async (req, res) => {
+  try {
+    console.log('Inside getUserRoles function');
+    // Define available user roles
+    const roles = [
+      { id: 1, name: 'Sinh viên', code: 'student' },
+      { id: 2, name: 'Nhân viên', code: 'staff' },
+      { id: 3, name: 'Quản trị viên', code: 'admin' },
+      { id: 4, name: 'Nhân viên IT', code: 'it_staff' }
+    ];
+    
+    res.json(roles);
+  } catch (error) {
+    console.error('Get user roles error:', error);
+    res.status(500).json({ error: 'Error fetching user roles' });
+  }
+};
+
+// Get current user profile
 exports.getProfile = async (req, res) => {
   try {
     // User đã được đưa vào req bởi middleware authenticate
@@ -29,7 +48,7 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// Cập nhật thông tin profile của người dùng hiện tại
+// Update current user profile
 exports.updateProfile = async (req, res) => {
   try {
     const { email, full_name, phone, department_id } = req.body;
@@ -55,7 +74,7 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// Đổi mật khẩu của người dùng hiện tại
+// Change password
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -77,7 +96,7 @@ exports.changePassword = async (req, res) => {
   }
 };
 
-// [CHỈ ADMIN] Lấy danh sách tất cả người dùng
+// Get all users
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.getAll();
@@ -88,14 +107,14 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// [CHỈ ADMIN] Thay đổi vai trò của người dùng
+// Change user role
 exports.changeUserRole = async (req, res) => {
   try {
     const { userId } = req.params;
     const { role } = req.body;
     
     // Kiểm tra role hợp lệ
-    if (!['student', 'staff', 'admin', 'it_staff'].includes(role)) {
+    if (!['student', 'staff', 'admin'].includes(role)) {
       return res.status(400).json({ error: 'Invalid role' });
     }
     
@@ -121,25 +140,6 @@ exports.changeUserRole = async (req, res) => {
   } catch (error) {
     console.error('Change user role error:', error);
     res.status(500).json({ error: 'Error changing user role' });
-  }
-};
-
-// Get user roles
-exports.getUserRoles = async (req, res) => {
-  try {
-    console.log('Inside getUserRoles function');
-    // Define available user roles
-    const roles = [
-      { id: 1, name: 'Sinh viên', code: 'student' },
-      { id: 2, name: 'Nhân viên', code: 'staff' },
-      { id: 3, name: 'Quản trị viên', code: 'admin' },
-      { id: 4, name: 'Nhân viên IT', code: 'it_staff' }
-    ];
-    
-    res.json(roles);
-  } catch (error) {
-    console.error('Get user roles error:', error);
-    res.status(500).json({ error: 'Error fetching user roles' });
   }
 };
 
@@ -266,34 +266,6 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// Update user password
-exports.updateUserPassword = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { current_password, new_password } = req.body;
-    
-    // Check if user exists
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    // Verify current password
-    const isMatch = await bcrypt.compare(current_password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ error: 'Current password is incorrect' });
-    }
-    
-    // Update password
-    await User.updatePassword(id, new_password);
-    
-    res.json({ message: 'Password updated successfully' });
-  } catch (error) {
-    console.error('Update password error:', error);
-    res.status(500).json({ error: 'Error updating password' });
-  }
-};
-
 // Delete user
 exports.deleteUser = async (req, res) => {
   try {
@@ -310,12 +282,51 @@ exports.deleteUser = async (req, res) => {
       return res.status(400).json({ error: 'Cannot delete yourself' });
     }
     
-    // Delete user
-    await User.delete(id);
+    // Delete user directly using db from the database module
+    const { db } = require('../config/database');
+    
+    await new Promise((resolve, reject) => {
+      db.run('DELETE FROM users WHERE id = ?', [id], function(err) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ deleted: true, rows: this.changes });
+        }
+      });
+    });
     
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     console.error('Delete user error:', error);
     res.status(500).json({ error: 'Error deleting user' });
+  }
+};
+
+// Update user password (admin)
+exports.updateUserPassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Handle both new_password (snake_case) and newPassword (camelCase) formats
+    const newPassword = req.body.new_password || req.body.newPassword;
+    
+    if (!newPassword) {
+      return res.status(400).json({ error: 'New password is required' });
+    }
+    
+    // Check if user exists
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // For admin users, we don't need to verify the current password
+    
+    // Update password
+    await User.updatePassword(id, newPassword);
+    
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Update user password error:', error);
+    res.status(500).json({ error: 'Error updating password' });
   }
 }; 
