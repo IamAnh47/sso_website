@@ -30,6 +30,10 @@ Website quản lý đặt phòng.
    ```
    npm start
    ```
+### Run server:
+   ```
+   npm start
+   ```
 ## Admin User
 
 Tài khoản admin được tạo tự động:
