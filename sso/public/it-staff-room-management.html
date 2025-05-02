@@ -211,6 +211,9 @@
             <div class="menu-item" id="devices-menu-item" data-title="Thiết bị IoT">
                 <i class="fas fa-microchip"></i>
             </div>
+            <div class="menu-item" id="profile-menu-item" data-title="Thông tin cá nhân">
+                <i class="fas fa-user"></i>
+            </div>
             <div class="menu-item" id="logout-btn" data-title="Đăng xuất">
                 <i class="fas fa-sign-out-alt"></i>
             </div>
@@ -369,6 +372,10 @@
             
             document.getElementById('devices-menu-item').addEventListener('click', function() {
                 window.location.href = 'it-staff-iot-devices.html';
+            });
+            
+            document.getElementById('profile-menu-item').addEventListener('click', function() {
+                window.location.href = 'it-staff-profile.html';
             });
             
             document.getElementById('logout-btn').addEventListener('click', function() {

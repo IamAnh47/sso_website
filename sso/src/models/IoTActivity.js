@@ -9,7 +9,8 @@ class IoTActivity {
           a.*, 
           d.device_name, 
           d.device_type,
-          r.room_name
+          r.room_name,
+          r.location
         FROM 
           iot_device_activities a
         LEFT JOIN 
